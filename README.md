@@ -9,31 +9,31 @@ Unlike traditional property management tools that rely on fragmented spreadsheet
 Standard management systems often suffer from "race conditions" where two residents might book the same slot simultaneously, or a maintenance task is assigned to an unavailable technician. `UrbanNexus` mitigates these risks by implementing **Constraint-Driven Logic** directly within the SQL layer, ensuring the database remains the absolute source of truth.
 
 The system utilizes a **Synchronized Resource Engine** to manage overlapping states:
-* **Preventive Locking:** When a resident initiates an amenity booking, the system utilizes serializable isolation to lock the time slot during the "Pending" phase.
-* **Atomic Completion:** The booking is only committed to the ledger if the associated payment transaction returns a success code, preventing "orphaned bookings" and revenue leakage.
-* **Self-Healing Schedules:** Advanced SQL triggers automatically recalculate technician availability the moment a maintenance ticket is closed, eliminating administrative bottlenecks in the workforce.
+* **Dynamic Availability Locking:** Utilizing `NOT EXISTS` subqueries and transactional stored procedures, the system verifies and locks resource slots in real-time, preventing double-booking without permanently freezing schedules.
+* **Atomic Completion:** Workflows like technician booking are bundled into strict SQL transactions (`START TRANSACTION` / `COMMIT`). If any part of the process fails—from finding a technician to generating the invoice—the entire operation rolls back safely.
+* **Automated Financial Triggers:** Database-level triggers intercept data before it is written, automatically calculating variables like GST tax to ensure the financial ledger remains pristine and tamper-proof.
 
 ## Technical Stack
 
-* **Interface / Frontend:** Streamlit (Rapid, data-driven web app deployment natively in Python).
-* **Backend Logic:** Python (Core business logic and transaction orchestration).
-* **Database Driver:** `mysql-connector-python` (For executing parameterized queries, calling stored procedures, and handling commits/rollbacks).
-* **Database:** MySQL (Relational database management, enforcing strict ACID properties and relational integrity).
-* **State Management:** Streamlit Session State (`st.session_state`) for tracking resident sessions, multi-step booking flows, and real-time UI updates.
+* **Framework / Backend Core:** Node.js with Express.js (Provides a robust, non-blocking RESTful API architecture).
+* **Database:** MySQL (Relational database management, enforcing strict ACID properties, stored procedures, and triggers).
+* **Database Driver:** `mysql2/promise` (Implements asynchronous connection pooling and secure, parameterized queries to prevent SQL injection).
+* **Authentication & Security:** JSON Web Tokens (JWT) for stateless, role-based session management, paired with `bcrypt` for cryptographic password hashing.
+* **API Testing / Consumer:** Postman (For precise endpoint validation, header configuration, and JSON payload testing).
 
 ## Architecture & Division of Labor
 
-This project utilizes a modular architecture to facilitate parallel development and robust data handling:
+This project utilizes a modular, backend-first architecture to facilitate rapid development and ironclad data handling:
 
-* **Database Administration (DBA):** Manages the 3NF/BCNF relational schema in MySQL, designs optimized table structures, enforces referential integrity (foreign keys), and develops trigger-based automation.
-* **Backend Engineering (Python Core):** Develops modular Python functions to interact securely with the database via the MySQL Connector, orchestrates server-side transaction wrapping to prevent data anomalies, and handles user authentication logic.
-* **Frontend Architecture (Streamlit):** Constructs the resident and administrative dashboards, focusing on integrating Python logic with Streamlit's interactive widgets, dynamic data visualization (e.g., Pandas dataframes, charts), and intuitive workflow design.
-* **System Integration:** Connects the database logic layer to the Streamlit UI state, ensuring seamless bidirectional data flow, maintaining session security, and orchestrating automated, audit-ready reporting mechanisms.
+* **Database Architecture (Data Layer):** Manages the normalized relational schema in MySQL, designs optimized table structures (like decoupled `pricing` lookups), and authors advanced DBMS logic including Triggers and Stored Procedures.
+* **API Engineering (Routing Layer):** Develops asynchronous Express routes (`server.js`) to handle HTTP requests, parse JSON bodies, and securely interface with the MySQL connection pool.
+* **Security Integration (Middleware Layer):** Implements "Bouncer-pattern" middleware (`authMiddleware.js`) to intercept requests, validate JWT signatures, and ensure strictly authenticated access control before any database interaction occurs.
+* **Client Integration (Headless Architecture):** The backend serves as a headless API, outputting clean, structured JSON. This completely decouples the logic from the interface, allowing any modern frontend framework (React, Vue, HTML/JS) to easily consume the data.
 
 ## Key System Features
 
+* **Role-Based Access Control:** Secure admin dashboard access governed by encrypted credentials and expiring web tokens.
 * **Intelligent Unit & Resident Mapping:** Dynamic tracking of ownership status, occupancy levels, and complex multi-resident relationships per unit.
-* **Automated Maintenance Lifecycle:** End-to-end ticket management featuring priority-based queuing and automated technician assignment based on specialization.
-* **Collision-Proof Amenity Engine:** Real-time scheduling for shared facilities with built-in logic to prevent double-bookings and enforce community usage rules.
-* **Integrated Financial Ledger:** A transactional billing module that links service delivery to payment records with strict referential integrity.
-* **Operational Analytics:** Automated reporting on facility utilization rates, technician response times, and community financial health directly within the Streamlit dashboard.
+* **Automated Maintenance Lifecycle:** End-to-end ticket management featuring dynamic availability checks and automated technician assignment based on specialization.
+* **Collision-Proof Amenity Engine:** Real-time scheduling for shared facilities with built-in trigger logic to prevent capacity overbooking.
+* **Integrated Financial Ledger:** A transactional billing module that automatically applies taxes and links service delivery to dynamic pricing lookup tables.
