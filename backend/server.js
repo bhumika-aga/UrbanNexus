@@ -6,6 +6,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authenticateToken = require('./authMiddleware');
 const cron = require('node-cron');
+const twilio = require('twilio');
+const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 
 const app = express();
 const PORT = process.env.PORT || 4720;
@@ -79,38 +81,57 @@ app.post('/api/residents', authenticateToken, async (req, res) => {
     const { name, house_block, house_floor, house_unit, ownership_status, contact, no_of_members } = req.body;
 
     if (req.admin.role !== 'SuperAdmin') {
-        return res.status(403).json({ error: 'Access denied. SuperAdmin clearance required.' });
+        return res.status(403).json({ error: 'Access denied.' });
     }
 
     try {
-        const [result] = await db.query(
+        // 1. Insert into the resident table
+        const [resResult] = await db.query(
             'INSERT INTO resident (name, house_block, house_floor, house_unit, ownership_status, contact, no_of_members) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [name, house_block, house_floor, house_unit, ownership_status, contact, no_of_members]
         );
-        res.status(201).json({ message: 'Resident added successfully!', resident_id: result.insertId });
+        const newResidentId = resResult.insertId;
+
+        // 2. Create a default login account
+        const defaultPassword = 'pwd123#';
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        const username = name.toLowerCase().replace(/\s+/g, '_') + newResidentId;
+
+        await db.query(
+            'INSERT INTO admin (username, password_hash, role, resident_id) VALUES (?, ?, ?, ?)',
+            [username, hashedPassword, 'Resident', newResidentId]
+        );
+
+        res.status(201).json({
+            message: 'Resident and Login created!',
+            username: username,
+            password: defaultPassword
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to add resident' });
+        res.status(500).json({ error: 'Failed to create resident account' });
     }
 });
 
 // Add Technician
 app.post('/api/technicians', authenticateToken, async (req, res) => {
     const { tech_id, name, contact, skill } = req.body;
-
-    if (req.admin.role !== 'SuperAdmin') {
-        return res.status(403).json({ error: 'Access denied. SuperAdmin clearance required.' });
-    }
+    if (req.admin.role !== 'SuperAdmin') return res.status(403).json({ error: 'Admin only.' });
 
     try {
-        await db.query(
-            'INSERT INTO technician (tech_id, name, contact, skill) VALUES (?, ?, ?, ?)',
-            [tech_id, name, contact, skill]
-        );
-        res.status(201).json({ message: 'Technician added successfully!' });
+        // 1. Insert into technician table
+        await db.query('INSERT INTO technician (tech_id, name, contact, skill) VALUES (?, ?, ?, ?)',
+            [tech_id, name, contact, skill]);
+
+        // 2. Create Login (e.g., username: toto_101)
+        const username = name.toLowerCase().replace(/\s+/g, '_') + "_" + tech_id;
+        const hashedPassword = await bcrypt.hash('pitstop123', 10); // Default password
+
+        await db.query('INSERT INTO admin (username, password_hash, role, tech_id) VALUES (?, ?, "Technician", ?)',
+            [username, hashedPassword, tech_id]);
+
+        res.status(201).json({ message: 'Technician & Login Created!', username, password: 'pitstop123' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to add technician' });
+        res.status(500).json({ error: 'Failed to add technician.' });
     }
 });
 
@@ -137,37 +158,41 @@ app.post('/api/amenities', authenticateToken, async (req, res) => {
 // Book Technician
 app.post('/api/bookings/technician', authenticateToken, async (req, res) => {
 
-    const { resident_id, skill, slot, assign_date } = req.body;
-
-    if (req.admin.role !== 'Resident' && req.admin.role !== 'SuperAdmin') {
-        return res.status(403).json({ error: 'Only Residents or Admins can create bookings.' });
-    }
+    const resident_id = req.admin.role === 'Resident' ? req.admin.resident_id : req.body.resident_id;
+    const { skill, slot, assign_date } = req.body;
 
     try {
-        const [results] = await db.query(
-            'CALL AutoBookTechnician(?, ?, ?, ?)',
-            [resident_id, skill, slot, assign_date]
+        // 1. Fetch the actual contact number from the DB first
+        const [residentRows] = await db.query(
+            'SELECT contact FROM resident WHERE resident_id = ?',
+            [resident_id]
         );
 
-        const invoiceData = results[0][0];
+        const residentContact = residentRows[0]?.contact;
 
-        res.status(201).json({
-            message: 'Technician booked successfully!',
-            invoice: invoiceData
-        });
+        // 2. Run the booking procedure
+        const [results] = await db.query('CALL AutoBookTechnician(?, ?, ?, ?)', [resident_id, skill, slot, assign_date]);
+        const invoice = results[0][0];
 
-    } catch (error) {
-        console.error('Booking Error:', error);
-        if (error.sqlState === '45000') {
-            return res.status(400).json({ error: error.message });
+        // 3. Send to the ACTUAL number found in Step 1
+        if (residentContact) {
+            sendConfirmationMessage(
+                residentContact,
+                `Pit crew confirmed! ${invoice.technician_name} dispatched for ${skill} on ${assign_date}.`
+            );
         }
-        res.status(500).json({ error: 'Failed to book technician.' });
+
+        res.status(201).json({ message: 'Booked!', invoice });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Booking failed' });
     }
 });
 
 // Book Amenity
 app.post('/api/bookings/amenity', authenticateToken, async (req, res) => {
-    const { resident_id, amenity_id, date, slot, capacity_booked } = req.body;
+    const resident_id = req.admin.role === 'Resident' ? req.admin.resident_id : req.body.resident_id;
+    const { amenity_id, date, slot, capacity_booked } = req.body;
 
     if (req.admin.role !== 'Resident' && req.admin.role !== 'SuperAdmin') {
         return res.status(403).json({ error: 'Only Residents or Admins can create bookings.' });
@@ -180,6 +205,14 @@ app.post('/api/bookings/amenity', authenticateToken, async (req, res) => {
         );
 
         const invoiceData = results[0][0];
+
+        const [resRows] = await db.query('SELECT contact FROM resident WHERE resident_id = ?', [resident_id]);
+        if (resRows[0]?.contact) {
+            sendConfirmationMessage(
+                resRows[0].contact,
+                `Reservation confirmed! Your slot for ${invoiceData.amenity_name} is locked in for ${date}.`
+            );
+        }
 
         res.status(201).json({
             message: 'Amenity booked successfully!',
@@ -417,29 +450,32 @@ app.get('/api/admin/transactions', authenticateToken, async (req, res) => {
 app.post('/api/payments/:trans_no/pay', authenticateToken, async (req, res) => {
     const transNo = req.params.trans_no;
     const residentId = req.admin.resident_id;
+    const isSuperAdmin = req.admin.role === 'SuperAdmin';
 
     try {
-        // This query only updates the status if the trans_no belongs to the logged-in resident
-        // It checks both amenity and technician booking tables
-        const [result] = await db.query(`
-            UPDATE \`UrbanNexus\`.\`payment\` p
-            SET p.status = 'Paid'
-            WHERE p.trans_no = ? 
-            AND (
+        // Base query to mark as Paid
+        let sql = 'UPDATE `UrbanNexus`.`payment` p SET p.status = "Paid" WHERE p.trans_no = ?';
+        let params = [transNo];
+
+        // If NOT an admin, enforce the resident ownership check
+        if (!isSuperAdmin) {
+            sql += ` AND (
                 EXISTS (SELECT 1 FROM \`UrbanNexus\`.\`amenity_mgmt\` am WHERE am.trans_no = p.trans_no AND am.resident_id = ?)
                 OR 
                 EXISTS (SELECT 1 FROM \`UrbanNexus\`.\`technician_management\` tm WHERE tm.trans_no = p.trans_no AND tm.resident_id = ?)
-            )
-        `, [transNo, residentId, residentId]);
-
-        if (result.affectedRows === 0) {
-            return res.status(403).json({ error: 'Transaction not found or you do not have permission to pay it.' });
+            )`;
+            params.push(residentId, residentId);
         }
 
-        res.status(200).json({ message: `Transaction ${transNo} successfully paid!` });
+        const [result] = await db.query(sql, params);
+
+        if (result.affectedRows === 0) {
+            return res.status(403).json({ error: 'Transaction not found or you do not have permission.' });
+        }
+
+        res.status(200).json({ message: `Transaction ${transNo} processed successfully!` });
     } catch (error) {
-        console.error('Payment Error:', error);
-        res.status(500).json({ error: 'Failed to process payment.' });
+        res.status(500).json({ error: 'Payment processing failed.' });
     }
 });
 
@@ -491,6 +527,183 @@ app.get('/api/admin/audit-logs', authenticateToken, async (req, res) => {
     }
 });
 
+app.put('/api/residents/me', authenticateToken, async (req, res) => {
+    const residentId = req.admin.resident_id;
+    const { contact, no_of_members } = req.body;
+
+    if (!residentId) return res.status(403).json({ error: 'Only residents can update their profile.' });
+
+    try {
+        await db.query(
+            'UPDATE resident SET contact = ?, no_of_members = ? WHERE resident_id = ?',
+            [contact, no_of_members, residentId]
+        );
+        res.json({ message: 'Profile updated successfully!' });
+    } catch (error) {
+        res.status(500).json({ error: 'Update failed.' });
+    }
+});
+
+// DELETE: Remove a Resident (and their linked login/bookings via CASCADE)
+app.delete('/api/residents/:id', authenticateToken, async (req, res) => {
+    if (req.admin.role !== 'SuperAdmin') {
+        return res.status(403).json({ error: 'Only SuperAdmin can remove drivers from the grid.' });
+    }
+
+    try {
+        const [result] = await db.query('DELETE FROM resident WHERE resident_id = ?', [req.params.id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Resident not found.' });
+        }
+
+        res.json({ message: 'Resident and all associated records deleted successfully.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Deletion failed.' });
+    }
+});
+
+// DELETE: Remove a User Account (Admin Only)
+app.delete('/api/admin/:id', authenticateToken, async (req, res) => {
+    if (req.admin.role !== 'SuperAdmin') return res.status(403).json({ error: 'Access denied.' });
+
+    try {
+        await db.query('DELETE FROM admin WHERE admin_id = ?', [req.params.id]);
+        res.json({ message: 'User account removed.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to remove account.' });
+    }
+});
+
+// GET: Fetch assignments for the logged-in Technician
+app.get('/api/technician/me/tasks', authenticateToken, async (req, res) => {
+    if (req.admin.role !== 'Technician') return res.status(403).json({ error: 'Access denied.' });
+
+    try {
+        const [tasks] = await db.query(`
+            SELECT tm.assignment_id, tm.assign_date, tm.slot, tm.status, 
+                   r.name as resident_name, r.house_block, r.house_unit, r.contact as resident_phone
+            FROM technician_management tm
+            JOIN resident r ON tm.resident_id = r.resident_id
+            WHERE tm.tech_id = ? ORDER BY tm.assign_date ASC, tm.slot ASC
+        `, [req.admin.tech_id]);
+
+        res.json(tasks);
+    } catch (error) { res.status(500).json({ error: 'Failed to fetch tasks.' }); }
+});
+
+// PUT: Unified Profile Update (Works for Resident AND Technician)
+app.put('/api/profile/update', authenticateToken, async (req, res) => {
+    const { name, contact, password } = req.body;
+    const { resident_id, tech_id, id: admin_id } = req.admin;
+
+    try {
+        // 1. Update Password if provided
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            await db.query('UPDATE admin SET password_hash = ? WHERE admin_id = ?', [hashedPassword, admin_id]);
+        }
+
+        // 2. Update Role-Specific Table
+        if (resident_id) {
+            await db.query('UPDATE resident SET name = ?, contact = ? WHERE resident_id = ?', [name, contact, resident_id]);
+        } else if (tech_id) {
+            await db.query('UPDATE technician SET name = ?, contact = ? WHERE tech_id = ?', [name, contact, tech_id]);
+        }
+
+        res.json({ message: 'Profile updated successfully!' });
+    } catch (error) { res.status(500).json({ error: 'Update failed.' }); }
+});
+
+// PUT: Technician updates task status (e.g., In Progress, Resolved)
+app.put('/api/technician/tasks/:id/status', authenticateToken, async (req, res) => {
+    const { status } = req.body;
+    const assignment_id = req.params.id;
+
+    try {
+        // 1. Update status in the database
+        await db.query('UPDATE technician_management SET status = ? WHERE assignment_id = ?', [status, assignment_id]);
+
+        // 2. Fetch resident contact for notification
+        const [details] = await db.query(`
+            SELECT r.contact, r.name as resident_name, t.name as tech_name, t.skill
+            FROM technician_management tm
+            JOIN resident r ON tm.resident_id = r.resident_id
+            JOIN technician t ON tm.tech_id = t.tech_id
+            WHERE tm.assignment_id = ?
+        `, [assignment_id]);
+
+        if (details[0]?.contact) {
+            const message = `${status.toUpperCase()}! Your ${details[0].skill} request is now ${status}. Tech: ${details[0].tech_name}.`;
+            await sendConfirmationMessage(details[0].contact, message);
+        }
+
+        res.json({ message: `Task status updated to ${status}. Notification sent.` });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update status' });
+    }
+});
+
+app.get('/api/admin/technicians', authenticateToken, async (req, res) => {
+    if (req.admin.role !== 'SuperAdmin') return res.status(403).json({ error: 'Admin only.' });
+    try {
+        const [techs] = await db.query('SELECT * FROM technician');
+        res.json(techs);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch technical crew.' });
+    }
+});
+
+app.put('/api/admin/users/:id', authenticateToken, async (req, res) => {
+    if (req.admin.role !== 'SuperAdmin') return res.status(403).json({ error: 'Admin clearance required.' });
+
+    const { name, username, password, contact } = req.body;
+    const targetResidentId = req.params.id;
+
+    try {
+        // 1. Update Profile (Name/Contact)
+        await db.query('UPDATE resident SET name = ?, contact = ? WHERE resident_id = ?', [name, contact, targetResidentId]);
+
+        // 2. Update Credentials
+        let loginSql = 'UPDATE admin SET username = ?';
+        let loginParams = [username];
+
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            loginSql += ', password_hash = ?';
+            loginParams.push(hashedPassword);
+        }
+
+        loginSql += ' WHERE resident_id = ?';
+        loginParams.push(targetResidentId);
+
+        await db.query(loginSql, loginParams);
+        res.json({ message: 'User details synchronized successfully.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update user details.' });
+    }
+});
+
+// GET: Fetch current profile details for the logged-in user
+app.get('/api/profile/me', authenticateToken, async (req, res) => {
+    const { resident_id, tech_id } = req.admin;
+
+    try {
+        let data;
+        if (resident_id) {
+            [data] = await db.query('SELECT name, contact FROM resident WHERE resident_id = ?', [resident_id]);
+        } else if (tech_id) {
+            [data] = await db.query('SELECT name, contact FROM technician WHERE tech_id = ?', [tech_id]);
+        }
+
+        if (!data || data.length === 0) return res.status(404).json({ error: 'User not found' });
+
+        res.json(data[0]);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch profile info' });
+    }
+});
+
 cron.schedule('0 0 * * *', async () => {
     try {
         await db.query('CALL ProcessOverduePayments()');
@@ -499,6 +712,34 @@ cron.schedule('0 0 * * *', async () => {
         console.error('Failed to run nightly cron job:', error);
     }
 });
+
+const sendConfirmationMessage = async (to, message) => {
+    if (!to) {
+        console.error("[SMS Error] No phone number found.");
+        return;
+    }
+
+    try {
+        // 1. Force to string and remove spaces/special chars
+        // This prevents the "Short Code" misinterpretation
+        let cleanNumber = String(to).replace(/\s+/g, '');
+
+        // 2. Format check: If it doesn't have '+', prepend '+91'
+        const formattedNumber = cleanNumber.startsWith('+') ? cleanNumber : `+91${cleanNumber}`;
+
+        console.log(`[Attempting SMS] Sending to: ${formattedNumber}`);
+
+        await twilioClient.messages.create({
+            body: `UrbanNexus: ${message}`,
+            from: process.env.TWILIO_PHONE, // Ensure this is your Twilio #, not a short code
+            to: formattedNumber
+        });
+
+        console.log(`[SMS Sent] to ${formattedNumber}`);
+    } catch (err) {
+        console.error("[Twilio Error]", err.message);
+    }
+};
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

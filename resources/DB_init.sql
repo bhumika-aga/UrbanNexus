@@ -483,6 +483,22 @@ BEGIN
 END//
 DELIMITER ;
 
+DELIMITER //
+DROP TRIGGER IF EXISTS LogResidentDeletion//
+CREATE TRIGGER LogResidentDeletion
+    AFTER DELETE ON `UrbanNexus`.`resident`
+    FOR EACH ROW
+BEGIN
+    INSERT INTO `UrbanNexus`.`audit_log` (table_affected, record_id, action_type, details)
+    VALUES (
+               'resident',
+               OLD.resident_id,
+               'DELETE',
+               CONCAT('Resident removed from grid: ', OLD.name, ' (Unit: ', OLD.house_block, '-', OLD.house_unit, ')')
+           );
+END//
+DELIMITER ;
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, UserPlus, Home, Phone, X, Loader2 } from 'lucide-react';
+import { Search, UserPlus, Home, Phone, X, Trash2 } from 'lucide-react';
 import api from '../api';
 
 export default function ResidentDirectory() {
@@ -30,9 +30,21 @@ export default function ResidentDirectory() {
             await api.post('/residents', formData);
             setShowModal(false);
             setFormData({ name: '', house_block: '', house_floor: '', house_unit: '', ownership_status: 'Owner', contact: '', no_of_members: 1 });
-            fetchResidents(); // Refresh the grid
+            fetchResidents();
         } catch (error) {
             alert("Failed to sign resident: " + (error.response?.data?.error || error.message));
+        }
+    };
+
+    // Deletion Logic
+    const handleDelete = async (id, name) => {
+        if (window.confirm(`Are you sure you want to remove ${name} from the grid? This will delete their login and all history.`)) {
+            try {
+                await api.delete(`/residents/${id}`);
+                fetchResidents(); // Refresh the table after deletion
+            } catch (error) {
+                alert("Deletion failed: " + (error.response?.data?.error || error.message));
+            }
         }
     };
 
@@ -70,23 +82,33 @@ export default function ResidentDirectory() {
                         <th className="px-6 py-4">Unit</th>
                         <th className="px-6 py-4">Status</th>
                         <th className="px-6 py-4">Contact</th>
+                        <th className="px-6 py-4 text-right">Actions</th> {/* Added Actions Header */}
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-sm">
                     {loading ? (
-                        <tr><td colSpan="4" className="text-center py-10 text-gray-400 italic">Scanning the grid...</td></tr>
+                        <tr><td colSpan="5" className="text-center py-10 text-gray-400 italic">Scanning the grid...</td></tr>
                     ) : residents.map((resident) => (
-                        <tr key={resident.resident_id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={resident.resident_id} className="hover:bg-gray-50 transition-colors group">
                             <td className="px-6 py-4 font-semibold text-gray-900">{resident.name}</td>
                             <td className="px-6 py-4 text-gray-600 font-mono">{resident.house_block}-{resident.house_unit}</td>
                             <td className="px-6 py-4">
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                        resident.ownership_status === 'Owner' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                                    }`}>
-                                        {resident.ownership_status}
-                                    </span>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                    resident.ownership_status === 'Owner' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                    {resident.ownership_status}
+                                </span>
                             </td>
                             <td className="px-6 py-4 text-gray-500 font-mono">{resident.contact}</td>
+                            <td className="px-6 py-4 text-right">
+                                <button
+                                    onClick={() => handleDelete(resident.resident_id, resident.name)}
+                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                    title="Delete Resident"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </td>
                         </tr>
                     ))}
                     </tbody>
