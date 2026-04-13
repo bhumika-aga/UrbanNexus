@@ -5,6 +5,7 @@ const db = require('./db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authenticateToken = require('./authMiddleware');
+const cron = require('node-cron');
 
 const app = express();
 const PORT = process.env.PORT || 4720;
@@ -64,7 +65,8 @@ app.get('/api/residents', async (req, res) => {
         res.json({
             server: 'Running',
             database: 'Connected',
-            db_test_result: rows[0].name
+            // Fix: Add a check to handle empty tables safely
+            db_test_result: rows.length > 0 ? rows[0].name : 'No residents found'
         });
     } catch (error) {
         console.error(error);
@@ -75,6 +77,10 @@ app.get('/api/residents', async (req, res) => {
 // Add Resident
 app.post('/api/residents', authenticateToken, async (req, res) => {
     const { name, house_block, house_floor, house_unit, ownership_status, contact, no_of_members } = req.body;
+
+    if (req.admin.role !== 'SuperAdmin') {
+        return res.status(403).json({ error: 'Access denied. SuperAdmin clearance required.' });
+    }
 
     try {
         const [result] = await db.query(
@@ -92,6 +98,10 @@ app.post('/api/residents', authenticateToken, async (req, res) => {
 app.post('/api/technicians', authenticateToken, async (req, res) => {
     const { tech_id, name, contact, skill } = req.body;
 
+    if (req.admin.role !== 'SuperAdmin') {
+        return res.status(403).json({ error: 'Access denied. SuperAdmin clearance required.' });
+    }
+
     try {
         await db.query(
             'INSERT INTO technician (tech_id, name, contact, skill) VALUES (?, ?, ?, ?)',
@@ -107,6 +117,10 @@ app.post('/api/technicians', authenticateToken, async (req, res) => {
 // Add Amenity
 app.post('/api/amenities', authenticateToken, async (req, res) => {
     const { amenity_id, name, capacity } = req.body;
+
+    if (req.admin.role !== 'SuperAdmin') {
+        return res.status(403).json({ error: 'Access denied. SuperAdmin clearance required.' });
+    }
 
     try {
         await db.query(
@@ -124,6 +138,10 @@ app.post('/api/amenities', authenticateToken, async (req, res) => {
 app.post('/api/bookings/technician', authenticateToken, async (req, res) => {
 
     const { resident_id, skill, slot, assign_date } = req.body;
+
+    if (req.admin.role !== 'Resident' && req.admin.role !== 'SuperAdmin') {
+        return res.status(403).json({ error: 'Only Residents or Admins can create bookings.' });
+    }
 
     try {
         const [results] = await db.query(
@@ -150,6 +168,10 @@ app.post('/api/bookings/technician', authenticateToken, async (req, res) => {
 // Book Amenity
 app.post('/api/bookings/amenity', authenticateToken, async (req, res) => {
     const { resident_id, amenity_id, date, slot, capacity_booked } = req.body;
+
+    if (req.admin.role !== 'Resident' && req.admin.role !== 'SuperAdmin') {
+        return res.status(403).json({ error: 'Only Residents or Admins can create bookings.' });
+    }
 
     try {
         const [results] = await db.query(
@@ -181,7 +203,7 @@ app.post('/api/bookings/amenity', authenticateToken, async (req, res) => {
 
 // GET: Fetch Pending Dues for the currently logged-in Resident
 app.get('/api/residents/me/dues', authenticateToken, async (req, res) => {
-    // We extract the ID directly from the decrypted token, NOT the URL!
+
     const residentId = req.admin.resident_id;
 
     // Security Check: Make sure they are actually a resident
@@ -207,6 +229,11 @@ app.get('/api/residents/me/dues', authenticateToken, async (req, res) => {
 
 // POST: Trigger the Overdue Payment Cursor (Admin Task)
 app.post('/api/admin/process-overdue', authenticateToken, async (req, res) => {
+
+    if (req.admin.role !== 'SuperAdmin') {
+        return res.status(403).json({ error: 'Access denied. SuperAdmin clearance required.' });
+    }
+
     try {
         // This calls the procedure with the CURSOR to loop through and update statuses
         await db.query('CALL ProcessOverduePayments()');
@@ -228,6 +255,12 @@ app.post('/api/admin/process-overdue', authenticateToken, async (req, res) => {
 // GET: Search all payments with dynamic filters
 // Example usage: /api/admin/payments?status=Pending&type=Technician&search=TXN
 app.get('/api/admin/payments', authenticateToken, async (req, res) => {
+
+    // Add this check to: process-overdue, payments, residents/search, transactions, and audit-logs
+    if (req.admin.role !== 'SuperAdmin') {
+        return res.status(403).json({ error: 'Access denied. SuperAdmin clearance required.' });
+    }
+
     try {
         // 1. Grab variables from the URL query string
         const { status, type, search } = req.query;
@@ -270,6 +303,12 @@ app.get('/api/admin/payments', authenticateToken, async (req, res) => {
 // GET: Search and Filter Residents
 // Example: /api/admin/residents/search?name=Test&block=A&unit=101
 app.get('/api/admin/residents/search', authenticateToken, async (req, res) => {
+
+    // Add this check to: process-overdue, payments, residents/search, transactions, and audit-logs
+    if (req.admin.role !== 'SuperAdmin') {
+        return res.status(403).json({ error: 'Access denied. SuperAdmin clearance required.' });
+    }
+
     try {
         const { name, block, floor, unit } = req.query;
 
@@ -312,6 +351,12 @@ app.get('/api/admin/residents/search', authenticateToken, async (req, res) => {
 // GET: Advanced Transaction Search (Join Payments with Resident Details)
 // Example: /api/admin/transactions?status=Pending&block=A
 app.get('/api/admin/transactions', authenticateToken, async (req, res) => {
+
+    // Add this check to: process-overdue, payments, residents/search, transactions, and audit-logs
+    if (req.admin.role !== 'SuperAdmin') {
+        return res.status(403).json({ error: 'Access denied. SuperAdmin clearance required.' });
+    }
+
     try {
         const { status, block, resident_name } = req.query;
 
@@ -371,16 +416,24 @@ app.get('/api/admin/transactions', authenticateToken, async (req, res) => {
 // Example: /api/payments/TXN-TECH-12345/pay
 app.post('/api/payments/:trans_no/pay', authenticateToken, async (req, res) => {
     const transNo = req.params.trans_no;
+    const residentId = req.admin.resident_id;
 
     try {
-        // Update the payment status to 'Paid'
-        const [result] = await db.query(
-            'UPDATE `UrbanNexus`.`payment` SET status = ? WHERE trans_no = ?',
-            ['Paid', transNo]
-        );
+        // This query only updates the status if the trans_no belongs to the logged-in resident
+        // It checks both amenity and technician booking tables
+        const [result] = await db.query(`
+            UPDATE \`UrbanNexus\`.\`payment\` p
+            SET p.status = 'Paid'
+            WHERE p.trans_no = ? 
+            AND (
+                EXISTS (SELECT 1 FROM \`UrbanNexus\`.\`amenity_mgmt\` am WHERE am.trans_no = p.trans_no AND am.resident_id = ?)
+                OR 
+                EXISTS (SELECT 1 FROM \`UrbanNexus\`.\`technician_management\` tm WHERE tm.trans_no = p.trans_no AND tm.resident_id = ?)
+            )
+        `, [transNo, residentId, residentId]);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Transaction not found.' });
+            return res.status(403).json({ error: 'Transaction not found or you do not have permission to pay it.' });
         }
 
         res.status(200).json({ message: `Transaction ${transNo} successfully paid!` });
@@ -435,6 +488,15 @@ app.get('/api/admin/audit-logs', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Audit Log Error:', error);
         res.status(500).json({ error: 'Failed to fetch audit logs.' });
+    }
+});
+
+cron.schedule('0 0 * * *', async () => {
+    try {
+        await db.query('CALL ProcessOverduePayments()');
+        console.log('Nightly Overdue Payment check completed.');
+    } catch (error) {
+        console.error('Failed to run nightly cron job:', error);
     }
 });
 
