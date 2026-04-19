@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:3306/${DB_NAME:UrbanNexus}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:password}
+    password: ${DB_PASSWORD:Bhumika@1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
@@ -17,10 +17,6 @@ app:
   jwt:
     secret: ${JWT_SECRET:dGhpcy1pcy1hLXZlcnktc2VjdXJlLWtleS0yNTZiaXRzLW1pbmltdW0tc28taXQtY2FuLWJlLXVzZWQ=}
     expiration: 86400000 # 24 hours in milliseconds
-  twilio:
-    sid: ${TWILIO_SID:your_sid}
-    token: ${TWILIO_AUTH_TOKEN:your_token}
-    phone: ${TWILIO_PHONE:your_phone}
 
 logging:
   level:

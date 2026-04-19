@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2026 Bhumika Agarwal
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package com.urbannexus.service;
 
 import java.util.HashMap;
@@ -5,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,27 +37,22 @@ import com.urbannexus.repository.AdminRepository;
 import com.urbannexus.repository.AmenityMgmtRepository;
 import com.urbannexus.repository.PaymentRepository;
 import com.urbannexus.repository.ResidentRepository;
+import com.urbannexus.repository.TechnicianManagementRepository;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ResidentService {
 
-    @Autowired
-    private ResidentRepository residentRepository;
-
-    @Autowired
-    private AdminRepository adminRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private PaymentRepository paymentRepository;
-
-    @Autowired
-    private AmenityMgmtRepository amenityMgmtRepository;
+    private final ResidentRepository residentRepository;
+    private final AdminRepository adminRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final PaymentRepository paymentRepository;
+    private final AmenityMgmtRepository amenityMgmtRepository;
+    private final TechnicianManagementRepository technicianManagementRepository;
 
     @Transactional
     public Map<String, Object> addResident(String name, String houseBlock, String houseFloor, String houseUnit,
@@ -84,23 +100,12 @@ public class ResidentService {
     }
 
     public Map<String, Object> getBookings(Long residentId) {
-        // Querying specific raw query maps or using custom interfaces is common in
-        // reporting endpoints.
-        // The booking history for technicians requires a join, so leaving as native
-        // query map.
         List<Map<String, Object>> amenities = amenityMgmtRepository.getAmenityBookingsForResident(residentId);
-
-        // Let's implement an equivalent native query for technician bookings in
-        // standard JDBC format since we lost `getTechnicianBookingsForResident` in the
-        // previous code mapping.
-        // Wait, where is `getTechnicianBookingsForResident`? It was in
-        // `BookingRepository` but I removed it.
-        // We will pass an empty array or fix it if I missed it, let me assume it's just
-        // raw data for now.
+        List<Map<String, Object>> technicians = technicianManagementRepository.findBookingsByResidentId(residentId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("amenities", amenities);
-        response.put("technicians", List.of()); // Left blank for brevity as it was native mapped earlier
+        response.put("technicians", technicians);
         return response;
     }
 

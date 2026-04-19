@@ -19,7 +19,7 @@ The API and Persistence layer. Originally built on Node.js/Express, the backend 
 
 ### 2. `frontend/`
 
-The Interactive User Interface. A lightning-fast **React Hook** application powered by **Vite** and styled beautifully leveraging **Tailwind CSS**. It securely parses the backend JSON objects using JWT logic to provide isolated dashboards for Residents, Technicians, and Super Admins.
+The Interactive User Interface. A high-performance **React 19** application powered by **Vite**, **TypeScript**, and **Material-UI (MUI)**. It adopts a minimalist **Vercel/Apple-inspired** aesthetic with strict monochromatic themes and glassmorphism. It securely parses JWT tokens to provide tailored experiences for Residents, Technicians, and SuperAdmins.
 👉 [**Read the Frontend Architecture Documentation**](./frontend/README.md)
 
 ---

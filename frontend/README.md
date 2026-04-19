@@ -4,11 +4,13 @@ The `frontend` module is the visual core of the UrbanNexus platform, providing i
 
 ## 📱 Tech Stack & Tooling
 
-- **Core Framework:** React 18, integrated heavily with React Hooks (`useState`, `useEffect`, `useContext`).
-- **Vite Bundler:** Serves as the HMR (Hot Module Replacement) build tool keeping compilation footprints and local testing exceptionally fast versus legacy Webpack.
-- **Component Styling:** `Tailwind CSS`. We bypass complex traditional CSS files for scalable inline utility styling mapped via `postcss` generating a unified responsive application ecosystem regardless of screen dimension!
-- **Icons & Nav:** `lucide-react` constructs unified vector representations, while `react-router-dom` powers seamless client-side single-page (SPA) navigation arrays seamlessly linking modules.
-- **API Bridging:** Handled globally by `Axios`.
+- **Core Framework:** React 19, utilizing functional components and hooks (`useState`, `useEffect`, `useContext`).
+- **TypeScript:** Enforced strict typing across all components and API layers to ensure zero "any" types and robust compilation.
+- **Vite Bundler:** High-speed HMR build tool for optimized development and bundling.
+- **Component Library:** **Material-UI (MUI)**. Leverages a custom theme for a clean **Vercel/Apple-inspired** aesthetic, featuring glassmorphism and monochrome accents.
+- **Icons:** `lucide-react` for consistent, lightweight vector iconography.
+- **Routing:** `react-router-dom` for seamless SPA navigation.
+- **API Bridging:** `Axios` with interceptors for automatic JWT handling.
 
 ## 🔀 Application Workflows
 
