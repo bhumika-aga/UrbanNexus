@@ -1,22 +1,27 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
+import {
+  Navigate,
+  Route,
+  BrowserRouter as Router,
+  Routes,
+} from "react-router-dom";
+import Dashboard from "./components/Dashboard";
+import Login from "./components/Login";
 
 function App() {
-    return (
-        <Router>
-            <Routes>
-                {/* Default route redirects to login */}
-                <Route path="/" element={<Navigate to="/login" />} />
+  return (
+    <Router>
+      <Routes>
+        {/* Default route redirects to login */}
+        <Route path="/" element={<Navigate to="/login" />} />
 
-                {/* The Login Page */}
-                <Route path="/login" element={<Login />} />
+        {/* The Login Page */}
+        <Route path="/login" element={<Login />} />
 
-                {/* The Dynamic Dashboard */}
-                <Route path="/dashboard" element={<Dashboard />} />
-            </Routes>
-        </Router>
-    );
+        {/* The Dynamic Dashboard */}
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;

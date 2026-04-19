@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "UrbanNexus API Collection",
-    "description": "Comprehensive Postman collection for the UrbanNexus Spring Boot Backend, covering Auth, Residents, Technicians, Amenities, Bookings, Payments, and Admin functions.",
+    "description": "Comprehensive Postman collection for the UrbanNexus Spring Boot Backend.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -271,6 +271,28 @@
               ]
             }
           }
+        },
+        {
+          "name": "Delete Technician",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/technicians/101",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "technicians",
+                "101"
+              ]
+            }
+          }
         }
       ]
     },
@@ -323,6 +345,58 @@
               ],
               "path": [
                 "amenities"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Amenity",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sauber Tennis Court Updated\",\n  \"capacity\": 6\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/amenities/4",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "amenities",
+                "4"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Amenity",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/amenities/4",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "amenities",
+                "4"
               ]
             }
           }
