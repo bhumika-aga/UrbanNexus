@@ -17,6 +17,9 @@ import com.urbannexus.repository.AmenityMgmtRepository;
 import com.urbannexus.repository.PaymentRepository;
 import com.urbannexus.repository.ResidentRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ResidentService {
 
@@ -38,6 +41,7 @@ public class ResidentService {
     @Transactional
     public Map<String, Object> addResident(String name, String houseBlock, String houseFloor, String houseUnit,
             String ownershipStatus, String contact, Integer noOfMembers) {
+        log.info("Adding new resident: {} in block: {}", name, houseBlock);
         Resident resident = new Resident();
         resident.setName(name);
         resident.setHouseBlock(houseBlock);
@@ -61,6 +65,7 @@ public class ResidentService {
         admin.setResident(resident);
 
         adminRepository.save(admin);
+        log.info("Resident created successfully inside database with generated username: {}", username);
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Resident and Login created!");

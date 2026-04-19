@@ -13,6 +13,9 @@ import com.urbannexus.repository.AdminRepository;
 import com.urbannexus.security.JwtTokenProvider;
 import com.urbannexus.security.UserPrincipal;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class AuthService {
 
@@ -26,6 +29,7 @@ public class AuthService {
     private JwtTokenProvider tokenProvider;
 
     public AuthResponse login(LoginRequest request) {
+        log.debug("Attempting to find admin with username: {}", request.getUsername());
         Optional<Admin> adminOpt = adminRepository.findByUsername(request.getUsername());
 
         if (adminOpt.isEmpty()) {
@@ -49,6 +53,8 @@ public class AuthService {
                 techId);
 
         String token = tokenProvider.generateToken(principal);
+        log.info("Successfully generated JWT token for user: {} with role: {}", principal.getUsername(),
+                principal.getRole());
 
         return new AuthResponse("Login successful!", token, new AuthResponse.AdminInfo(
                 principal.getUsername(), principal.getRole()));

@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.ResidentService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/residents")
 public class ResidentController {
@@ -28,9 +31,11 @@ public class ResidentController {
     public ResponseEntity<?> addResident(@AuthenticationPrincipal UserPrincipal currentUser,
             @RequestBody Map<String, Object> payload) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
+            log.warn("Unauthorized addResident attempt by user: {}", currentUser.getUsername());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
         }
 
+        log.info("Processing addResident request by SuperAdmin for resident: {}", payload.get("name"));
         try {
             String name = (String) payload.get("name");
             String houseBlock = (String) payload.get("house_block");
