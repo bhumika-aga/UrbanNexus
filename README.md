@@ -1,39 +1,52 @@
-# UrbanNexus: Integrated Residential Operations & Resource System (urbannexus-dbms)
+# UrbanNexus: Integrated Residential Operations & Resource System
 
-A high-concurrency database management system designed for modern residential complexes to orchestrate the lifecycle of units, residents, maintenance workflows, and shared community resources.
+Welcome to the **UrbanNexus** monolith repository!
 
-Unlike traditional property management tools that rely on fragmented spreadsheets, `UrbanNexus` replaces manual tracking with a unified relational architecture that prioritizes **data consistency** and **transactional atomicity**. Every interaction—from reporting a leak to reserving a community hall—is governed by strict database-level constraints to ensure 100% operational reliability and financial transparency.
+UrbanNexus is a high-concurrency database management system and web application designed for modern residential complexes. It comprehensively orchestrates the lifecycle of housing units, residents, maintenance workflows, pending financial dues, and shared community amenity resources.
 
-## The Core Innovation: Atomic State Synchronization
+Unlike traditional property management tools that rely on fragmented spreadsheets, UrbanNexus implements a unified relational architecture prioritizing **data consistency** and **transactional atomicity**. Every interaction—from a resident reporting a structural leak to reserving a community hall—is governed by strict high-performance systems mapping securely from a React user interface down to strict database-level constraints.
 
-Standard management systems often suffer from "race conditions" where two residents might book the same slot simultaneously, or a maintenance task is assigned to an unavailable technician. `UrbanNexus` mitigates these risks by implementing **Constraint-Driven Logic** directly within the SQL layer, ensuring the database remains the absolute source of truth.
+---
 
-The system utilizes a **Synchronized Resource Engine** to manage overlapping states:
-* **Dynamic Availability Locking:** Utilizing `NOT EXISTS` subqueries and transactional stored procedures, the system verifies and locks resource slots in real-time, preventing double-booking without permanently freezing schedules.
-* **Atomic Completion:** Workflows like technician booking are bundled into strict SQL transactions (`START TRANSACTION` / `COMMIT`). If any part of the process fails—from finding a technician to generating the invoice—the entire operation rolls back safely.
-* **Automated Financial Triggers:** Database-level triggers intercept data before it is written, automatically calculating variables like GST tax to ensure the financial ledger remains pristine and tamper-proof.
+## 🏗 Repository Structure
 
-## Technical Stack
+This project uses a decoupled Full-Stack architecture split cleanly across two main environments. Detailed documentation for each environment is located in their respective directories:
 
-* **Framework / Backend Core:** Node.js with Express.js (Provides a robust, non-blocking RESTful API architecture).
-* **Database:** MySQL (Relational database management, enforcing strict ACID properties, stored procedures, and triggers).
-* **Database Driver:** `mysql2/promise` (Implements asynchronous connection pooling and secure, parameterized queries to prevent SQL injection).
-* **Authentication & Security:** JSON Web Tokens (JWT) for stateless, role-based session management, paired with `bcrypt` for cryptographic password hashing.
-* **API Testing / Consumer:** Postman (For precise endpoint validation, header configuration, and JSON payload testing).
+### 1. `backend/`
 
-## Architecture & Division of Labor
+The API and Persistence layer. Originally built on Node.js/Express, the backend has been successfully overhauled into an Enterprise-Grade **Java Spring Boot Application**. This layer uses **Spring Data JPA (Hibernate)** acting directly on a MySQL database, merging Stored Procedures with type-safe server logic.
+👉 [**Read the Backend Architecture Documentation**](./backend/README.md)
 
-This project utilizes a modular, backend-first architecture to facilitate rapid development and ironclad data handling:
+### 2. `frontend/`
 
-* **Database Architecture (Data Layer):** Manages the normalized relational schema in MySQL, designs optimized table structures (like decoupled `pricing` lookups), and authors advanced DBMS logic including Triggers and Stored Procedures.
-* **API Engineering (Routing Layer):** Develops asynchronous Express routes (`server.js`) to handle HTTP requests, parse JSON bodies, and securely interface with the MySQL connection pool.
-* **Security Integration (Middleware Layer):** Implements "Bouncer-pattern" middleware (`authMiddleware.js`) to intercept requests, validate JWT signatures, and ensure strictly authenticated access control before any database interaction occurs.
-* **Client Integration (Headless Architecture):** The backend serves as a headless API, outputting clean, structured JSON. This completely decouples the logic from the interface, allowing any modern frontend framework (React, Vue, HTML/JS) to easily consume the data.
+The Interactive User Interface. A lightning-fast **React Hook** application powered by **Vite** and styled beautifully leveraging **Tailwind CSS**. It securely parses the backend JSON objects using JWT logic to provide isolated dashboards for Residents, Technicians, and Super Admins.
+👉 [**Read the Frontend Architecture Documentation**](./frontend/README.md)
 
-## Key System Features
+---
 
-* **Role-Based Access Control:** Secure admin dashboard access governed by encrypted credentials and expiring web tokens.
-* **Intelligent Unit & Resident Mapping:** Dynamic tracking of ownership status, occupancy levels, and complex multi-resident relationships per unit.
-* **Automated Maintenance Lifecycle:** End-to-end ticket management featuring dynamic availability checks and automated technician assignment based on specialization.
-* **Collision-Proof Amenity Engine:** Real-time scheduling for shared facilities with built-in trigger logic to prevent capacity overbooking.
-* **Integrated Financial Ledger:** A transactional billing module that automatically applies taxes and links service delivery to dynamic pricing lookup tables.
+## ⚙️ Core Operational Concepts
+
+UrbanNexus mitigates standard property management "race conditions" where two residents might book the same physical slot simultaneously by implementing a **Synchronized Resource Engine**:
+
+1. **JPA Entity Synchronization:** The complete MySQL schema relies on strictly mapped `@Entity` graphs across Java guaranteeing type-safe manipulation.
+2. **Database-Level Locks:** Standard management systems check overlap in the code. UrbanNexus checks overlap natively via strict database `BEFORE INSERT` triggers and optimized **Stored Procedures** routed directly through Spring Data's `@Procedure` wrapper.
+3. **Automated Subsystems:** Recurring logic such as checking for overdue residential payments is automated utilizing a Java `@Scheduled(cron)` workflow hitting batch transactions overnight, entirely bypassing manual admin calculation.
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+Before running the system, ensure you have the following installed locally:
+
+- **Java Development Kit (JDK) 17** for compiling the Spring App.
+- **Maven 3.8+** for backend dependency management.
+- **Node.js (v18+)** and **npm** for frontend bundling.
+- **MySQL Server (v8+)** initialized and running.
+
+### Initialization Workflow
+
+1. **Initialize the Database:** Run the scripts located in `resources/DB_init.sql` directly on your MySQL instance.
+2. **Start the Backend Layer:** Follow the compilation limits in the [Backend README](./backend/README.md) to boot the `localhost:4720` Spring Tomcat server.
+3. **Start the Frontend UI:** Follow run setups in the [Frontend README](./frontend/README.md) to bootstrap the Vite hot-reloading window!
+
+_(For automated testing, a comprehensive `UrbanNexus_Postman_Collection.json` is provided in the repository root)._

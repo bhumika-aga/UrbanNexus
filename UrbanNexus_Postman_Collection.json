@@ -1,0 +1,628 @@
+{
+  "info": {
+    "name": "UrbanNexus API Collection",
+    "description": "Comprehensive Postman collection for the UrbanNexus Spring Boot Backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4720/api",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.token) {",
+                  "    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"toto_admin\",\n  \"password\": \"pwd123#\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profile/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile",
+                "me"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Residents",
+      "item": [
+        {
+          "name": "Add Resident (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Charles Leclerc\",\n  \"house_block\": \"B\",\n  \"house_floor\": \"16\",\n  \"house_unit\": \"1604\",\n  \"ownership_status\": \"Tenant\",\n  \"contact\": \"9123456780\",\n  \"no_of_members\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/residents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "residents"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Dues",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/residents/me/dues",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "residents",
+                "me",
+                "dues"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/residents/me/bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "residents",
+                "me",
+                "bookings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Resident",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/residents/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "residents",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Technicians",
+      "item": [
+        {
+          "name": "Add Technician (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tech_id\": 101,\n  \"name\": \"Max Verstappen\",\n  \"contact\": \"9876543210\",\n  \"skill\": \"Plumber\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/technicians",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "technicians"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/technicians/me/tasks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "technicians",
+                "me",
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Task Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Completed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/technicians/tasks/1/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "technicians",
+                "tasks",
+                "1",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Technician",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/technicians/101",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "technicians",
+                "101"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Amenities",
+      "item": [
+        {
+          "name": "Add Amenity (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amenity_id\": 4,\n  \"name\": \"Sauber Tennis Court\",\n  \"capacity\": 4\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/amenities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "amenities"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Amenities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/amenities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "amenities"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Amenity",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sauber Tennis Court Updated\",\n  \"capacity\": 6\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/amenities/4",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "amenities",
+                "4"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Amenity",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/amenities/4",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "amenities",
+                "4"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Bookings",
+      "item": [
+        {
+          "name": "Book Technician",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resident_id\": 1,\n  \"skill\": \"Plumber\",\n  \"slot\": 1,\n  \"assign_date\": \"2026-05-10\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bookings/technician",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                "technician"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Book Amenity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resident_id\": 1,\n  \"amenity_id\": 1,\n  \"date\": \"2026-05-15\",\n  \"slot\": 2,\n  \"capacity_booked\": 4\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/bookings/amenity",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                "amenity"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Payments",
+      "item": [
+        {
+          "name": "Pay Transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/TXN-12345/pay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "TXN-12345",
+                "pay"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Admin Dashboard",
+      "item": [
+        {
+          "name": "Search Residents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/residents/search?name=Lewis",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "residents",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Lewis"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Technicians",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/technicians",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "technicians"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/transactions?status=Pending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Pending"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Process Overdue Payments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/process-overdue",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "process-overdue"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/audit-logs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "audit-logs"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
