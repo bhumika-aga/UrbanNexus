@@ -22,11 +22,16 @@
 
 package com.urbannexus.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.urbannexus.model.TechnicianManagement;
+import com.urbannexus.model.Pricing;
+import com.urbannexus.model.Pricing.PricingCategory;
+import com.urbannexus.model.PricingId;
 
 @Repository
-public interface BookingRepository extends JpaRepository<TechnicianManagement, Long> {
+public interface PricingRepository extends JpaRepository<Pricing, PricingId> {
+    Optional<Pricing> findByItemNameAndCategory(String itemName, PricingCategory category);
 }

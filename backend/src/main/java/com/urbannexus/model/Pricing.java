@@ -20,13 +20,37 @@
  * SOFTWARE.
  */
 
-package com.urbannexus.repository;
+package com.urbannexus.model;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import java.math.BigDecimal;
 
-import com.urbannexus.model.TechnicianManagement;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+import lombok.Data;
 
-@Repository
-public interface BookingRepository extends JpaRepository<TechnicianManagement, Long> {
+@Data
+@Entity
+@Table(name = "pricing")
+@IdClass(PricingId.class)
+public class Pricing {
+
+    @Id
+    @Column(name = "item_name")
+    private String itemName;
+
+    @Id
+    @Enumerated(EnumType.STRING)
+    private PricingCategory category;
+
+    @Column(name = "base_price", nullable = false)
+    private BigDecimal basePrice;
+
+    public enum PricingCategory {
+        Technician, Amenity
+    }
 }

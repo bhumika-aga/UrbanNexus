@@ -23,11 +23,13 @@
 package com.urbannexus.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -51,4 +53,16 @@ public class Payment {
 
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
+
+    @PrePersist
+    public void calculateGST() {
+        if (this.cost != null) {
+            // Apply 18% GST
+            this.cost = this.cost.multiply(new java.math.BigDecimal("1.18"))
+                    .setScale(2, RoundingMode.HALF_UP);
+        }
+        if (this.paymentDate == null) {
+            this.paymentDate = LocalDateTime.now();
+        }
+    }
 }

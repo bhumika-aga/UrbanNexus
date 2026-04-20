@@ -1,52 +1,75 @@
-# UrbanNexus: Integrated Residential Operations & Resource System
+# UrbanNexus: Enterprise Residential Operations Ecosystem
 
-Welcome to the **UrbanNexus** monolith repository!
+UrbanNexus is a high-bandwidth, full-stack ERP designed for premium residential complexes. It orchestrates the mission-critical intersection of human resources (Technicians), infrastructure (Amenities), and community (Residents) through a unified relational engine that prioritizes transactional integrity and a premium, modern user experience.
 
-UrbanNexus is a high-concurrency database management system and web application designed for modern residential complexes. It comprehensively orchestrates the lifecycle of housing units, residents, maintenance workflows, pending financial dues, and shared community amenity resources.
+## 🏛 Technical Logic & Architecture
 
-Unlike traditional property management tools that rely on fragmented spreadsheets, UrbanNexus implements a unified relational architecture prioritizing **data consistency** and **transactional atomicity**. Every interaction—from a resident reporting a structural leak to reserving a community hall—is governed by strict high-performance systems mapping securely from a React user interface down to strict database-level constraints.
+### 1. Persistence & Data Integrity (Cross-DB Engine)
 
----
+The cornerstone of UrbanNexus is **Database Agnosticism**. To support seamless deployment across both MySQL and H2 environments, the system utilizes a normalized relational schema:
 
-## 🏗 Repository Structure
+- **Universal DDL**: The schema scripts are optimized for compatibility with modern relational dialects, ensuring identical behavior across local development (MySQL) and standalone production (H2).
+- **Persistent Production Hub**: In production mode, the system utilizes a **File-Based H2 Database** (`urbannexus_db.mv.db`). This allows the platform to maintain data persistence across restarts without requiring a dedicated external database server.
+- **Boot Consistency**: The system utilizes Spring SQL Initialization (`schema.sql` and `data.sql`) to reconstruct the operational environment on every boot, ensuring a reliable state for field operations.
 
-This project uses a decoupled Full-Stack architecture split cleanly across two main environments. Detailed documentation for each environment is located in their respective directories:
+### 2. Business Engine (Spring Boot 3.5 & Java 17)
 
-### 1. `backend/`
+The backend acts as the intelligent orchestrator, housing the complex business logic that ensures community stability:
 
-The API and Persistence layer. Originally built on Node.js/Express, the backend has been successfully overhauled into an Enterprise-Grade **Java Spring Boot Application**. This layer uses **Spring Data JPA (Hibernate)** acting directly on a MySQL database, merging Stored Procedures with type-safe server logic.
-👉 [**Read the Backend Architecture Documentation**](./backend/README.md)
+- **Service-Layer Transactionality**: Mission-critical operations like technician availability matching and amenity capacity checking have been refactored from legacy SQL procedures into **Java Services**. This ensures that transactional integrity is maintained via Spring's `@Transactional` boundary, regardless of the underlying database.
+- **Automated Fiscal Rules**:
+  - **Dynamic GST**: An 18% GST is automatically applied to all community payments via JPA lifecycle hooks (`@PrePersist`).
+  - **Overdue Management**: Scheduled background tasks (`@Scheduled`) periodically audit the financial ledger to enforce payment status transitions.
+- **Stateless RBAC Security**: JWT-based security extracts role claims (`SuperAdmin`, `Technician`, `Resident`) to enforce strict server-side permissions through Spring Security.
 
-### 2. `frontend/`
+### 3. User Experience (React 19 & "Royal Indigo" Design)
 
-The Interactive User Interface. A high-performance **React 19** application powered by **Vite**, **TypeScript**, and **Material-UI (MUI)**. It adopts a minimalist **Vercel/Apple-inspired** aesthetic with strict monochromatic themes and glassmorphism. It securely parses JWT tokens to provide tailored experiences for Residents, Technicians, and SuperAdmins.
-👉 [**Read the Frontend Architecture Documentation**](./frontend/README.md)
+- **Royal Indigo Design System (v1.0)**: A curated design language utilizing Indigo (`#6366f1`) and Slate (`#1e293b`) tokens.
+- **Field Ops Control Center**: High-fidelity dashboard for technicians with real-time status toggling.
+- **Resident Portal**: Intuitive interface for resource booking and ledger auditing.
 
----
-
-## ⚙️ Core Operational Concepts
-
-UrbanNexus mitigates standard property management "race conditions" where two residents might book the same physical slot simultaneously by implementing a **Synchronized Resource Engine**:
-
-1. **JPA Entity Synchronization:** The complete MySQL schema relies on strictly mapped `@Entity` graphs across Java guaranteeing type-safe manipulation.
-2. **Database-Level Locks:** Standard management systems check overlap in the code. UrbanNexus checks overlap natively via strict database `BEFORE INSERT` triggers and optimized **Stored Procedures** routed directly through Spring Data's `@Procedure` wrapper.
-3. **Automated Subsystems:** Recurring logic such as checking for overdue residential payments is automated utilizing a Java `@Scheduled(cron)` workflow hitting batch transactions overnight, entirely bypassing manual admin calculation.
-
-## 🚀 Getting Started
+## 🚀 Deployment & Operations
 
 ### Prerequisites
 
-Before running the system, ensure you have the following installed locally:
+- **JDK 17** | **Maven 3.8+** | **Node.js v18+**
 
-- **Java Development Kit (JDK) 17** for compiling the Spring App.
-- **Maven 3.8+** for backend dependency management.
-- **Node.js (v18+)** and **npm** for frontend bundling.
-- **MySQL Server (v8+)** initialized and running.
+### Rapid Start (Production Mode - H2)
 
-### Initialization Workflow
+By default, the system starts in **Production Mode** using an embedded, persistent H2 database.
 
-1. **Initialize the Database:** Run the scripts located in `resources/DB_init.sql` directly on your MySQL instance.
-2. **Start the Backend Layer:** Follow the compilation limits in the [Backend README](./backend/README.md) to boot the `localhost:4720` Spring Tomcat server.
-3. **Start the Frontend UI:** Follow run setups in the [Frontend README](./frontend/README.md) to bootstrap the Vite hot-reloading window!
+1. **Backend**:
 
-_(For automated testing, a comprehensive `UrbanNexus_Postman_Collection.json` is provided in the repository root)._
+   ```bash
+   cd backend && mvn spring-boot:run -Dspring.profiles.active=prod
+   ```
+
+   _The database file will be created automatically in the project root._
+
+2. **Frontend**:
+
+   ```bash
+   cd frontend && npm install && npm run dev
+   ```
+
+### Development Mode (MySQL)
+
+To run with a local MySQL instance, use the `dev` profile:
+
+1. Ensure a MySQL database named `UrbanNexus` exists.
+2. Update `application.yml` with your local credentials.
+3. Start the backend:
+
+   ```bash
+   mvn spring-boot:run -Dspring.profiles.active=dev
+   ```
+
+## 🧪 API Verification (Postman)
+
+- **Path**: `resources/UrbanNexus_Postman_Collection.json`
+- **Admin**: `toto_admin` / `pwd123#`
+- **Resident**: `sir_lewis` / `pwd123#`
+
+---
+
+© 2026 UrbanNexus Engineering. Engineered for the Future of Community Living.

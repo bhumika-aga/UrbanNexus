@@ -52,4 +52,6 @@ public interface TechnicianRepository extends JpaRepository<Technician, Long> {
                         WHERE tm.assignment_id = :assignmentId
                         """, nativeQuery = true)
         Map<String, Object> getTaskDetails(@Param("assignmentId") Long assignmentId);
+
+        List<Technician> findBySkill(String skill);
 }

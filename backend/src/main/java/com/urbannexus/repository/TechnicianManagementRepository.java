@@ -22,6 +22,10 @@
 
 package com.urbannexus.repository;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -39,5 +43,7 @@ public interface TechnicianManagementRepository extends JpaRepository<Technician
             "FROM technician_management tm " +
             "JOIN technician t ON tm.tech_id = t.tech_id " +
             "WHERE tm.resident_id = :residentId", nativeQuery = true)
-    java.util.List<java.util.Map<String, Object>> findBookingsByResidentId(@Param("residentId") Long residentId);
+    List<Map<String, Object>> findBookingsByResidentId(@Param("residentId") Long residentId);
+
+    boolean existsByTechnician_TechIdAndAssignDateAndSlot(Long techId, LocalDate assignDate, Integer slot);
 }
