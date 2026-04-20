@@ -1,7 +1,7 @@
 -- UrbanNexus Seed Data (Universal)
 
 INSERT INTO resident (resident_id, name, house_block, house_floor, house_unit, ownership_status, contact, no_of_members)
-VALUES (1, 'Lewis Hamilton', 'A', '4', '44', 'Owner', '9444444444', 2);
+VALUES (1, 'John Doe', 'A', '4', '44', 'Owner', '9444444444', 2);
 
 INSERT INTO amenity (amenity_id, name, capacity)
 VALUES (1, 'Paddock Club Lounge', 20),
@@ -9,8 +9,8 @@ VALUES (1, 'Paddock Club Lounge', 20),
        (3, 'Parc Fermé Gym', 10);
 
 INSERT INTO admin (username, password_hash, role, resident_id)
-VALUES ('sir_lewis', '$2b$10$qzIQR37Qo.GBQvgaXFSMeerZukbS7G1WTAHwRROGlB5IHjf9j3mR6', 'Resident', 1),
-       ('toto_admin', '$2b$10$qzIQR37Qo.GBQvgaXFSMeerZukbS7G1WTAHwRROGlB5IHjf9j3mR6', 'SuperAdmin', NULL);
+VALUES ('bhumika', '$2b$10$qzIQR37Qo.GBQvgaXFSMeerZukbS7G1WTAHwRROGlB5IHjf9j3mR6', 'Resident', 1),
+       ('admin', '$2b$10$qzIQR37Qo.GBQvgaXFSMeerZukbS7G1WTAHwRROGlB5IHjf9j3mR6', 'SuperAdmin', NULL);
 
 INSERT INTO pricing (item_name, category, base_price)
 VALUES ('Plumber', 'Technician', 500.00),
