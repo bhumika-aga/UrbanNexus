@@ -19,7 +19,7 @@ spring:
     init:
       mode: always
       platform: h2
-      separator: //
+      separator: ";"
 
 logging:
   level:
