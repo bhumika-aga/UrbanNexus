@@ -20,8 +20,9 @@
  * SOFTWARE.
  */
 
-import {AppBar, Avatar, Box, Button, Chip, Container, Toolbar, Tooltip, Typography,} from "@mui/material";
-import {LayoutDashboard, LogOut, UserIcon} from "lucide-react";
+import {AppBar, Avatar, Box, Button, Chip, Container, Toolbar, Tooltip, Typography} from "@mui/material";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faGaugeHigh, faSignOutAlt, faUser,} from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 import {Navigate} from "react-router-dom";
 import {useAuth} from "../context/AuthContext";
@@ -72,7 +73,7 @@ const Dashboard: React.FC = () => {
                                     justifyContent: "center",
                                 }}
                             >
-                                <LayoutDashboard size={18} color="white"/>
+                                <FontAwesomeIcon icon={faGaugeHigh} style={{fontSize: 18, color: "white"}}/>
                             </Box>
                             <Typography
                                 variant="h6"
@@ -94,7 +95,7 @@ const Dashboard: React.FC = () => {
                             <Button
                                 size="small"
                                 onClick={() => setIsProfileView(false)}
-                                startIcon={<LayoutDashboard size={16}/>}
+                                startIcon={<FontAwesomeIcon icon={faGaugeHigh} style={{fontSize: 16}}/>}
                                 sx={{
                                     color: !isProfileView ? "primary.main" : "#666",
                                     fontWeight: 700,
@@ -106,7 +107,7 @@ const Dashboard: React.FC = () => {
                             <Button
                                 size="small"
                                 onClick={() => setIsProfileView(true)}
-                                startIcon={<UserIcon size={16}/>}
+                                startIcon={<FontAwesomeIcon icon={faUser} style={{fontSize: 16}}/>}
                                 sx={{
                                     color: isProfileView ? "primary.main" : "#666",
                                     fontWeight: 700,
@@ -139,7 +140,7 @@ const Dashboard: React.FC = () => {
                                             cursor: "pointer",
                                         }}
                                     >
-                                        <UserIcon size={14}/>
+                                        <FontAwesomeIcon icon={faUser} style={{fontSize: 14}}/>
                                     </Avatar>
                                 </Tooltip>
                             </Box>
@@ -147,7 +148,7 @@ const Dashboard: React.FC = () => {
                             <Button
                                 size="small"
                                 onClick={logout}
-                                startIcon={<LogOut size={16}/>}
+                                startIcon={<FontAwesomeIcon icon={faSignOutAlt} style={{fontSize: 16}}/>}
                                 sx={{
                                     color: "#666",
                                     fontWeight: 600,

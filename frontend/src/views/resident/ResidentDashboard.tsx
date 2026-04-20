@@ -20,9 +20,9 @@
  * SOFTWARE.
  */
 
-import {Box, Card, CardActionArea, CardContent, Typography} from "@mui/material";
-import Grid from "@mui/material/Grid2";
-import {Calendar, CreditCard, History, Wrench} from "lucide-react";
+import {Box, Card, CardActionArea, CardContent, Grid, Typography} from "@mui/material";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCalendarAlt, faCreditCard, faHistory, faWrench,} from "@fortawesome/free-solid-svg-icons";
 import React, {useState} from "react";
 import AmenityBooker from "./AmenityBooker";
 import DuesManager from "./DuesManager";
@@ -76,7 +76,8 @@ const ResidentDashboard: React.FC = () => {
                                                     mb: 3,
                                                 }}
                                             >
-                                                <CreditCard color="#991b1b"/>
+                                                <FontAwesomeIcon icon={faCreditCard}
+                                                                 style={{color: "#991b1b", fontSize: 24}}/>
                                             </Box>
                                             <Typography variant="h5" sx={{fontWeight: 800, mb: 1}}>
                                                 My Dues
@@ -108,7 +109,8 @@ const ResidentDashboard: React.FC = () => {
                                                     mb: 3,
                                                 }}
                                             >
-                                                <Calendar color="#166534"/>
+                                                <FontAwesomeIcon icon={faCalendarAlt}
+                                                                 style={{color: "#166534", fontSize: 24}}/>
                                             </Box>
                                             <Typography variant="h5" sx={{fontWeight: 800, mb: 1}}>
                                                 Facilities
@@ -140,7 +142,8 @@ const ResidentDashboard: React.FC = () => {
                                                     mb: 3,
                                                 }}
                                             >
-                                                <Wrench color="#6366f1"/>
+                                                <FontAwesomeIcon icon={faWrench}
+                                                                 style={{color: "#6366f1", fontSize: 24}}/>
                                             </Box>
                                             <Typography variant="h5" sx={{fontWeight: 800, mb: 1}}>
                                                 Staff Support
@@ -172,7 +175,8 @@ const ResidentDashboard: React.FC = () => {
                                                     mb: 3,
                                                 }}
                                             >
-                                                <History color="#6366f1"/>
+                                                <FontAwesomeIcon icon={faHistory}
+                                                                 style={{color: "#6366f1", fontSize: 24}}/>
                                             </Box>
                                             <Typography variant="h5" sx={{fontWeight: 800, mb: 1}}>
                                                 My Activity

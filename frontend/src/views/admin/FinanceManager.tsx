@@ -35,7 +35,8 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import {ArrowUpRight, RefreshCw, Search} from "lucide-react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faArrowUpRightFromSquare, faSearch, faSyncAlt,} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
 import api from "../../api/axiosClient";
 import {Transaction} from "../../types";
@@ -112,7 +113,7 @@ const FinanceManager: React.FC = () => {
                         input: {
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <Search size={16}/>
+                                    <FontAwesomeIcon icon={faSearch} style={{fontSize: 16}}/>
                                 </InputAdornment>
                             ),
                         },
@@ -125,7 +126,7 @@ const FinanceManager: React.FC = () => {
                         scanning ? (
                             <CircularProgress size={16} color="inherit"/>
                         ) : (
-                            <RefreshCw size={18}/>
+                            <FontAwesomeIcon icon={faSyncAlt} style={{fontSize: 18}}/>
                         )
                     }
                     onClick={runOverdueScan}
@@ -276,7 +277,8 @@ const FinanceManager: React.FC = () => {
                                             <Button
                                                 size="small"
                                                 variant="text"
-                                                endIcon={<ArrowUpRight size={14}/>}
+                                                endIcon={<FontAwesomeIcon icon={faArrowUpRightFromSquare}
+                                                                          style={{fontSize: 14}}/>}
                                                 onClick={() => processPayment(tx.trans_no)}
                                                 sx={{fontWeight: 700, color: "#1e40af"}}
                                             >

@@ -20,9 +20,10 @@
  * SOFTWARE.
  */
 
-import {Box, Card, Grid2, Typography} from "@mui/material";
+import {Box, Card, Grid, Typography} from "@mui/material";
 import {alpha} from "@mui/material/styles";
-import {CheckCircle2, ListChecks, Star, Zap} from "lucide-react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faBolt, faCheckCircle, faListCheck, faStar,} from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 import {Booking} from "../../types";
 
@@ -38,33 +39,33 @@ const StatsGrid: React.FC<StatsGridProps> = ({tasks}) => {
         {
             label: "Resolved",
             value: resolvedCount,
-            icon: <CheckCircle2 size={20}/>,
+            icon: <FontAwesomeIcon icon={faCheckCircle} style={{fontSize: 20}}/>,
             color: "#10b981",
         },
         {
             label: "Active",
             value: activeCount,
-            icon: <ListChecks size={20}/>,
+            icon: <FontAwesomeIcon icon={faListCheck} style={{fontSize: 20}}/>,
             color: "#6366f1",
         },
         {
             label: "Efficiency",
             value: resolvedCount > 0 ? "94%" : "--",
-            icon: <Zap size={20}/>,
+            icon: <FontAwesomeIcon icon={faBolt} style={{fontSize: 20}}/>,
             color: "#a855f7",
         },
         {
             label: "Rating",
             value: "4.9",
-            icon: <Star size={20}/>,
+            icon: <FontAwesomeIcon icon={faStar} style={{fontSize: 20}}/>,
             color: "#f59e0b",
         },
     ];
 
     return (
-        <Grid2 container spacing={3} sx={{mb: 6}}>
+        <Grid container spacing={3} sx={{mb: 6}}>
             {stats.map((stat, i) => (
-                <Grid2 size={{xs: 12, sm: 6, md: 3}} key={i}>
+                <Grid size={{xs: 12, sm: 6, md: 3}} key={i}>
                     <Card
                         sx={{
                             p: 3,
@@ -116,9 +117,9 @@ const StatsGrid: React.FC<StatsGridProps> = ({tasks}) => {
                             </Typography>
                         </Box>
                     </Card>
-                </Grid2>
+                </Grid>
             ))}
-        </Grid2>
+        </Grid>
     );
 };
 

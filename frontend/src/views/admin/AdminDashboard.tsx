@@ -20,9 +20,9 @@
  * SOFTWARE.
  */
 
-import {Box, Card, CardContent, CircularProgress, Tab, Tabs, Typography,} from "@mui/material";
-import Grid from "@mui/material/Grid2";
-import {Activity, IndianRupee, Users, Wrench} from "lucide-react";
+import {Box, Card, CardContent, CircularProgress, Grid, Tab, Tabs, Typography,} from "@mui/material";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faChartLine, faIndianRupeeSign, faUsers, faWrench,} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
 import api from "../../api/axiosClient";
 import AssignmentManager from "./AssignmentManager";
@@ -101,7 +101,10 @@ const AdminDashboard: React.FC = () => {
                             <Box
                                 sx={{display: "flex", justifyContent: "space-between", mb: 2}}
                             >
-                                <Users size={20} color="#666"/>
+                                <FontAwesomeIcon
+                                    icon={faUsers}
+                                    style={{fontSize: 20, color: "#666"}}
+                                />
                                 <Typography
                                     variant="caption"
                                     sx={{fontWeight: 700, color: "success.main"}}
@@ -132,7 +135,10 @@ const AdminDashboard: React.FC = () => {
                             <Box
                                 sx={{display: "flex", justifyContent: "space-between", mb: 2}}
                             >
-                                <Activity size={20} color="#666"/>
+                                <FontAwesomeIcon
+                                    icon={faChartLine}
+                                    style={{fontSize: 20, color: "#666"}}
+                                />
                                 <Typography
                                     variant="caption"
                                     sx={{fontWeight: 700, color: "success.main"}}
@@ -159,7 +165,10 @@ const AdminDashboard: React.FC = () => {
                             <Box
                                 sx={{display: "flex", justifyContent: "space-between", mb: 2}}
                             >
-                                <IndianRupee size={20} color="#666"/>
+                                <FontAwesomeIcon
+                                    icon={faIndianRupeeSign}
+                                    style={{fontSize: 20, color: "#666"}}
+                                />
                                 <Typography
                                     variant="caption"
                                     sx={{fontWeight: 700, color: "warning.main"}}
@@ -190,7 +199,10 @@ const AdminDashboard: React.FC = () => {
                             <Box
                                 sx={{display: "flex", justifyContent: "space-between", mb: 2}}
                             >
-                                <Wrench size={20} color="#666"/>
+                                <FontAwesomeIcon
+                                    icon={faWrench}
+                                    style={{fontSize: 20, color: "#666"}}
+                                />
                                 <Typography
                                     variant="caption"
                                     sx={{fontWeight: 700, color: "error.main"}}

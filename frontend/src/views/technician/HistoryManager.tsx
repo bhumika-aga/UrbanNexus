@@ -22,7 +22,8 @@
 
 import {Box, Card, Chip, Paper, Stack, Typography} from "@mui/material";
 import {alpha} from "@mui/material/styles";
-import {CheckCircle2, Clock, MapPin, User} from "lucide-react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCheckCircle, faClock, faMapMarkerAlt, faUser,} from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 import {Booking} from "../../types";
 
@@ -78,7 +79,7 @@ const HistoryManager: React.FC<HistoryManagerProps> = ({tasks}) => {
                                             color: "#10b981",
                                         }}
                                     >
-                                        <CheckCircle2 size={16}/>
+                                        <FontAwesomeIcon icon={faCheckCircle} style={{fontSize: 16}}/>
                                     </Box>
                                     <Typography
                                         variant="caption"
@@ -111,7 +112,7 @@ const HistoryManager: React.FC<HistoryManagerProps> = ({tasks}) => {
                                             color: "text.secondary",
                                         }}
                                     >
-                                        <User size={14}/>
+                                        <FontAwesomeIcon icon={faUser} style={{fontSize: 14}}/>
                                         <Typography variant="caption" sx={{fontWeight: 600}}>
                                             Unit{" "}
                                             {task.booking_id
@@ -127,7 +128,7 @@ const HistoryManager: React.FC<HistoryManagerProps> = ({tasks}) => {
                                             color: "text.secondary",
                                         }}
                                     >
-                                        <Clock size={14}/>
+                                        <FontAwesomeIcon icon={faClock} style={{fontSize: 14}}/>
                                         <Typography variant="caption" sx={{fontWeight: 600}}>
                                             Slot {task.slot}
                                         </Typography>
@@ -140,7 +141,7 @@ const HistoryManager: React.FC<HistoryManagerProps> = ({tasks}) => {
                                             color: "text.secondary",
                                         }}
                                     >
-                                        <MapPin size={14}/>
+                                        <FontAwesomeIcon icon={faMapMarkerAlt} style={{fontSize: 14}}/>
                                         <Typography variant="caption" sx={{fontWeight: 600}}>
                                             Field Ops
                                         </Typography>

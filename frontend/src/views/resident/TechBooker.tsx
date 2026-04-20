@@ -26,6 +26,7 @@ import {
     Card,
     CardContent,
     CircularProgress,
+    Grid,
     IconButton,
     MenuItem,
     Paper,
@@ -33,8 +34,9 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
-import {ChevronLeft, Info, Wrench} from "lucide-react";
+
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faChevronLeft, faInfoCircle, faWrench,} from "@fortawesome/free-solid-svg-icons";
 import React, {useState} from "react";
 import api from "../../api/axiosClient";
 
@@ -75,7 +77,7 @@ const TechBooker: React.FC<Props> = ({onBack}) => {
         <Box>
             <Box sx={{mb: 4, display: "flex", alignItems: "center", gap: 2}}>
                 <IconButton onClick={onBack} size="small">
-                    <ChevronLeft size={20}/>
+                    <FontAwesomeIcon icon={faChevronLeft} style={{fontSize: 20}}/>
                 </IconButton>
                 <Typography variant="h4" sx={{fontWeight: 800}}>
                     Request Technical Support
@@ -114,7 +116,10 @@ const TechBooker: React.FC<Props> = ({onBack}) => {
                                                         : "text.secondary",
                                             }}
                                         >
-                                            <Wrench size={20}/>
+                                            <FontAwesomeIcon
+                                                icon={faWrench}
+                                                style={{fontSize: 20}}
+                                            />
                                         </Box>
                                         <Typography
                                             variant="subtitle1"
@@ -149,7 +154,7 @@ const TechBooker: React.FC<Props> = ({onBack}) => {
                                 onChange={(e) =>
                                     setFormData({...formData, assign_date: e.target.value})
                                 }
-                                InputLabelProps={{shrink: true}}
+                                slotProps={{inputLabel: {shrink: true}}}
                             />
                             <TextField
                                 fullWidth
@@ -174,7 +179,10 @@ const TechBooker: React.FC<Props> = ({onBack}) => {
                                     gap: 1.5,
                                 }}
                             >
-                                <Info size={18} color="#f59e0b"/>
+                                <FontAwesomeIcon
+                                    icon={faInfoCircle}
+                                    style={{fontSize: 18, color: "#f59e0b"}}
+                                />
                                 <Typography
                                     variant="caption"
                                     sx={{color: "#92400e", fontWeight: 500}}

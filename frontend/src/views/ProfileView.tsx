@@ -29,13 +29,14 @@ import {
     CardContent,
     CircularProgress,
     Divider,
+    Grid,
     Snackbar,
     Switch,
     TextField,
     Typography,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
-import {BadgeCheck, Save, X} from "lucide-react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCheckCircle, faSave, faXmark,} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
 import api from "../api/axiosClient";
 import {useAuth} from "../context/AuthContext";
@@ -159,7 +160,7 @@ const ProfileView: React.FC = () => {
                         {profileData?.name || profileData?.username || "My Profile"}
                     </Typography>
                     <Box sx={{display: "flex", alignItems: "center", gap: 1, mt: 0.5}}>
-                        <BadgeCheck size={16} color="#6366f1"/>
+                        <FontAwesomeIcon icon={faCheckCircle} style={{fontSize: 16, color: "#6366f1"}}/>
                         <Typography
                             variant="body2"
                             color="text.secondary"
@@ -209,7 +210,7 @@ const ProfileView: React.FC = () => {
                                         setEditing(false);
                                         setFormData(profileData);
                                     }}
-                                    startIcon={<X size={16}/>}
+                                    startIcon={<FontAwesomeIcon icon={faXmark} style={{fontSize: 16}}/>}
                                     sx={{color: "text.secondary", fontWeight: 700}}
                                 >
                                     Cancel
@@ -220,7 +221,8 @@ const ProfileView: React.FC = () => {
                                     onClick={handleUpdate}
                                     disabled={saving}
                                     startIcon={
-                                        saving ? <CircularProgress size={16}/> : <Save size={16}/>
+                                        saving ? <CircularProgress size={16}/> :
+                                            <FontAwesomeIcon icon={faSave} style={{fontSize: 16}}/>
                                     }
                                     sx={{borderRadius: "8px", fontWeight: 700}}
                                 >

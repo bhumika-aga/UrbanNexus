@@ -22,7 +22,8 @@
 
 import {Box, Button, Chip, CircularProgress, Stack, Switch, Tab, Tabs, Typography,} from "@mui/material";
 import {alpha} from "@mui/material/styles";
-import {CheckCircle2, Clock, MapPin, Radio} from "lucide-react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCheckCircle, faClock, faMapMarkerAlt, faRadio,} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
 import api from "../../api/axiosClient";
 import {Booking} from "../../types";
@@ -174,12 +175,12 @@ const TechnicianDashboard: React.FC = () => {
                     scrollButtons="auto"
                 >
                     <Tab
-                        icon={<Radio size={18}/>}
+                        icon={<FontAwesomeIcon icon={faRadio} style={{fontSize: 18}}/>}
                         iconPosition="start"
                         label="Live Feed"
                     />
                     <Tab
-                        icon={<Clock size={18}/>}
+                        icon={<FontAwesomeIcon icon={faClock} style={{fontSize: 18}}/>}
                         iconPosition="start"
                         label="Archive"
                     />
@@ -265,7 +266,7 @@ const TechnicianDashboard: React.FC = () => {
                                                 color: "#64748b",
                                             }}
                                         >
-                                            <Clock size={14}/>
+                                            <FontAwesomeIcon icon={faClock} style={{fontSize: 14}}/>
                                             <Typography variant="caption" sx={{fontWeight: 600}}>
                                                 Slot {task.slot}
                                             </Typography>
@@ -278,7 +279,7 @@ const TechnicianDashboard: React.FC = () => {
                                                 color: "#64748b",
                                             }}
                                         >
-                                            <MapPin size={14}/>
+                                            <FontAwesomeIcon icon={faMapMarkerAlt} style={{fontSize: 14}}/>
                                             <Typography variant="caption" sx={{fontWeight: 600}}>
                                                 Ground Support
                                             </Typography>
@@ -287,7 +288,7 @@ const TechnicianDashboard: React.FC = () => {
                                 </Box>
                                 <Button
                                     variant="contained"
-                                    startIcon={<CheckCircle2 size={18}/>}
+                                    startIcon={<FontAwesomeIcon icon={faCheckCircle} style={{fontSize: 18}}/>}
                                     onClick={() => updateStatus(task.assignment_id!, "Resolved")}
                                 >
                                     Resolve Task

@@ -87,20 +87,28 @@ const vercelTheme = createTheme({
                         borderColor: 'transparent',
                     },
                 },
-                containedPrimary: {
-                    background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                    color: '#ffffff',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                },
-                outlinedPrimary: {
-                    borderColor: 'rgba(99, 102, 241, 0.2)',
-                    backgroundColor: 'rgba(99, 102, 241, 0.02)',
-                    '&:hover': {
-                        backgroundColor: 'rgba(99, 102, 241, 0.06)',
-                        borderColor: '#6366f1',
+            },
+            variants: [
+                {
+                    props: {variant: 'contained', color: 'primary'},
+                    style: {
+                        background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                        color: '#ffffff',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                     },
                 },
-            },
+                {
+                    props: {variant: 'outlined', color: 'primary'},
+                    style: {
+                        borderColor: 'rgba(99, 102, 241, 0.2)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.02)',
+                        '&:hover': {
+                            backgroundColor: 'rgba(99, 102, 241, 0.06)',
+                            borderColor: '#6366f1',
+                        },
+                    },
+                },
+            ],
         },
         MuiPaper: {
             styleOverrides: {

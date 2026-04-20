@@ -34,7 +34,8 @@ import {
     Typography,
 } from "@mui/material";
 import {alpha} from "@mui/material/styles";
-import {History} from "lucide-react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faHistory} from "@fortawesome/free-solid-svg-icons";
 import React, {useEffect, useState} from "react";
 import api from "../../api/axiosClient";
 import {AuditLogEntry} from "../../types";
@@ -89,7 +90,7 @@ const AuditLog: React.FC = () => {
                         color: "primary.main",
                     }}
                 >
-                    <History size={24}/>
+                    <FontAwesomeIcon icon={faHistory} style={{fontSize: 24}}/>
                 </Box>
                 <Box>
                     <Typography variant="h5" sx={{fontWeight: 800}}>

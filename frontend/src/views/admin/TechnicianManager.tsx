@@ -21,313 +21,325 @@
  */
 
 import {
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  InputAdornment,
-  MenuItem,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
+    Box,
+    Button,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Grid,
+    InputAdornment,
+    MenuItem,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    TextField,
+    Typography,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
-import { Hash, Phone, UserPlus, Wrench } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faHashtag, faPhone, faUserPlus, faWrench,} from "@fortawesome/free-solid-svg-icons";
+import React, {useEffect, useState} from "react";
 import api from "../../api/axiosClient";
-import { Technician } from "../../types";
+import {Technician} from "../../types";
 
 const TechnicianManager: React.FC = () => {
-  const [techs, setTechs] = useState<Technician[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
-  const [formData, setFormData] = useState({
-    techId: "",
-    name: "",
-    contact: "",
-    skill: "Plumber",
-  });
+    const [techs, setTechs] = useState<Technician[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [openModal, setOpenModal] = useState(false);
+    const [formData, setFormData] = useState({
+        techId: "",
+        name: "",
+        contact: "",
+        skill: "Plumber",
+    });
 
-  const fetchTechs = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get("/admin/technicians");
-      setTechs(res.data);
-    } catch (err: unknown) {
-      const errorMsg =
-        err && typeof err === "object" && "response" in err
-          ? (err as { response?: { data?: { error?: string } } }).response?.data
-              ?.error
-          : "Processing failed";
-      alert(errorMsg || "Processing failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchTechs = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get("/admin/technicians");
+            setTechs(res.data);
+        } catch (err: unknown) {
+            const errorMsg =
+                err && typeof err === "object" && "response" in err
+                    ? (err as { response?: { data?: { error?: string } } }).response?.data
+                        ?.error
+                    : "Processing failed";
+            alert(errorMsg || "Processing failed");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleAdd = async () => {
-    try {
-      await api.post("/technicians", formData);
-      setOpenModal(false);
-      setFormData({ techId: "", name: "", contact: "", skill: "Plumber" });
-      fetchTechs();
-    } catch (err: unknown) {
-      const errorMsg =
-        err && typeof err === "object" && "response" in err
-          ? (err as any).response?.data?.error
-          : "Action failed.";
-      alert("Failed to sign crew: " + (errorMsg || "Unknown error"));
-    }
-  };
+    const handleAdd = async () => {
+        try {
+            await api.post("/technicians", formData);
+            setOpenModal(false);
+            setFormData({techId: "", name: "", contact: "", skill: "Plumber"});
+            fetchTechs();
+        } catch (err: unknown) {
+            const errorMsg =
+                err && typeof err === "object" && "response" in err
+                    ? (err as any).response?.data?.error
+                    : "Action failed.";
+            alert("Failed to sign crew: " + (errorMsg || "Unknown error"));
+        }
+    };
 
-  useEffect(() => {
-    fetchTechs();
-  }, []);
+    useEffect(() => {
+        fetchTechs();
+    }, []);
 
-  return (
-    <Box>
-      <Box
-        sx={{
-          mb: 4,
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-        }}
-      >
-        <Button
-          variant="contained"
-          startIcon={<UserPlus size={18} />}
-          onClick={() => setOpenModal(true)}
-        >
-          Recruit Crew
-        </Button>
-      </Box>
-
-      <TableContainer component={Paper} elevation={0}>
-        <Table sx={{ minWidth: 650 }}>
-          <TableHead sx={{ backgroundColor: "#fafafa" }}>
-            <TableRow>
-              <TableCell
+    return (
+        <Box>
+            <Box
                 sx={{
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  fontSize: "0.65rem",
-                  color: "#666",
+                    mb: 4,
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
                 }}
-              >
-                ID
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  fontSize: "0.65rem",
-                  color: "#666",
-                }}
-              >
-                Name
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  fontSize: "0.65rem",
-                  color: "#666",
-                }}
-              >
-                Skill
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  fontSize: "0.65rem",
-                  color: "#666",
-                }}
-              >
-                Contact
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  fontSize: "0.65rem",
-                  color: "#666",
-                }}
-                align="right"
-              >
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                  <CircularProgress size={24} color="inherit" />
-                </TableCell>
-              </TableRow>
-            ) : techs.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  align="center"
-                  sx={{ py: 4, color: "#999", fontStyle: "italic" }}
+            >
+                <Button
+                    variant="contained"
+                    startIcon={
+                        <FontAwesomeIcon icon={faUserPlus} style={{fontSize: 18}}/>
+                    }
+                    onClick={() => setOpenModal(true)}
                 >
-                  No technical crew registered.
-                </TableCell>
-              </TableRow>
-            ) : (
-              techs.map((tech) => (
-                <TableRow key={tech.techId} hover>
-                  <TableCell sx={{ fontFamily: "monospace" }}>
-                    {tech.techId}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>{tech.name}</TableCell>
-                  <TableCell>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        backgroundColor: "#f8fafc",
-                        color: "#475569",
-                        fontWeight: 700,
-                        fontSize: "0.6rem",
-                        textTransform: "uppercase",
-                        border: "1px solid #e2e8f0",
-                      }}
-                    >
-                      {tech.skill}
-                    </Typography>
-                  </TableCell>
-                  <TableCell sx={{ fontFamily: "monospace", color: "#666" }}>
-                    {tech.contact}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography variant="caption" color="text.secondary">
-                      Ready for assignment
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                    Recruit Crew
+                </Button>
+            </Box>
 
-      <Dialog
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 800 }}>
-          Sign New Technical Staff
-        </DialogTitle>
-        <DialogContent dividers>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid size={12}>
-              <TextField
+            <TableContainer component={Paper} elevation={0}>
+                <Table sx={{minWidth: 650}}>
+                    <TableHead sx={{backgroundColor: "#fafafa"}}>
+                        <TableRow>
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    textTransform: "uppercase",
+                                    fontSize: "0.65rem",
+                                    color: "#666",
+                                }}
+                            >
+                                ID
+                            </TableCell>
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    textTransform: "uppercase",
+                                    fontSize: "0.65rem",
+                                    color: "#666",
+                                }}
+                            >
+                                Name
+                            </TableCell>
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    textTransform: "uppercase",
+                                    fontSize: "0.65rem",
+                                    color: "#666",
+                                }}
+                            >
+                                Skill
+                            </TableCell>
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    textTransform: "uppercase",
+                                    fontSize: "0.65rem",
+                                    color: "#666",
+                                }}
+                            >
+                                Contact
+                            </TableCell>
+                            <TableCell
+                                sx={{
+                                    fontWeight: 700,
+                                    textTransform: "uppercase",
+                                    fontSize: "0.65rem",
+                                    color: "#666",
+                                }}
+                                align="right"
+                            >
+                                Actions
+                            </TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={5} align="center" sx={{py: 4}}>
+                                    <CircularProgress size={24} color="inherit"/>
+                                </TableCell>
+                            </TableRow>
+                        ) : techs.length === 0 ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={5}
+                                    align="center"
+                                    sx={{py: 4, color: "#999", fontStyle: "italic"}}
+                                >
+                                    No technical crew registered.
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            techs.map((tech) => (
+                                <TableRow key={tech.techId} hover>
+                                    <TableCell sx={{fontFamily: "monospace"}}>
+                                        {tech.techId}
+                                    </TableCell>
+                                    <TableCell sx={{fontWeight: 600}}>{tech.name}</TableCell>
+                                    <TableCell>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                px: 1,
+                                                py: 0.5,
+                                                borderRadius: 1,
+                                                backgroundColor: "#f8fafc",
+                                                color: "#475569",
+                                                fontWeight: 700,
+                                                fontSize: "0.6rem",
+                                                textTransform: "uppercase",
+                                                border: "1px solid #e2e8f0",
+                                            }}
+                                        >
+                                            {tech.skill}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell sx={{fontFamily: "monospace", color: "#666"}}>
+                                        {tech.contact}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <Typography variant="caption" color="text.secondary">
+                                            Ready for assignment
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+
+            <Dialog
+                open={openModal}
+                onClose={() => setOpenModal(false)}
+                maxWidth="xs"
                 fullWidth
-                label="Staff ID"
-                placeholder="e.g. 101"
-                value={formData.techId}
-                onChange={(e) =>
-                  setFormData({ ...formData, techId: e.target.value })
-                }
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Hash size={16} />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                fullWidth
-                label="Full Name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                fullWidth
-                label="Contact"
-                value={formData.contact}
-                onChange={(e) =>
-                  setFormData({ ...formData, contact: e.target.value })
-                }
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Phone size={16} />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-            </Grid>
-            <Grid size={12}>
-              <TextField
-                fullWidth
-                select
-                label="Primary Skill"
-                value={formData.skill}
-                onChange={(e) =>
-                  setFormData({ ...formData, skill: e.target.value })
-                }
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Wrench size={16} />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              >
-                <MenuItem value="Plumber">Plumber</MenuItem>
-                <MenuItem value="Electrician">Electrician</MenuItem>
-                <MenuItem value="Maintenance">Maintenance</MenuItem>
-                <MenuItem value="Carpenter">Carpenter</MenuItem>
-              </TextField>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={() => setOpenModal(false)} variant="outlined">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleAdd}
-            variant="contained"
-            disabled={!formData.name || !formData.techId}
-          >
-            Deploy Staff
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
+            >
+                <DialogTitle sx={{fontWeight: 800}}>
+                    Sign New Technical Staff
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Grid container spacing={3} sx={{mt: 1}}>
+                        <Grid size={12}>
+                            <TextField
+                                fullWidth
+                                label="Staff ID"
+                                placeholder="e.g. 101"
+                                value={formData.techId}
+                                onChange={(e) =>
+                                    setFormData({...formData, techId: e.target.value})
+                                }
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <FontAwesomeIcon
+                                                    icon={faHashtag}
+                                                    style={{fontSize: 16}}
+                                                />
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
+                            />
+                        </Grid>
+                        <Grid size={12}>
+                            <TextField
+                                fullWidth
+                                label="Full Name"
+                                value={formData.name}
+                                onChange={(e) =>
+                                    setFormData({...formData, name: e.target.value})
+                                }
+                            />
+                        </Grid>
+                        <Grid size={12}>
+                            <TextField
+                                fullWidth
+                                label="Contact"
+                                value={formData.contact}
+                                onChange={(e) =>
+                                    setFormData({...formData, contact: e.target.value})
+                                }
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <FontAwesomeIcon
+                                                    icon={faPhone}
+                                                    style={{fontSize: 16}}
+                                                />
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
+                            />
+                        </Grid>
+                        <Grid size={12}>
+                            <TextField
+                                fullWidth
+                                select
+                                label="Primary Skill"
+                                value={formData.skill}
+                                onChange={(e) =>
+                                    setFormData({...formData, skill: e.target.value})
+                                }
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <FontAwesomeIcon
+                                                    icon={faWrench}
+                                                    style={{fontSize: 16}}
+                                                />
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
+                            >
+                                <MenuItem value="Plumber">Plumber</MenuItem>
+                                <MenuItem value="Electrician">Electrician</MenuItem>
+                                <MenuItem value="Maintenance">Maintenance</MenuItem>
+                                <MenuItem value="Carpenter">Carpenter</MenuItem>
+                            </TextField>
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <DialogActions sx={{px: 3, py: 2}}>
+                    <Button onClick={() => setOpenModal(false)} variant="outlined">
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleAdd}
+                        variant="contained"
+                        disabled={!formData.name || !formData.techId}
+                    >
+                        Deploy Staff
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Box>
+    );
 };
 
 export default TechnicianManager;

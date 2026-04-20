@@ -21,215 +21,216 @@
  */
 
 import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  IconButton,
-  InputAdornment,
-  Paper,
-  TextField,
-  Typography,
+    Alert,
+    Box,
+    Button,
+    CircularProgress,
+    Container,
+    IconButton,
+    InputAdornment,
+    Paper,
+    TextField,
+    Typography,
 } from "@mui/material";
-import { motion } from "framer-motion";
-import { Building2, Eye, EyeOff, Lock, User } from "lucide-react";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {motion} from "framer-motion";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faBuilding, faEye, faEyeSlash, faLock, faUser,} from "@fortawesome/free-solid-svg-icons";
+import React, {useState} from "react";
+import {useNavigate} from "react-router-dom";
 import api from "../api/axiosClient";
-import { useAuth } from "../context/AuthContext";
+import {useAuth} from "../context/AuthContext";
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-  const { login } = useAuth();
-  const navigate = useNavigate();
+    const {login} = useAuth();
+    const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        setLoading(true);
 
-    try {
-      const response = await api.post("/login", { username, password });
-      login(response.data.token);
-      navigate("/dashboard");
-    } catch (err: unknown) {
-      const errorMessage =
-        err && typeof err === "object" && "response" in err
-          ? (err as any).response?.data?.error
-          : "Failed to connect to the community grid.";
-      setError(errorMessage || "Failed to connect to the community grid.");
-    } finally {
-      setLoading(false);
-    }
-  };
+        try {
+            const response = await api.post("/login", {username, password});
+            login(response.data.token);
+            navigate("/dashboard");
+        } catch (err: unknown) {
+            const errorMessage =
+                err && typeof err === "object" && "response" in err
+                    ? (err as any).response?.data?.error
+                    : "Failed to connect to the community grid.";
+            setError(errorMessage || "Failed to connect to the community grid.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background:
-          "radial-gradient(circle at 50% 50%, #fafafa 0%, #ffffff 100%)",
-        p: 2,
-      }}
-    >
-      <Container maxWidth="xs">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Paper
-            elevation={0}
+    return (
+        <Box
             sx={{
-              p: 4,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              border: "1px solid #eaeaea",
-              borderRadius: 4,
-              backgroundColor: "rgba(255, 255, 255, 0.8)",
-              backdropFilter: "blur(20px)",
-            }}
-          >
-            <Box
-              sx={{
-                width: 64,
-                height: 64,
-                borderRadius: "50%",
-                backgroundColor: "#000",
+                minHeight: "100vh",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                mb: 3,
-              }}
-            >
-              <Building2 size={32} color="white" />
-            </Box>
-
-            <Typography
-              variant="h4"
-              component="h1"
-              gutterBottom
-              align="center"
-              sx={{ fontWeight: 800 }}
-            >
-              UrbanNexus
-            </Typography>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              mb={4}
-              align="center"
-            >
-              Sign in to manage your community grid
-            </Typography>
-
-            {error && (
-              <Alert
-                severity="error"
-                sx={{ width: "100%", mb: 3, borderRadius: 2 }}
-              >
-                {error}
-              </Alert>
-            )}
-
-            <Box component="form" onSubmit={handleLogin} sx={{ width: "100%" }}>
-              <TextField
-                fullWidth
-                label="Username"
-                variant="outlined"
-                margin="normal"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
-                autoComplete="username"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <User size={18} />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-              <TextField
-                fullWidth
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                variant="outlined"
-                margin="normal"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock size={18} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                          size="small"
+                background:
+                    "radial-gradient(circle at 50% 50%, #fafafa 0%, #ffffff 100%)",
+                p: 2,
+            }}
+        >
+            <Container maxWidth="xs">
+                <motion.div
+                    initial={{opacity: 0, y: 20}}
+                    animate={{opacity: 1, y: 0}}
+                    transition={{duration: 0.5}}
+                >
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 4,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            border: "1px solid #eaeaea",
+                            borderRadius: 4,
+                            backgroundColor: "rgba(255, 255, 255, 0.8)",
+                            backdropFilter: "blur(20px)",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: "50%",
+                                backgroundColor: "#000",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                mb: 3,
+                            }}
                         >
-                          {showPassword ? (
-                            <EyeOff size={18} />
-                          ) : (
-                            <Eye size={18} />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
-                disabled={loading}
-                sx={{
-                  mt: 4,
-                  height: 48,
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                }}
-              >
-                {loading ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
-            </Box>
-          </Paper>
-        </motion.div>
+                            <FontAwesomeIcon icon={faBuilding} style={{fontSize: 32, color: "white"}}/>
+                        </Box>
 
-        <Box sx={{ mt: 4, textAlign: "center" }}>
-          <Typography variant="caption" color="text.secondary">
-            © {new Date().getFullYear()} UrbanNexus. Engineered for reliability.
-          </Typography>
+                        <Typography
+                            variant="h4"
+                            component="h1"
+                            gutterBottom
+                            align="center"
+                            sx={{fontWeight: 800}}
+                        >
+                            UrbanNexus
+                        </Typography>
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            align="center"
+                            sx={{mb: 4}}
+                        >
+                            Sign in to manage your community grid
+                        </Typography>
+
+                        {error && (
+                            <Alert
+                                severity="error"
+                                sx={{width: "100%", mb: 3, borderRadius: 2}}
+                            >
+                                {error}
+                            </Alert>
+                        )}
+
+                        <Box component="form" onSubmit={handleLogin} sx={{width: "100%"}}>
+                            <TextField
+                                fullWidth
+                                label="Username"
+                                variant="outlined"
+                                margin="normal"
+                                required
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder="Enter your username"
+                                autoComplete="username"
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <FontAwesomeIcon icon={faUser} style={{fontSize: 18}}/>
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
+                            />
+                            <TextField
+                                fullWidth
+                                label="Password"
+                                type={showPassword ? "text" : "password"}
+                                variant="outlined"
+                                margin="normal"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                autoComplete="current-password"
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <FontAwesomeIcon icon={faLock} style={{fontSize: 18}}/>
+                                            </InputAdornment>
+                                        ),
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    edge="end"
+                                                    size="small"
+                                                >
+                                                    {showPassword ? (
+                                                        <FontAwesomeIcon icon={faEyeSlash} style={{fontSize: 18}}/>
+                                                    ) : (
+                                                        <FontAwesomeIcon icon={faEye} style={{fontSize: 18}}/>
+                                                    )}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
+                            />
+                            <Button
+                                type="submit"
+                                fullWidth
+                                variant="contained"
+                                size="large"
+                                disabled={loading}
+                                sx={{
+                                    mt: 4,
+                                    height: 48,
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                {loading ? (
+                                    <CircularProgress size={24} color="inherit"/>
+                                ) : (
+                                    "Sign In"
+                                )}
+                            </Button>
+                        </Box>
+                    </Paper>
+                </motion.div>
+
+                <Box sx={{mt: 4, textAlign: "center"}}>
+                    <Typography variant="caption" color="text.secondary">
+                        © {new Date().getFullYear()} UrbanNexus. Engineered for reliability.
+                    </Typography>
+                </Box>
+            </Container>
         </Box>
-      </Container>
-    </Box>
-  );
+    );
 };
 
 export default Login;
