@@ -81,6 +81,11 @@ const vercelTheme = createTheme({
                         boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)',
                         transform: 'translateY(-1px)',
                     },
+                    '&.Mui-disabled': {
+                        backgroundColor: alpha('#000000', 0.04),
+                        color: alpha('#000000', 0.25),
+                        borderColor: 'transparent',
+                    },
                 },
                 containedPrimary: {
                     background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
