@@ -75,7 +75,7 @@ const ResidentManager: React.FC = () => {
     setLoading(true);
     try {
       const res = await api.get(`/admin/residents/search?name=${searchTerm}`);
-      setResidents(res.data.residents);
+      setResidents(res.data || []);
     } catch (err) {
       console.error("Resident lookup failed");
     } finally {

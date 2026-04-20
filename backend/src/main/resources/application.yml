@@ -9,9 +9,15 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
+  sql:
+    init:
+      mode: always
+      separator: ";" # Default to semicolon for H2/General Compatibility
 
 app:
   jwt:

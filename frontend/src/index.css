@@ -29,15 +29,17 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #ffffff;
-  color: #000000;
+  background-color: #f8fafc;
+  /* Platinum Background */
+  color: #0f172a;
+  /* Slate Slate 900 */
   overflow-x: hidden;
 }
 
-/* Custom Selection Color (Vercel Style) */
+/* Royal Indigo Selection */
 ::selection {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: rgba(99, 102, 241, 0.2);
+  color: #6366f1;
 }
 
 /* Minimalist Scrollbar */
@@ -50,17 +52,17 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #eaeaea;
+  background: rgba(99, 102, 241, 0.1);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #666666;
+  background: #6366f1;
 }
 
 /* Smooth Focus States */
 *:focus-visible {
-  outline: 2px solid #000000;
+  outline: 2px solid #6366f1;
   outline-offset: 2px;
 }
 

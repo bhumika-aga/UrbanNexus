@@ -139,14 +139,15 @@ const ResidentDashboard: React.FC = () => {
                           width: 48,
                           height: 48,
                           borderRadius: "12px",
-                          backgroundColor: "#fff7ed",
+                          backgroundColor: "primary.light",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           mb: 3,
+                          opacity: 0.1,
                         }}
                       >
-                        <Wrench color="#9a3412" />
+                        <Wrench color="primary" />
                       </Box>
                       <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
                         Staff Support
@@ -171,14 +172,15 @@ const ResidentDashboard: React.FC = () => {
                           width: 48,
                           height: 48,
                           borderRadius: "12px",
-                          backgroundColor: "#f5f3ff",
+                          backgroundColor: "primary.light",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           mb: 3,
+                          opacity: 0.1,
                         }}
                       >
-                        <History color="#5b21b6" />
+                        <History color="primary" />
                       </Box>
                       <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
                         My Activity

@@ -21,10 +21,8 @@
  */
 
 import axios from 'axios';
-import meta from 'meta';
-
 const api = axios.create({
-  baseURL: meta.env.VITE_API_URL || 'http://localhost:4720/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4720/api',
   headers: {
     'Content-Type': 'application/json',
   },

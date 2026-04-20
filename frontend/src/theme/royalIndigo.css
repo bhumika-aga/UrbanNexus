@@ -1,0 +1,15 @@
+/* Global Indigo Theme Overrides */
+:root {
+  --primary-indigo: #6366f1;
+  --primary-dark: #4f46e5;
+  --platinum-gray: #f8fafc;
+}
+
+::selection {
+  background-color: var(--primary-indigo);
+  color: #fff;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--primary-indigo);
+}

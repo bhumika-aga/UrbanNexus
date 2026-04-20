@@ -273,6 +273,59 @@
           }
         },
         {
+          "name": "Update Availability",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"available\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/technicians/me/availability",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "technicians",
+                "me",
+                "availability"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tech Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/technicians/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "technicians",
+                "me"
+              ]
+            }
+          }
+        },
+        {
           "name": "Delete Technician",
           "request": {
             "method": "DELETE",

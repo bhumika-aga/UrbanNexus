@@ -55,7 +55,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await api.post("/auth/login", { username, password });
+      const response = await api.post("/login", { username, password });
       login(response.data.token);
       navigate("/dashboard");
     } catch (err: unknown) {

@@ -50,7 +50,7 @@ const FinanceManager: React.FC = () => {
     setLoading(true);
     try {
       const res = await api.get(`/admin/transactions?resident_name=${search}`);
-      setTransactions(res.data.transactions);
+      setTransactions(res.data || []);
     } catch (err) {
       console.error("Ledger sync failed");
     } finally {
