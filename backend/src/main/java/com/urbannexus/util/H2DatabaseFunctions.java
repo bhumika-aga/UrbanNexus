@@ -6,6 +6,7 @@ package com.urbannexus.util;
 
 import java.util.Map;
 
+import com.urbannexus.repository.PaymentRepository;
 import com.urbannexus.service.BookingService;
 
 /**
@@ -24,5 +25,10 @@ public class H2DatabaseFunctions {
             Integer capacityBooked) {
         return StaticContextAccessor.getBean(BookingService.class).executeAmenityBooking(residentId, amenityId, date,
                 slot, capacityBooked);
+    }
+
+    public static java.util.List<Map<String, Object>> getResidentPendingDues(Long residentId) {
+        return StaticContextAccessor.getBean(PaymentRepository.class)
+                .findPendingDuesByResidentId(residentId);
     }
 }

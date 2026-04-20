@@ -91,7 +91,7 @@ public class ResidentService {
     }
 
     public Map<String, Object> getPendingDues(Long residentId) {
-        List<Map<String, Object>> dues = paymentRepository.getPendingDues(residentId);
+        List<Map<String, Object>> dues = paymentRepository.findPendingDuesByResidentId(residentId);
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Your pending dues retrieved successfully.");
         response.put("total_unpaid_invoices", dues.size());

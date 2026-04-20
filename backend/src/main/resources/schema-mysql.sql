@@ -82,6 +82,22 @@ BEGIN
     SELECT v_trans_no as trans_no;
 END //
 
+DROP PROCEDURE IF EXISTS GetResidentPendingDues //
+CREATE PROCEDURE GetResidentPendingDues(IN p_resident_id BIGINT)
+BEGIN
+    SELECT 
+        p.trans_no, 
+        p.status, 
+        p.type as service_type,
+        p.cost, 
+        p.payment_date
+    FROM payment p
+    LEFT JOIN amenity_mgmt am ON p.trans_no = am.trans_no
+    LEFT JOIN technician_management tm ON p.trans_no = tm.trans_no
+    WHERE (am.resident_id = p_resident_id OR tm.resident_id = p_resident_id)
+    AND p.status IN ('Pending', 'Overdue');
+END //
+
 -- -----------------------------------------------------
 -- Triggers
 -- -----------------------------------------------------

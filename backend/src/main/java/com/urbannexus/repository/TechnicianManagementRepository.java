@@ -35,15 +35,24 @@ import com.urbannexus.model.TechnicianManagement;
 
 public interface TechnicianManagementRepository extends JpaRepository<TechnicianManagement, Long> {
 
-    @Modifying
-    @Query("UPDATE TechnicianManagement t SET t.status = :status WHERE t.assignmentId = :assignmentId")
-    void updateTaskStatus(@Param("assignmentId") Long assignmentId, @Param("status") String status);
+        @Modifying
+        @Query("UPDATE TechnicianManagement t SET t.status = :status WHERE t.assignmentId = :assignmentId")
+        void updateTaskStatus(@Param("assignmentId") Long assignmentId, @Param("status") String status);
 
-    @Query(value = "SELECT tm.assignment_id, t.name as technician, t.skill, tm.assign_date, tm.slot, tm.status " +
-            "FROM technician_management tm " +
-            "JOIN technician t ON tm.tech_id = t.tech_id " +
-            "WHERE tm.resident_id = :residentId", nativeQuery = true)
-    List<Map<String, Object>> findBookingsByResidentId(@Param("residentId") Long residentId);
+        @Query(value = "SELECT tm.assignment_id, t.name as technician, t.skill, tm.assign_date, tm.slot, tm.status " +
+                        "FROM technician_management tm " +
+                        "JOIN technician t ON tm.tech_id = t.tech_id " +
+                        "WHERE tm.resident_id = :residentId", nativeQuery = true)
+        List<Map<String, Object>> findBookingsByResidentId(@Param("residentId") Long residentId);
 
-    boolean existsByTechnician_TechIdAndAssignDateAndSlot(Long techId, LocalDate assignDate, Integer slot);
+        @Query(value = """
+                        SELECT tm.assignment_id, r.name as resident_name, t.name as technician, t.skill, tm.assign_date, tm.slot, tm.status, tm.trans_no
+                        FROM technician_management tm
+                        JOIN resident r ON tm.resident_id = r.resident_id
+                        JOIN technician t ON tm.tech_id = t.tech_id
+                        ORDER BY tm.assign_date DESC
+                        """, nativeQuery = true)
+        List<Map<String, Object>> findAllAssignmentsDetailed();
+
+        boolean existsByTechnician_TechIdAndAssignDateAndSlot(Long techId, LocalDate assignDate, Integer slot);
 }

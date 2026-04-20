@@ -49,7 +49,8 @@ const FinanceManager: React.FC = () => {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/admin/transactions?resident_name=${search}`);
+      const queryParam = search ? `resident_name=${search}` : "";
+      const res = await api.get(`/admin/transactions?${queryParam}`);
       setTransactions(res.data || []);
     } catch (err) {
       console.error("Ledger sync failed");
@@ -161,7 +162,7 @@ const FinanceManager: React.FC = () => {
                   color: "#666",
                 }}
               >
-                Driver
+                Resident
               </TableCell>
               <TableCell
                 sx={{

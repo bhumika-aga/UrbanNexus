@@ -144,7 +144,6 @@ const ResidentDashboard: React.FC = () => {
                           alignItems: "center",
                           justifyContent: "center",
                           mb: 3,
-                          opacity: 0.1,
                         }}
                       >
                         <Wrench color="primary" />
@@ -177,7 +176,6 @@ const ResidentDashboard: React.FC = () => {
                           alignItems: "center",
                           justifyContent: "center",
                           mb: 3,
-                          opacity: 0.1,
                         }}
                       >
                         <History color="primary" />

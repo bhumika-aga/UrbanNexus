@@ -66,7 +66,7 @@ public class AdminController {
 
     @GetMapping("/technicians")
     public ResponseEntity<?> getTechnicians(@AuthenticationPrincipal UserPrincipal currentUser) {
-        if (!"SuperAdmin".equals(currentUser.getRole())) {
+        if (!"SuperAdmin".equals(currentUser.getRole()) && !"Resident".equals(currentUser.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
         }
         try {
@@ -125,5 +125,42 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to fetch audit logs."));
         }
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<?> getDashboardStats(@AuthenticationPrincipal UserPrincipal currentUser) {
+        if (!"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
+        }
+        try {
+            return ResponseEntity.ok(adminService.getDashboardStats());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to fetch dashboard statistics."));
+        }
+    }
+
+    @GetMapping("/assignments")
+    public ResponseEntity<?> getAllAssignments(@AuthenticationPrincipal UserPrincipal currentUser) {
+        if (!"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
+        }
+        return ResponseEntity.ok(adminService.getAllAssignments());
+    }
+
+    @GetMapping("/amenities/bookings")
+    public ResponseEntity<?> getAllAmenityBookings(@AuthenticationPrincipal UserPrincipal currentUser) {
+        if (!"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
+        }
+        return ResponseEntity.ok(adminService.getAllAmenityBookings());
+    }
+
+    @GetMapping("/technicians/bookings")
+    public ResponseEntity<?> getAllTechnicianBookings(@AuthenticationPrincipal UserPrincipal currentUser) {
+        if (!"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
+        }
+        return ResponseEntity.ok(adminService.getAllTechnicianBookings());
     }
 }

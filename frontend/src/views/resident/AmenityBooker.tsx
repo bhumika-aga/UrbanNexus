@@ -57,7 +57,7 @@ const AmenityBooker: React.FC<Props> = ({ onBack }) => {
   const fetchAmenities = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/admin/amenities");
+      const res = await api.get("/amenities");
       setAmenities(res.data);
     } catch (err) {
       console.error("Failed to fetch amenities");

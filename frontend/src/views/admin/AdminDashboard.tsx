@@ -20,13 +20,32 @@
  * SOFTWARE.
  */
 
-import { Box, Card, CardContent, Tab, Tabs, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  Tab,
+  Tabs,
+  Typography,
+} from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import { Activity, IndianRupee, Users, Wrench } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import api from "../../api/axiosClient";
+import AssignmentManager from "./AssignmentManager";
+import FacilityBookings from "./FacilityBookings";
 import FinanceManager from "./FinanceManager";
 import ResidentManager from "./ResidentManager";
+import ServiceHistory from "./ServiceHistory";
 import TechnicianManager from "./TechnicianManager";
+
+interface DashboardStats {
+  totalResidents: number;
+  unpaidLedger: number;
+  pendingTickets: number;
+  gridUptime: string;
+}
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -45,9 +64,30 @@ function TabPanel(props: TabPanelProps) {
 
 const AdminDashboard: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await api.get("/admin/stats");
+        setStats(response.data);
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  const formatCurrency = (amount: number) => {
+    if (amount >= 1000) return `₹${(amount / 1000).toFixed(1)}K`;
+    return `₹${amount}`;
   };
 
   return (
@@ -73,11 +113,15 @@ const AdminDashboard: React.FC = () => {
                   variant="caption"
                   sx={{ fontWeight: 700, color: "success.main" }}
                 >
-                  +5%
+                  LIVE
                 </Typography>
               </Box>
               <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                1,280
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  stats?.totalResidents.toLocaleString()
+                )}
               </Typography>
               <Typography
                 variant="caption"
@@ -100,18 +144,18 @@ const AdminDashboard: React.FC = () => {
                   variant="caption"
                   sx={{ fontWeight: 700, color: "success.main" }}
                 >
-                  Live
+                  SYSTEM
                 </Typography>
               </Box>
               <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                98.4%
+                {loading ? <CircularProgress size={24} /> : stats?.gridUptime}
               </Typography>
               <Typography
                 variant="caption"
                 color="text.secondary"
                 sx={{ fontWeight: 600, textTransform: "uppercase" }}
               >
-                Grid Uptime
+                Infrastructure Health
               </Typography>
             </CardContent>
           </Card>
@@ -127,18 +171,22 @@ const AdminDashboard: React.FC = () => {
                   variant="caption"
                   sx={{ fontWeight: 700, color: "warning.main" }}
                 >
-                  PENDING
+                  LEDGER
                 </Typography>
               </Box>
               <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                ₹42.5K
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  formatCurrency(stats?.unpaidLedger || 0)
+                )}
               </Typography>
               <Typography
                 variant="caption"
                 color="text.secondary"
                 sx={{ fontWeight: 600, textTransform: "uppercase" }}
               >
-                Unpaid Ledger
+                Unpaid Total
               </Typography>
             </CardContent>
           </Card>
@@ -152,20 +200,24 @@ const AdminDashboard: React.FC = () => {
                 <Wrench size={20} color="#666" />
                 <Typography
                   variant="caption"
-                  sx={{ fontWeight: 700, color: "#666" }}
+                  sx={{ fontWeight: 700, color: "error.main" }}
                 >
-                  ACTIVE
+                  PENDING
                 </Typography>
               </Box>
               <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                12
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  stats?.pendingTickets
+                )}
               </Typography>
               <Typography
                 variant="caption"
                 color="text.secondary"
                 sx={{ fontWeight: 600, textTransform: "uppercase" }}
               >
-                Pending Tickets
+                Open Assignments
               </Typography>
             </CardContent>
           </Card>
@@ -191,6 +243,9 @@ const AdminDashboard: React.FC = () => {
           <Tab label="Resident Directory" />
           <Tab label="Technical Crew" />
           <Tab label="Financial Ledger" />
+          <Tab label="Open Assignments" />
+          <Tab label="Facility Bookings" />
+          <Tab label="Service History" />
         </Tabs>
       </Box>
 
@@ -202,6 +257,15 @@ const AdminDashboard: React.FC = () => {
       </TabPanel>
       <TabPanel value={tabValue} index={2}>
         <FinanceManager />
+      </TabPanel>
+      <TabPanel value={tabValue} index={3}>
+        <AssignmentManager />
+      </TabPanel>
+      <TabPanel value={tabValue} index={4}>
+        <FacilityBookings />
+      </TabPanel>
+      <TabPanel value={tabValue} index={5}>
+        <ServiceHistory />
       </TabPanel>
     </Box>
   );

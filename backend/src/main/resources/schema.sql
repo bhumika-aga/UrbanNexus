@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS amenity;
 -- Table amenity
 -- -----------------------------------------------------
 CREATE TABLE amenity (
-  amenity_id INT NOT NULL,
+  amenity_id BIGINT NOT NULL,
   name VARCHAR(100) NOT NULL,
   capacity INT NULL DEFAULT NULL,
   PRIMARY KEY (amenity_id)
@@ -25,7 +25,7 @@ CREATE TABLE amenity (
 -- Table resident
 -- -----------------------------------------------------
 CREATE TABLE resident (
-  resident_id INT NOT NULL AUTO_INCREMENT,
+  resident_id BIGINT NOT NULL AUTO_INCREMENT,
   name VARCHAR(100) NOT NULL,
   house_block VARCHAR(10) NULL DEFAULT NULL,
   house_floor VARCHAR(10) NULL DEFAULT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE resident (
 -- Table payment
 -- -----------------------------------------------------
 CREATE TABLE payment (
-  trans_no VARCHAR(50) NOT NULL,
+  trans_no VARCHAR(255) NOT NULL,
   status VARCHAR(50) NOT NULL,
   type VARCHAR(50) NOT NULL,
   cost DECIMAL(10,2) NOT NULL,
@@ -52,10 +52,10 @@ CREATE TABLE payment (
 -- Table amenity_mgmt
 -- -----------------------------------------------------
 CREATE TABLE amenity_mgmt (
-  booking_id VARCHAR(50) NOT NULL,
-  resident_id INT NULL DEFAULT NULL,
-  amenity_id INT NULL DEFAULT NULL,
-  trans_no VARCHAR(50) NULL DEFAULT NULL,
+  booking_id BIGINT NOT NULL AUTO_INCREMENT,
+  resident_id BIGINT NULL DEFAULT NULL,
+  amenity_id BIGINT NULL DEFAULT NULL,
+  trans_no VARCHAR(255) NULL DEFAULT NULL,
   date DATE NULL DEFAULT NULL,
   status VARCHAR(50) NULL DEFAULT NULL,
   capacity_booked INT NULL DEFAULT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE amenity_mgmt (
 -- Table technician
 -- -----------------------------------------------------
 CREATE TABLE technician (
-  tech_id INT NOT NULL,
+  tech_id BIGINT NOT NULL,
   name VARCHAR(100) NOT NULL,
   contact VARCHAR(20) NULL DEFAULT NULL,
   skill VARCHAR(50) NULL DEFAULT NULL,
@@ -81,10 +81,10 @@ CREATE TABLE technician (
 -- Table technician_management
 -- -----------------------------------------------------
 CREATE TABLE technician_management (
-  assignment_id INT NOT NULL AUTO_INCREMENT,
-  resident_id INT NULL DEFAULT NULL,
-  tech_id INT NULL DEFAULT NULL,
-  trans_no VARCHAR(50) NULL DEFAULT NULL,
+  assignment_id BIGINT NOT NULL AUTO_INCREMENT,
+  resident_id BIGINT NULL DEFAULT NULL,
+  tech_id BIGINT NULL DEFAULT NULL,
+  trans_no VARCHAR(255) NULL DEFAULT NULL,
   status VARCHAR(50) NULL DEFAULT NULL,
   slot INT NOT NULL,
   assign_date DATE NOT NULL,
@@ -98,12 +98,12 @@ CREATE TABLE technician_management (
 -- Table admin
 -- -----------------------------------------------------
 CREATE TABLE admin (
-  admin_id INT NOT NULL AUTO_INCREMENT,
+  admin_id BIGINT NOT NULL AUTO_INCREMENT,
   username VARCHAR(50) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(50) NOT NULL,
-  resident_id INT NULL,
-  tech_id INT NULL,
+  resident_id BIGINT NULL,
+  tech_id BIGINT NULL,
   PRIMARY KEY (admin_id),
   FOREIGN KEY (resident_id) REFERENCES resident (resident_id) ON DELETE CASCADE,
   FOREIGN KEY (tech_id) REFERENCES technician (tech_id) ON DELETE CASCADE
@@ -113,7 +113,7 @@ CREATE TABLE admin (
 -- Table audit_log
 -- -----------------------------------------------------
 CREATE TABLE audit_log (
-  log_id INT AUTO_INCREMENT PRIMARY KEY,
+  log_id BIGINT AUTO_INCREMENT PRIMARY KEY,
   table_affected VARCHAR(50) NOT NULL,
   record_id VARCHAR(50) NOT NULL,
   action_type VARCHAR(50) NOT NULL,

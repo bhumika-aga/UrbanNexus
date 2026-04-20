@@ -45,6 +45,21 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
 
     @Query(value = """
             SELECT
+                p.trans_no,
+                p.status,
+                p.type as service_type,
+                p.cost,
+                p.payment_date
+            FROM payment p
+            LEFT JOIN amenity_mgmt am ON p.trans_no = am.trans_no
+            LEFT JOIN technician_management tm ON p.trans_no = tm.trans_no
+            WHERE (am.resident_id = :residentId OR tm.resident_id = :residentId)
+            AND p.status IN ('Pending', 'Overdue')
+            """, nativeQuery = true)
+    List<Map<String, Object>> findPendingDuesByResidentId(@Param("residentId") Long residentId);
+
+    @Query(value = """
+            SELECT
                 p.trans_no, p.status, p.type, p.cost,
                 COALESCE(r_am.name, r_tm.name) AS resident_name,
                 COALESCE(r_am.house_block, r_tm.house_block) AS house_block,
@@ -56,7 +71,7 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
             LEFT JOIN resident r_tm ON tm.resident_id = r_tm.resident_id
             WHERE (:status IS NULL OR p.status = :status)
             AND (:block IS NULL OR r_am.house_block = :block OR r_tm.house_block = :block)
-            AND (:residentName IS NULL OR r_am.name LIKE :residentName OR r_tm.name LIKE :residentName)
+            AND (:residentName IS NULL OR :residentName = '' OR r_am.name LIKE CONCAT('%', :residentName, '%') OR r_tm.name LIKE CONCAT('%', :residentName, '%'))
             """, nativeQuery = true)
     List<Map<String, Object>> searchTransactions(@Param("status") String status,
             @Param("block") String block,

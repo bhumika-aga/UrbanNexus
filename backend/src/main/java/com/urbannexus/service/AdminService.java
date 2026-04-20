@@ -22,16 +22,20 @@
 
 package com.urbannexus.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.urbannexus.dto.DashboardStatsDTO;
 import com.urbannexus.model.Resident;
 import com.urbannexus.model.Technician;
 import com.urbannexus.repository.AdminRepository;
+import com.urbannexus.repository.AmenityMgmtRepository;
 import com.urbannexus.repository.PaymentRepository;
 import com.urbannexus.repository.ResidentRepository;
+import com.urbannexus.repository.TechnicianManagementRepository;
 import com.urbannexus.repository.TechnicianRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -44,6 +48,32 @@ public class AdminService {
     private final TechnicianRepository technicianRepository;
     private final PaymentRepository paymentRepository;
     private final AdminRepository adminRepository;
+    private final TechnicianManagementRepository technicianManagementRepository;
+    private final AmenityMgmtRepository amenityMgmtRepository;
+
+    public DashboardStatsDTO getDashboardStats() {
+        long totalResidents = residentRepository.count();
+
+        BigDecimal unpaidLedger = paymentRepository.findAll().stream()
+                .filter(p -> "Pending".equals(p.getStatus()) || "Overdue".equals(p.getStatus()))
+                .map(com.urbannexus.model.Payment::getCost)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long pendingAssignments = technicianManagementRepository.findAll().stream()
+                .filter(tm -> "Assigned".equals(tm.getStatus()))
+                .count();
+
+        long pendingAmenities = amenityMgmtRepository.findAll().stream()
+                .filter(am -> "Confirmed".equals(am.getStatus()))
+                .count();
+
+        return DashboardStatsDTO.builder()
+                .totalResidents(totalResidents)
+                .unpaidLedger(unpaidLedger)
+                .pendingTickets(pendingAssignments + pendingAmenities)
+                .gridUptime("99.8%") // Simulated infrastructure metric
+                .build();
+    }
 
     public List<Resident> searchResidents(String name, String block, String floor, String unit) {
         return residentRepository.searchResidents(name, block, floor, unit);
@@ -63,5 +93,18 @@ public class AdminService {
 
     public List<Map<String, Object>> getAuditLogs() {
         return adminRepository.getAuditLogs();
+    }
+
+    public List<Map<String, Object>> getAllAssignments() {
+        return technicianManagementRepository.findAllAssignmentsDetailed();
+    }
+
+    public List<Map<String, Object>> getAllAmenityBookings() {
+        return amenityMgmtRepository.findAllBookingsDetailed();
+    }
+
+    public List<Map<String, Object>> getAllTechnicianBookings() {
+        // Current assignments detailed view serves as the history for technicians
+        return technicianManagementRepository.findAllAssignmentsDetailed();
     }
 }
