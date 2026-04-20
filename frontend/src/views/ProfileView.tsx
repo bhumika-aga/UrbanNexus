@@ -63,9 +63,11 @@ const ProfileView: React.FC = () => {
             const response = await api.get("/profile/me");
             setProfileData(response.data);
             setFormData(response.data);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to fetch profile:", error);
-            showSnackbar("Failed to load profile data", "error");
+            const msg = error.response?.data?.error || "Failed to load profile data";
+            showSnackbar(msg, "error");
+            setProfileData(null); // Ensure null on failure
         } finally {
             setLoading(false);
         }
@@ -112,6 +114,31 @@ const ProfileView: React.FC = () => {
     const isResident = user?.role === "Resident";
     const isTechnician = user?.role === "Technician";
     const isAdmin = user?.role === "SuperAdmin";
+
+    if (!profileData) {
+        return (
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "400px",
+                    gap: 2,
+                }}
+            >
+                <Typography color="error" sx={{fontWeight: 700}}>
+                    Profile Data Unavailable
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                    Your profile record could not be retrieved from the server.
+                </Typography>
+                <Button variant="outlined" onClick={fetchProfile} sx={{mt: 2}}>
+                    Retry Sync
+                </Button>
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{maxWidth: 800, mx: "auto"}}>

@@ -70,22 +70,39 @@ public class AuthController {
     
     @GetMapping("/profile/me")
     public ResponseEntity<?> getProfile(@AuthenticationPrincipal UserPrincipal currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+        
         try {
             if ("Resident".equals(currentUser.getRole())) {
+                if (currentUser.getResidentId() == null) {
+                    log.warn("Authenticated Resident '{}' has no linked residentId", currentUser.getUsername());
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "No resident profile linked to this account"));
+                }
                 Resident r = residentRepository.findById(currentUser.getResidentId())
-                                 .orElseThrow(() -> new RuntimeException("Resident not found"));
+                                 .orElseThrow(() -> new RuntimeException("Resident record not found in database"));
                 return ResponseEntity.ok(r);
             } else if ("Technician".equals(currentUser.getRole())) {
+                if (currentUser.getTechId() == null) {
+                    log.warn("Authenticated Technician '{}' has no linked techId", currentUser.getUsername());
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "No technician profile linked to this account"));
+                }
                 Technician t = technicianRepository.findById(currentUser.getTechId())
-                                   .orElseThrow(() -> new RuntimeException("Technician not found"));
+                                   .orElseThrow(() -> new RuntimeException("Technician record not found in database"));
                 return ResponseEntity.ok(t);
             } else if ("SuperAdmin".equals(currentUser.getRole())) {
-                return ResponseEntity.ok(Map.of("username", currentUser.getUsername(), "role", "SuperAdmin"));
+                return ResponseEntity.ok(Map.of(
+                    "username", currentUser.getUsername(),
+                    "name", "System Administrator",
+                    "role", "SuperAdmin"
+                ));
             }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Unsupported role for profile retrieval"));
         } catch (Exception e) {
+            log.error("Internal error fetching profile for user '{}'", currentUser.getUsername(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                       .body(Map.of("error", "Failed to fetch profile info"));
+                       .body(Map.of("error", "Failed to fetch profile info: " + e.getMessage()));
         }
     }
     

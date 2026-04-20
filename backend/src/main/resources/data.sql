@@ -143,9 +143,12 @@ INSERT INTO technician_management (resident_id, tech_id, trans_no, slot, assign_
 VALUES (2, 1, 'TXN-101', 1, '2026-04-21', 'Assigned'),
        (3, 2, 'TXN-103', 2, '2026-04-20', 'Assigned'),
        (4, 3, 'TXN-105', 3, '2026-04-19', 'Completed'),
-       (5, 4, 'TXN-106', 1, '2026-04-22', 'Assigned');
+       (5, 4, 'TXN-106', 1, '2026-04-22', 'Assigned'),
+       (6, 5, 'TXN-108', 2, '2026-04-23', 'Completed');
 
 INSERT INTO amenity_mgmt (resident_id, amenity_id, trans_no, date, slot, capacity_booked, status)
 VALUES (2, 2, 'TXN-102', '2026-04-21', 1, 2, 'Confirmed'),
        (3, 3, 'TXN-104', '2026-04-22', 2, 1, 'Confirmed'),
-       (4, 1, 'TXN-109', '2026-04-23', 3, 5, 'Confirmed');
+       (4, 1, 'TXN-109', '2026-04-23', 3, 5, 'Confirmed'),
+       (7, 2, 'TXN-107', '2026-04-24', 1, 3, 'Confirmed'),
+       (8, 4, 'TXN-110', '2026-04-25', 2, 4, 'Confirmed');
