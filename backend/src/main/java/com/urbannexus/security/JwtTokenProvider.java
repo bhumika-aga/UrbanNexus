@@ -53,8 +53,9 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
         
         return Jwts.builder()
-                   .subject(Long.toString(userPrincipal.getId()))
+                   .subject(userPrincipal.getUsername())
                    .claim("id", userPrincipal.getId())
+                   .claim("username", userPrincipal.getUsername())
                    .claim("role", userPrincipal.getRole())
                    .claim("resident_id", userPrincipal.getResidentId())
                    .claim("tech_id", userPrincipal.getTechId())
@@ -65,13 +66,9 @@ public class JwtTokenProvider {
     }
     
     public Long getUserIdFromJWT(String token) {
-        Claims claims = Jwts.parser()
-                            .verifyWith(key)
-                            .build()
-                            .parseSignedClaims(token)
-                            .getPayload();
-        
-        return Long.parseLong(claims.getSubject());
+        Claims claims = getClaimsFromJWT(token);
+        Object id = claims.get("id");
+        return id instanceof Number ? ((Number) id).longValue() : null;
     }
     
     public Claims getClaimsFromJWT(String token) {

@@ -57,12 +57,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 Claims claims = tokenProvider.getClaimsFromJWT(jwt);
                 
-                Long id = claims.get("id", Long.class);
+                String username = claims.getSubject();
+                Long id = extractLong(claims, "id");
                 String role = claims.get("role", String.class);
-                log.debug("Authenticated user {} with role {} for path {}", id, role, path);
+                Long residentId = extractLong(claims, "resident_id");
+                Long techId = extractLong(claims, "tech_id");
                 
-                UserPrincipal userDetails = new UserPrincipal(id, null, null, role,
-                    claims.get("resident_id", Long.class), claims.get("tech_id", Long.class));
+                log.debug("Found authenticated user {} with role {}", username, role);
+                
+                UserPrincipal userDetails = new UserPrincipal(id, username, null, role, residentId, techId);
                 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
@@ -71,10 +74,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
-            log.error("Could not set user authentication in security context for path: {}", path, ex);
+            log.error("Authentication setup failed", ex);
         }
         
         filterChain.doFilter(request, response);
+    }
+    
+    private Long extractLong(Claims claims, String key) {
+        Object val = claims.get(key);
+        if (val == null) return null;
+        if (val instanceof Number) return ((Number) val).longValue();
+        return null;
     }
     
     private String getJwtFromRequest(HttpServletRequest request) {

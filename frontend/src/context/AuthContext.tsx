@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             const decoded = jwtDecode<DecodedToken>(token);
             const user: User = {
                 id: (decoded.id || decoded.userId || decoded.adminId) as number,
-                username: (decoded.sub || decoded.username) as string,
+                username: (decoded.username || decoded.sub) as string,
                 role: decoded.role as Role,
                 residentId: decoded.residentId,
                 techId: decoded.techId,
