@@ -246,12 +246,14 @@ const TechnicianManager: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, techId: e.target.value })
                 }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Hash size={16} />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Hash size={16} />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
             </Grid>
@@ -273,12 +275,14 @@ const TechnicianManager: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, contact: e.target.value })
                 }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone size={16} />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone size={16} />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
             </Grid>
@@ -291,12 +295,14 @@ const TechnicianManager: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, skill: e.target.value })
                 }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Wrench size={16} />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Wrench size={16} />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               >
                 <MenuItem value="Plumber">Plumber</MenuItem>

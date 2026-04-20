@@ -131,12 +131,14 @@ const ResidentManager: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           sx={{ width: 400 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search size={16} />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={16} />
+                </InputAdornment>
+              ),
+            },
           }}
         />
         <Button
@@ -292,12 +294,14 @@ const ResidentManager: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <UserIcon size={16} />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <UserIcon size={16} />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
             </Grid>
@@ -329,12 +333,14 @@ const ResidentManager: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, houseUnit: e.target.value })
                 }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Home size={16} />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Home size={16} />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
             </Grid>
@@ -346,12 +352,14 @@ const ResidentManager: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, contact: e.target.value })
                 }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone size={16} />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone size={16} />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
             </Grid>
@@ -381,12 +389,14 @@ const ResidentManager: React.FC = () => {
                     noOfMembers: parseInt(e.target.value),
                   })
                 }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Users size={16} />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Users size={16} />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
             </Grid>

@@ -108,12 +108,14 @@ const FinanceManager: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{ width: 400 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search size={16} />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={16} />
+                </InputAdornment>
+              ),
+            },
           }}
         />
         <Button
