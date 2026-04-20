@@ -99,6 +99,15 @@ BEGIN
     AND p.status IN ('Pending', 'Overdue');
 END //
 
+DROP PROCEDURE IF EXISTS ProcessOverduePayments //
+CREATE PROCEDURE ProcessOverduePayments()
+BEGIN
+    UPDATE payment 
+    SET status = 'Overdue' 
+    WHERE status = 'Pending' 
+    AND payment_date < DATE_SUB(NOW(), INTERVAL 30 DAY);
+END //
+
 -- -----------------------------------------------------
 -- Triggers
 -- -----------------------------------------------------

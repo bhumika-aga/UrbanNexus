@@ -31,4 +31,8 @@ public class H2DatabaseFunctions {
         return StaticContextAccessor.getBean(PaymentRepository.class)
                 .findPendingDuesByResidentId(residentId);
     }
+
+    public static void processOverduePayments() {
+        StaticContextAccessor.getBean(PaymentRepository.class).processOverdueH2();
+    }
 }

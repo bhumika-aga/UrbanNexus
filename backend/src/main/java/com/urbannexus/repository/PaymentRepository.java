@@ -91,4 +91,8 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     @Modifying
     @Query(value = "UPDATE payment SET status = 'Paid' WHERE trans_no = :transNo", nativeQuery = true)
     int payTransaction(@Param("transNo") String transNo);
+
+    @Modifying
+    @Query(value = "UPDATE payment SET status = 'Overdue' WHERE status = 'Pending' AND payment_date < DATEADD('DAY', -30, CURRENT_TIMESTAMP)", nativeQuery = true)
+    void processOverdueH2();
 }
