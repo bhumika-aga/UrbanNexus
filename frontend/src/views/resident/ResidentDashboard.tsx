@@ -21,7 +21,6 @@
  */
 
 import {Box, Card, CardActionArea, CardContent, Typography} from "@mui/material";
-import {alpha} from "@mui/material/styles";
 import Grid from "@mui/material/Grid2";
 import {Calendar, CreditCard, History, Wrench} from "lucide-react";
 import React, {useState} from "react";
@@ -134,7 +133,7 @@ const ResidentDashboard: React.FC = () => {
                                                     width: 48,
                                                     height: 48,
                                                     borderRadius: "12px",
-                                                    backgroundColor: alpha("#6366f1", 0.1),
+                                                    backgroundColor: "rgba(99, 102, 241, 0.1)",
                                                     display: "flex",
                                                     alignItems: "center",
                                                     justifyContent: "center",
@@ -166,7 +165,7 @@ const ResidentDashboard: React.FC = () => {
                                                     width: 48,
                                                     height: 48,
                                                     borderRadius: "12px",
-                                                    backgroundColor: alpha("#6366f1", 0.1),
+                                                    backgroundColor: "rgba(99, 102, 241, 0.1)",
                                                     display: "flex",
                                                     alignItems: "center",
                                                     justifyContent: "center",

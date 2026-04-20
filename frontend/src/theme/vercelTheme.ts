@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import {alpha, createTheme} from '@mui/material/styles';
+import {createTheme} from '@mui/material/styles';
 
 const vercelTheme = createTheme({
     palette: {
@@ -82,8 +82,8 @@ const vercelTheme = createTheme({
                         transform: 'translateY(-1px)',
                     },
                     '&.Mui-disabled': {
-                        backgroundColor: alpha('#000000', 0.04),
-                        color: alpha('#000000', 0.25),
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                        color: 'rgba(0, 0, 0, 0.25)',
                         borderColor: 'transparent',
                     },
                 },
@@ -94,9 +94,9 @@ const vercelTheme = createTheme({
                 },
                 outlinedPrimary: {
                     borderColor: 'rgba(99, 102, 241, 0.2)',
-                    backgroundColor: alpha('#6366f1', 0.02),
+                    backgroundColor: 'rgba(99, 102, 241, 0.02)',
                     '&:hover': {
-                        backgroundColor: alpha('#6366f1', 0.06),
+                        backgroundColor: 'rgba(99, 102, 241, 0.06)',
                         borderColor: '#6366f1',
                     },
                 },
@@ -108,7 +108,7 @@ const vercelTheme = createTheme({
                     border: '1px solid rgba(0, 0, 0, 0.05)',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03)',
                     borderRadius: 16,
-                    backgroundColor: alpha('#ffffff', 0.9),
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
                     backdropFilter: 'blur(8px)',
                 },
             },
@@ -131,7 +131,7 @@ const vercelTheme = createTheme({
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    backgroundColor: alpha('#ffffff', 0.7),
+                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
                     backdropFilter: 'blur(16px)',
                     borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
                     color: '#0f172a',
@@ -151,7 +151,7 @@ const vercelTheme = createTheme({
                     transition: 'all 0.2s ease',
                     '&.Mui-selected': {
                         color: '#6366f1',
-                        backgroundColor: alpha('#6366f1', 0.05),
+                        backgroundColor: 'rgba(99, 102, 241, 0.05)',
                     },
                 },
             },
