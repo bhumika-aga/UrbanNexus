@@ -1,51 +1,57 @@
-# ================================
-# Stage 1: Build the application
-# ================================
+# Multi-stage build for UrbanNexus Backend
+# Stage 1: Build
 FROM eclipse-temurin:17-jdk-alpine AS builder
+
+# Install Maven
+RUN apk add --no-cache maven
 
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml
-COPY mvnw .
-COPY .mvn .mvn
+# Copy pom.xml first for better layer caching
 COPY pom.xml .
 
-# Make Maven wrapper executable
-RUN chmod +x mvnw
-
-# Download dependencies (cached layer)
-RUN ./mvnw dependency:go-offline -B
+# Download dependencies (cached unless pom.xml changes)
+RUN mvn dependency:go-offline -B
 
 # Copy source code
 COPY src src
 
 # Build the application
-RUN ./mvnw clean package -DskipTests -B
+RUN mvn package -DskipTests -B
 
-# ================================
-# Stage 2: Create runtime image
-# ================================
+# Stage 2: Runtime
 FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
 # Create non-root user for security
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
 
-# Copy the built JAR from builder stage
+# Copy the built artifact
 COPY --from=builder /app/target/*.jar app.jar
 
-# Change ownership to non-root user
-RUN chown -R spring:spring /app
+# Set ownership
+RUN chown -R appuser:appgroup /app
 
-USER spring
+# Switch to non-root user
+USER appuser
 
-# Expose port
+# Expose the application port
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:4720/actuator/health || exit 1
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
+    CMD wget -q --spider http://localhost:8080/api/v1/health || exit 1
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "-Xmx384m", "-Xms256m", "app.jar"]
+# JVM options optimized for low memory (512MB free tier)
+# - Xmx384m: Hard limit heap to 384MB
+# - Xms256m: Start with 256MB heap
+# - UseSerialGC: Lower memory overhead than G1GC
+# - TieredStopAtLevel=1: Reduce JIT compilation memory
+ENTRYPOINT ["java", \
+    "-Xms256m", \
+    "-Xmx384m", \
+    "-XX:+UseSerialGC", \
+    "-XX:TieredStopAtLevel=1", \
+    "-Djava.security.egd=file:/dev/./urandom", \
+    "-jar", "app.jar"]
