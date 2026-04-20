@@ -20,7 +20,8 @@
  * SOFTWARE.
  */
 
-import {alpha, Box, Card, CardActionArea, CardContent, Typography,} from "@mui/material";
+import {Box, Card, CardActionArea, CardContent, Typography} from "@mui/material";
+import {alpha} from "@mui/material/styles";
 import Grid from "@mui/material/Grid2";
 import {Calendar, CreditCard, History, Wrench} from "lucide-react";
 import React, {useState} from "react";
