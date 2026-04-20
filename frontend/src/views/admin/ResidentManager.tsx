@@ -28,7 +28,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Grid,
   IconButton,
   InputAdornment,
   MenuItem,
@@ -43,6 +42,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import {
   Home,
   Phone,
@@ -284,7 +284,7 @@ const ResidentManager: React.FC = () => {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 label="Full Name"
@@ -301,7 +301,7 @@ const ResidentManager: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <TextField
                 fullWidth
                 label="Block"
@@ -311,7 +311,7 @@ const ResidentManager: React.FC = () => {
                 }
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <TextField
                 fullWidth
                 label="Floor"
@@ -321,7 +321,7 @@ const ResidentManager: React.FC = () => {
                 }
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <TextField
                 fullWidth
                 label="Unit"
@@ -338,7 +338,7 @@ const ResidentManager: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 label="Contact Number"
@@ -355,7 +355,7 @@ const ResidentManager: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={6}>
               <TextField
                 fullWidth
                 select
@@ -369,7 +369,7 @@ const ResidentManager: React.FC = () => {
                 <MenuItem value="Tenant">Tenant</MenuItem>
               </TextField>
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={6}>
               <TextField
                 fullWidth
                 type="number"

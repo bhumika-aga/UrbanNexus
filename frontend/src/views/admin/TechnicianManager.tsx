@@ -28,7 +28,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Grid,
   InputAdornment,
   MenuItem,
   Paper,
@@ -41,6 +40,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { Hash, Phone, UserPlus, Wrench } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import api from "../../api/axiosClient";
@@ -105,13 +105,8 @@ const TechnicianManager: React.FC = () => {
       >
         <Button
           variant="contained"
-          color="primary"
           startIcon={<UserPlus size={18} />}
           onClick={() => setOpenModal(true)}
-          sx={{
-            backgroundColor: "#000",
-            "&:hover": { backgroundColor: "#333" },
-          }}
         >
           Recruit Crew
         </Button>
@@ -242,7 +237,7 @@ const TechnicianManager: React.FC = () => {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 label="Staff ID"
@@ -260,7 +255,7 @@ const TechnicianManager: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 label="Full Name"
@@ -270,7 +265,7 @@ const TechnicianManager: React.FC = () => {
                 }
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 label="Contact"
@@ -287,7 +282,7 @@ const TechnicianManager: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 select

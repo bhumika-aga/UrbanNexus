@@ -20,20 +20,13 @@
  * SOFTWARE.
  */
 
-import {
-  Box,
-  Card,
-  CardContent,
-  Grid,
-  Tab,
-  Tabs,
-  Typography,
-} from "@mui/material";
+import { Box, Card, CardContent, Tab, Tabs, Typography } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { Activity, IndianRupee, Users, Wrench } from "lucide-react";
 import React, { useState } from "react";
-import ResidentManager from "./admin/ResidentManager";
-import TechnicianManager from "./admin/TechnicianManager";
-import FinanceManager from "./admin/FinanceManager";
+import FinanceManager from "./FinanceManager";
+import ResidentManager from "./ResidentManager";
+import TechnicianManager from "./TechnicianManager";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -69,7 +62,7 @@ const AdminDashboard: React.FC = () => {
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 6 }}>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card>
             <CardContent>
               <Box
@@ -96,7 +89,7 @@ const AdminDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card>
             <CardContent>
               <Box
@@ -123,7 +116,7 @@ const AdminDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card>
             <CardContent>
               <Box
@@ -150,7 +143,7 @@ const AdminDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Card>
             <CardContent>
               <Box
@@ -190,9 +183,9 @@ const AdminDashboard: React.FC = () => {
               mr: 2,
               minWidth: 0,
               px: 1,
-              "&.Mui-selected": { color: "#000" },
+              "&.Mui-selected": { color: "primary.main" },
             },
-            "& .MuiTabs-indicator": { backgroundColor: "#000" },
+            "& .MuiTabs-indicator": { backgroundColor: "primary.main" },
           }}
         >
           <Tab label="Resident Directory" />

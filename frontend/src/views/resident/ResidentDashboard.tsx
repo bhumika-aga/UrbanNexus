@@ -25,15 +25,15 @@ import {
   Card,
   CardActionArea,
   CardContent,
-  Grid,
   Typography,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { Calendar, CreditCard, History, Wrench } from "lucide-react";
 import React, { useState } from "react";
-import DuesManager from "./resident/DuesManager";
-import HistoryManager from "./resident/HistoryManager";
-import AmenityBooker from "./resident/AmenityBooker";
-import TechBooker from "./resident/TechBooker";
+import AmenityBooker from "./AmenityBooker";
+import DuesManager from "./DuesManager";
+import HistoryManager from "./HistoryManager";
+import TechBooker from "./TechBooker";
 
 const ResidentDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<
@@ -63,7 +63,7 @@ const ResidentDashboard: React.FC = () => {
             </Box>
 
             <Grid container spacing={4}>
-              <Grid item xs={12} md={6} lg={3}>
+              <Grid size={{ xs: 12, md: 6, lg: 3 }}>
                 <Card sx={{ height: "100%" }}>
                   <CardActionArea
                     onClick={() => setActiveView("dues")}
@@ -95,7 +95,7 @@ const ResidentDashboard: React.FC = () => {
                 </Card>
               </Grid>
 
-              <Grid item xs={12} md={6} lg={3}>
+              <Grid size={{ xs: 12, md: 6, lg: 3 }}>
                 <Card sx={{ height: "100%" }}>
                   <CardActionArea
                     onClick={() => setActiveView("amenities")}
@@ -127,7 +127,7 @@ const ResidentDashboard: React.FC = () => {
                 </Card>
               </Grid>
 
-              <Grid item xs={12} md={6} lg={3}>
+              <Grid size={{ xs: 12, md: 6, lg: 3 }}>
                 <Card sx={{ height: "100%" }}>
                   <CardActionArea
                     onClick={() => setActiveView("technicians")}
@@ -159,7 +159,7 @@ const ResidentDashboard: React.FC = () => {
                 </Card>
               </Grid>
 
-              <Grid item xs={12} md={6} lg={3}>
+              <Grid size={{ xs: 12, md: 6, lg: 3 }}>
                 <Card sx={{ height: "100%" }}>
                   <CardActionArea
                     onClick={() => setActiveView("history")}

@@ -26,7 +26,6 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  Grid,
   IconButton,
   MenuItem,
   Paper,
@@ -34,6 +33,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { ChevronLeft, Info, Wrench } from "lucide-react";
 import React, { useState } from "react";
 import api from "../../api/axiosClient";
@@ -83,16 +83,20 @@ const TechBooker: React.FC<Props> = ({ onBack }) => {
       </Box>
 
       <Grid container spacing={4}>
-        <Grid item xs={12} md={7}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <Grid container spacing={2}>
             {techSkills.map((skill) => (
-              <Grid item xs={12} sm={6} key={skill}>
+              <Grid size={{ xs: 12, sm: 6 }} key={skill}>
                 <Card
                   sx={{
                     cursor: "pointer",
-                    borderColor: formData.skill === skill ? "#000" : "#eaeaea",
+                    borderColor:
+                      formData.skill === skill ? "primary.main" : "divider",
                     backgroundColor:
-                      formData.skill === skill ? "#fafafa" : "#fff",
+                      formData.skill === skill
+                        ? "action.hover"
+                        : "background.paper",
+                    "&:hover": { borderColor: "primary.light" },
                   }}
                   onClick={() => setFormData({ ...formData, skill })}
                 >
@@ -102,13 +106,26 @@ const TechBooker: React.FC<Props> = ({ onBack }) => {
                     <Box
                       sx={{
                         p: 1,
-                        backgroundColor: "#f0f0f0",
+                        backgroundColor: "action.selected",
                         borderRadius: "8px",
+                        color:
+                          formData.skill === skill
+                            ? "primary.main"
+                            : "text.secondary",
                       }}
                     >
                       <Wrench size={20} />
                     </Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        fontWeight: 700,
+                        color:
+                          formData.skill === skill
+                            ? "primary.main"
+                            : "text.primary",
+                      }}
+                    >
                       {skill}
                     </Typography>
                   </CardContent>
@@ -118,7 +135,7 @@ const TechBooker: React.FC<Props> = ({ onBack }) => {
           </Grid>
         </Grid>
 
-        <Grid item xs={12} md={5}>
+        <Grid size={{ xs: 12, md: 5 }}>
           <Paper sx={{ p: 4 }}>
             <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>
               Service Information
@@ -150,14 +167,16 @@ const TechBooker: React.FC<Props> = ({ onBack }) => {
               <Box
                 sx={{
                   p: 2,
-                  backgroundColor: "#fff7ed",
+                  backgroundColor: "warning.light",
+                  opacity: 0.9,
                   borderRadius: 2,
-                  border: "1px solid #fed7aa",
+                  border: "1px solid",
+                  borderColor: "warning.main",
                   display: "flex",
                   gap: 1.5,
                 }}
               >
-                <Info size={18} color="#9a3412" />
+                <Info size={18} color="warning.dark" />
                 <Typography variant="caption" color="text.secondary">
                   The community engine will auto-allocate a technician based on
                   skill-concurrency and available pits.
@@ -169,10 +188,6 @@ const TechBooker: React.FC<Props> = ({ onBack }) => {
                 size="large"
                 disabled={!formData.skill || submitting}
                 onClick={handleBook}
-                sx={{
-                  backgroundColor: "#000",
-                  "&:hover": { backgroundColor: "#333" },
-                }}
               >
                 {submitting ? (
                   <CircularProgress size={24} color="inherit" />

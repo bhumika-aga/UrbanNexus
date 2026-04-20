@@ -26,7 +26,6 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  Grid,
   IconButton,
   MenuItem,
   Paper,
@@ -34,6 +33,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 import { ChevronLeft, Info } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import api from "../../api/axiosClient";
@@ -104,21 +104,22 @@ const AmenityBooker: React.FC<Props> = ({ onBack }) => {
         </Box>
       ) : (
         <Grid container spacing={4}>
-          <Grid item xs={12} md={7}>
+          <Grid size={{ xs: 12, md: 7 }}>
             <Grid container spacing={2}>
               {amenities.map((a) => (
-                <Grid item xs={12} sm={6} key={a.amenityId}>
+                <Grid size={{ xs: 12, sm: 6 }} key={a.amenityId}>
                   <Card
                     sx={{
                       cursor: "pointer",
                       borderColor:
                         formData.amenity_id === a.amenityId.toString()
-                          ? "#000"
-                          : "#eaeaea",
+                          ? "primary.main"
+                          : "divider",
                       backgroundColor:
                         formData.amenity_id === a.amenityId.toString()
-                          ? "#fafafa"
-                          : "#fff",
+                          ? "action.hover"
+                          : "background.paper",
+                      "&:hover": { borderColor: "primary.light" },
                     }}
                     onClick={() =>
                       setFormData({
@@ -141,7 +142,7 @@ const AmenityBooker: React.FC<Props> = ({ onBack }) => {
             </Grid>
           </Grid>
 
-          <Grid item xs={12} md={5}>
+          <Grid size={{ xs: 12, md: 5 }}>
             <Paper sx={{ p: 4 }}>
               <Typography variant="h6" sx={{ fontWeight: 800, mb: 3 }}>
                 Booking Details

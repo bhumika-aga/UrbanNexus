@@ -35,9 +35,9 @@ import { LayoutDashboard, LogOut, User } from "lucide-react";
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import AdminDashboard from "./AdminDashboard";
-import ResidentDashboard from "./ResidentDashboard";
-import TechnicianDashboard from "./TechnicianDashboard";
+import AdminDashboard from "./admin/AdminDashboard";
+import ResidentDashboard from "./resident/ResidentDashboard";
+import TechnicianDashboard from "./technician/TechnicianDashboard";
 
 const Dashboard: React.FC = () => {
   const { user, token, logout, isLoading } = useAuth();
@@ -74,7 +74,7 @@ const Dashboard: React.FC = () => {
                   width: 32,
                   height: 32,
                   borderRadius: "6px",
-                  backgroundColor: "#000",
+                  backgroundColor: "primary.main",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -117,7 +117,7 @@ const Dashboard: React.FC = () => {
                       width: 28,
                       height: 28,
                       fontSize: "0.8rem",
-                      backgroundColor: "#000",
+                      backgroundColor: "primary.main",
                       cursor: "pointer",
                     }}
                   >
@@ -133,7 +133,10 @@ const Dashboard: React.FC = () => {
                 sx={{
                   color: "#666",
                   fontWeight: 600,
-                  "&:hover": { color: "#000", backgroundColor: "transparent" },
+                  "&:hover": {
+                    color: "primary.main",
+                    backgroundColor: "transparent",
+                  },
                 }}
               >
                 Logout

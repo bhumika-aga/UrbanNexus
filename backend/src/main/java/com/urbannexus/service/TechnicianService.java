@@ -107,4 +107,17 @@ public class TechnicianService {
         }
         technicianRepository.delete(tech.get());
     }
+
+    public Technician getTechnician(Long techId) {
+        return technicianRepository.findById(techId)
+                .orElseThrow(() -> new RuntimeException("Technician not found."));
+    }
+
+    @Transactional
+    public Map<String, Object> updateAvailability(Long techId, Boolean available) {
+        Technician tech = getTechnician(techId);
+        tech.setAvailable(available);
+        technicianRepository.save(tech);
+        return Map.of("message", "Availability updated to " + available);
+    }
 }

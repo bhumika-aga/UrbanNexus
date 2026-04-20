@@ -45,4 +45,7 @@ public class Technician {
 
     @Column(nullable = false)
     private String contact;
+
+    @Column(nullable = false)
+    private Boolean available = true;
 }

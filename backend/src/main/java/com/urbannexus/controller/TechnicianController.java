@@ -102,6 +102,34 @@ public class TechnicianController {
         }
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyProfile(@AuthenticationPrincipal UserPrincipal currentUser) {
+        if (!"Technician".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
+        }
+        try {
+            return ResponseEntity.ok(technicianService.getTechnician(currentUser.getTechId()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to fetch profile."));
+        }
+    }
+
+    @PutMapping("/me/availability")
+    public ResponseEntity<?> updateMyAvailability(@AuthenticationPrincipal UserPrincipal currentUser,
+            @RequestBody Map<String, Boolean> payload) {
+        if (!"Technician".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
+        }
+        try {
+            Boolean available = payload.get("available");
+            return ResponseEntity.ok(technicianService.updateAvailability(currentUser.getTechId(), available));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to update availability."));
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTechnician(@AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable Long id) {

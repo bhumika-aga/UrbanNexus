@@ -26,20 +26,25 @@ const vercelTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#000000',
+      main: '#6366f1', // Royal Indigo
+      dark: '#4f46e5',
+      light: '#818cf8',
     },
     secondary: {
-      main: '#666666',
+      main: '#1e293b', // Slate
+    },
+    success: {
+      main: '#10b981', // Emerald
     },
     background: {
-      default: '#ffffff',
+      default: '#f8fafc',
       paper: '#ffffff',
     },
     text: {
-      primary: '#000000',
-      secondary: '#666666',
+      primary: '#0f172a',
+      secondary: '#64748b',
     },
-    divider: '#eaeaea',
+    divider: 'rgba(0, 0, 0, 0.05)',
   },
   typography: {
     fontFamily: [
@@ -51,46 +56,43 @@ const vercelTheme = createTheme({
       '"Helvetica Neue"',
       'Arial',
       'sans-serif',
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-      '"Segoe UI Symbol"',
     ].join(','),
-    h1: { fontWeight: 700, letterSpacing: '-0.05em' },
-    h2: { fontWeight: 700, letterSpacing: '-0.04em' },
-    h3: { fontWeight: 700, letterSpacing: '-0.03em' },
-    h4: { fontWeight: 600, letterSpacing: '-0.02em' },
-    h5: { fontWeight: 600, letterSpacing: '-0.01em' },
-    h6: { fontWeight: 600 },
-    button: { textTransform: 'none', fontWeight: 500 },
+    h1: { fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a' },
+    h2: { fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a' },
+    h3: { fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' },
+    h4: { fontWeight: 700, letterSpacing: '-0.02em' },
+    h5: { fontWeight: 700, letterSpacing: '-0.01em' },
+    h6: { fontWeight: 700 },
+    button: { textTransform: 'none', fontWeight: 600, letterSpacing: '0.01em' },
+    caption: { letterSpacing: '0.05em' },
   },
   shape: {
-    borderRadius: 8,
+    borderRadius: 12,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          padding: '8px 16px',
+          borderRadius: 10,
+          padding: '10px 20px',
           boxShadow: 'none',
-          transition: 'all 0.2s ease-in-out',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
-            boxShadow: 'none',
+            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)',
+            transform: 'translateY(-1px)',
           },
         },
         containedPrimary: {
-          backgroundColor: '#000000',
+          background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
           color: '#ffffff',
-          '&:hover': {
-            backgroundColor: '#333333',
-          },
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         },
         outlinedPrimary: {
-          borderColor: '#eaeaea',
-          color: '#000000',
+          borderColor: 'rgba(99, 102, 241, 0.2)',
+          backgroundColor: alpha('#6366f1', 0.02),
           '&:hover': {
-            backgroundColor: '#fafafa',
-            borderColor: '#000000',
+            backgroundColor: alpha('#6366f1', 0.06),
+            borderColor: '#6366f1',
           },
         },
       },
@@ -98,20 +100,25 @@ const vercelTheme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          border: '1px solid #eaeaea',
-          boxShadow: 'none',
-          borderRadius: 12,
+          border: '1px solid rgba(0, 0, 0, 0.05)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03)',
+          borderRadius: 16,
+          backgroundColor: alpha('#ffffff', 0.9),
+          backdropFilter: 'blur(8px)',
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          border: '1px solid #eaeaea',
-          boxShadow: 'none',
-          borderRadius: 12,
+          border: '1px solid rgba(0, 0, 0, 0.05)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03)',
+          borderRadius: 16,
+          transition: 'all 0.3s ease',
           '&:hover': {
-            borderColor: '#000000',
+            borderColor: 'rgba(99, 102, 241, 0.3)',
+            boxShadow: '0 12px 24px rgba(99, 102, 241, 0.08)',
+            transform: 'translateY(-2px)',
           },
         },
       },
@@ -119,11 +126,28 @@ const vercelTheme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: alpha('#ffffff', 0.8),
-          backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid #eaeaea',
-          color: '#000000',
+          backgroundColor: alpha('#ffffff', 0.7),
+          backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+          color: '#0f172a',
           boxShadow: 'none',
+        },
+      },
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          fontWeight: 700,
+          fontSize: '0.875rem',
+          textTransform: 'none',
+          minHeight: 48,
+          borderRadius: 8,
+          margin: '0 4px',
+          transition: 'all 0.2s ease',
+          '&.Mui-selected': {
+            color: '#6366f1',
+            backgroundColor: alpha('#6366f1', 0.05),
+          },
         },
       },
     },
@@ -131,16 +155,18 @@ const vercelTheme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
+            borderRadius: 10,
+            transition: 'all 0.2s ease',
+            backgroundColor: '#ffffff',
             '& fieldset': {
-              borderColor: '#eaeaea',
+              borderColor: 'rgba(0, 0, 0, 0.08)',
             },
             '&:hover fieldset': {
-              borderColor: '#666666',
+              borderColor: 'rgba(99, 102, 241, 0.4)',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#000000',
-              borderWidth: '1px',
+              borderColor: '#6366f1',
+              borderWidth: '2px',
             },
           },
         },

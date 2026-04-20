@@ -30,8 +30,8 @@ import {
 } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import vercelTheme from "./theme/vercelTheme";
-import Login from "./views/Login";
 import Dashboard from "./views/Dashboard";
+import Login from "./views/Login";
 
 function App() {
   return (
