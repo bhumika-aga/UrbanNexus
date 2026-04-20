@@ -674,6 +674,74 @@
               ]
             }
           }
+        },
+        {
+          "name": "Get Open Assignments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/assignments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "assignments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Facility Bookings History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/amenities/bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "amenities",
+                "bookings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Service History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/technicians/bookings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "technicians",
+                "bookings"
+              ]
+            }
+          }
         }
       ]
     }
