@@ -3,6 +3,7 @@ spring:
     url: jdbc:h2:file:./urbannexus_db;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
     driver-class-name: org.h2.Driver
     username: sa
+    password:
   h2:
     console:
       enabled: true
