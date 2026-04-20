@@ -21,35 +21,30 @@
  */
 
 import CssBaseline from "@mui/material/CssBaseline";
-import { ThemeProvider } from "@mui/material/styles";
-import {
-  Navigate,
-  Route,
-  BrowserRouter as Router,
-  Routes,
-} from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import {ThemeProvider} from "@mui/material/styles";
+import {BrowserRouter as Router, Navigate, Route, Routes,} from "react-router-dom";
+import {AuthProvider} from "./context/AuthContext";
 import vercelTheme from "./theme/vercelTheme";
 import Dashboard from "./views/Dashboard";
 import Login from "./views/Login";
 
 function App() {
-  return (
-    <ThemeProvider theme={vercelTheme}>
-      <CssBaseline />
-      <AuthProvider>
-        <Router
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-        >
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
-  );
+    return (
+        <ThemeProvider theme={vercelTheme}>
+            <CssBaseline/>
+            <AuthProvider>
+                <Router
+                    future={{v7_startTransition: true, v7_relativeSplatPath: true}}
+                >
+                    <Routes>
+                        <Route path="/login" element={<Login/>}/>
+                        <Route path="/dashboard" element={<Dashboard/>}/>
+                        <Route path="/" element={<Navigate to="/dashboard" replace/>}/>
+                    </Routes>
+                </Router>
+            </AuthProvider>
+        </ThemeProvider>
+    );
 }
 
 export default App;

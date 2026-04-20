@@ -20,41 +20,35 @@
  * SOFTWARE.
  */
 
-import axios from 'axios';
+package com.urbannexus.model;
 
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+import jakarta.persistence.*;
+import lombok.Data;
 
-// Request interceptor to add JWT token
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+import java.time.LocalDateTime;
 
-// Response interceptor to handle unauthenticated errors
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401 || error.response?.status === 403) {
-            localStorage.removeItem('token');
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-            }
-        }
-        return Promise.reject(error);
-    }
-);
-
-export default api;
+@Data
+@Entity
+@Table(name = "audit_log")
+public class AuditLog {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "log_id")
+    private Long logId;
+    
+    @Column(name = "table_affected", nullable = false)
+    private String tableAffected;
+    
+    @Column(name = "record_id", nullable = false)
+    private String recordId;
+    
+    @Column(name = "action_type", nullable = false)
+    private String actionType;
+    
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String details;
+    
+    @Column(name = "changed_at", insertable = false, updatable = false)
+    private LocalDateTime changedAt;
+}

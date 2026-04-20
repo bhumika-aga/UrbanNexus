@@ -23,11 +23,13 @@
 package com.urbannexus.service;
 
 import com.urbannexus.dto.DashboardStatsDTO;
+import com.urbannexus.model.Admin;
 import com.urbannexus.model.Resident;
 import com.urbannexus.model.Technician;
 import com.urbannexus.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -43,6 +45,7 @@ public class AdminService {
     private final AdminRepository adminRepository;
     private final TechnicianManagementRepository technicianManagementRepository;
     private final AmenityMgmtRepository amenityMgmtRepository;
+    private final AuditService auditService;
     
     public DashboardStatsDTO getDashboardStats() {
         long totalResidents = residentRepository.count();
@@ -80,8 +83,22 @@ public class AdminService {
         return paymentRepository.searchTransactions(status, block, residentName);
     }
     
+    @Transactional
     public void processOverduePayments() {
         paymentRepository.processOverduePayments();
+        auditService.log("payment", "ALL", "OVERDUE_PROCESS", "Manual trigger of overdue payment processing.");
+    }
+    
+    @Transactional
+    public void updateAdminProfile(Long adminId, Map<String, Object> updates) {
+        Admin admin = adminRepository.findById(adminId)
+                          .orElseThrow(() -> new RuntimeException("Admin not found."));
+        
+        if (updates.containsKey("username")) {
+            admin.setUsername((String) updates.get("username"));
+            auditService.log("admin", adminId.toString(), "UPDATE", "Updated username to: " + admin.getUsername());
+        }
+        adminRepository.save(admin);
     }
     
     public List<Map<String, Object>> getAuditLogs() {

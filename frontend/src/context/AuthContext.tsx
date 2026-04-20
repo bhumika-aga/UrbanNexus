@@ -20,73 +20,73 @@
  * SOFTWARE.
  */
 
-import { jwtDecode } from "jwt-decode";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { AuthState, DecodedToken, Role, User } from "../types";
+import {jwtDecode} from "jwt-decode";
+import React, {createContext, useContext, useEffect, useState} from "react";
+import {AuthState, DecodedToken, Role, User} from "../types";
 
 interface AuthContextType extends AuthState {
-  login: (token: string) => void;
-  logout: () => void;
+    login: (token: string) => void;
+    logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    token: null,
-    isLoading: true,
-  });
+                                                                          children,
+                                                                      }) => {
+    const [state, setState] = useState<AuthState>({
+        user: null,
+        token: null,
+        isLoading: true,
+    });
 
-  const decodeTokenAndSetUser = (token: string) => {
-    try {
-      const decoded = jwtDecode<DecodedToken>(token);
-      const user: User = {
-        id: (decoded.id || decoded.userId || decoded.adminId) as number,
-        username: (decoded.sub || decoded.username) as string,
-        role: decoded.role as Role,
-        residentId: decoded.residentId,
-        techId: decoded.techId,
-      };
-      setState({ user, token, isLoading: false });
-    } catch (error) {
-      console.error("Token decoding failed:", error);
-      logout();
-    }
-  };
+    const decodeTokenAndSetUser = (token: string) => {
+        try {
+            const decoded = jwtDecode<DecodedToken>(token);
+            const user: User = {
+                id: (decoded.id || decoded.userId || decoded.adminId) as number,
+                username: (decoded.sub || decoded.username) as string,
+                role: decoded.role as Role,
+                residentId: decoded.residentId,
+                techId: decoded.techId,
+            };
+            setState({user, token, isLoading: false});
+        } catch (error) {
+            console.error("Token decoding failed:", error);
+            logout();
+        }
+    };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      decodeTokenAndSetUser(token);
-    } else {
-      setState({ user: null, token: null, isLoading: false });
-    }
-  }, []);
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            decodeTokenAndSetUser(token);
+        } else {
+            setState({user: null, token: null, isLoading: false});
+        }
+    }, []);
 
-  const login = (token: string) => {
-    localStorage.setItem("token", token);
-    decodeTokenAndSetUser(token);
-  };
+    const login = (token: string) => {
+        localStorage.setItem("token", token);
+        decodeTokenAndSetUser(token);
+    };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setState({ user: null, token: null, isLoading: false });
-  };
+    const logout = () => {
+        localStorage.removeItem("token");
+        setState({user: null, token: null, isLoading: false});
+    };
 
-  return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    return (
+        <AuthContext.Provider value={{...state, login, logout}}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
 };

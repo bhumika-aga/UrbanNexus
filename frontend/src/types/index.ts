@@ -23,86 +23,96 @@
 export type Role = 'SuperAdmin' | 'Resident' | 'Technician';
 
 export interface User {
-  id: number;
-  username: string;
-  role: Role;
-  residentId?: number;
-  techId?: number;
+    id: number;
+    username: string;
+    role: Role;
+    residentId?: number;
+    techId?: number;
 }
 
 export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isLoading: boolean;
+    user: User | null;
+    token: string | null;
+    isLoading: boolean;
 }
 
 export interface LoginResponse {
-  message: string;
-  token: string;
-  admin: {
-    username: string;
-    role: Role;
-  };
+    message: string;
+    token: string;
+    admin: {
+        username: string;
+        role: Role;
+    };
 }
 
 export interface Resident {
-  residentId: number;
-  name: string;
-  houseBlock: string;
-  houseFloor: string;
-  houseUnit: string;
-  ownershipStatus: string;
-  contact: string;
-  noOfMembers: number;
+    residentId: number;
+    name: string;
+    houseBlock: string;
+    houseFloor: string;
+    houseUnit: string;
+    ownershipStatus: string;
+    contact: string;
+    noOfMembers: number;
 }
 
 export interface Technician {
-  techId: number;
-  name: string;
-  skill: string;
-  contact: string;
+    techId: number;
+    name: string;
+    skill: string;
+    contact: string;
+    available: boolean;
+}
+
+export interface AuditLogEntry {
+    logId: number;
+    tableAffected: string;
+    recordId: string;
+    actionType: string;
+    details: string;
+    changedAt: string;
 }
 
 export interface Amenity {
-  amenityId: number;
-  name: string;
-  capacity: number;
+    amenityId: number;
+    name: string;
+    capacity: number;
 }
 
 export interface Transaction {
-  trans_no: string;
-  resident_name: string;
-  house_block: string;
-  house_unit: string;
-  status: string;
-  cost: number;
-  service_type: string;
+    trans_no: string;
+    resident_name: string;
+    house_block: string;
+    house_unit: string;
+    status: string;
+    cost: number;
+    service_type: string;
 }
 
 export interface Booking {
-  booking_id?: number;
-  assignment_id?: number;
-  amenity?: string;
-  technician?: string;
-  skill?: string;
-  date?: string;
-  assign_date?: string;
-  slot: number;
-  status: string;
-  house_block?: string;
-  house_unit?: string;
-  resident_name?: string;
+    booking_id?: number;
+    assignment_id?: number;
+    amenity?: string;
+    technician?: string;
+    skill?: string;
+    date?: string;
+    assign_date?: string;
+    slot: number;
+    status: string;
+    house_block?: string;
+    house_unit?: string;
+    resident_name?: string;
 }
 
 export interface DecodedToken {
-  id?: number;
-  userId?: number;
-  adminId?: number;
-  sub?: string;
-  username?: string;
-  role: Role;
-  residentId?: number;
-  techId?: number;
-  iat?: number;
-  exp?: number;
+    id?: number;
+    userId?: number;
+    adminId?: number;
+    sub?: string;
+    username?: string;
+    role: Role;
+    residentId?: number;
+    techId?: number;
+    iat?: number;
+    exp?: number;
 }

@@ -80,6 +80,36 @@
               ]
             }
           }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contact\": \"9999999999\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/update",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile",
+                "update"
+              ]
+            }
+          }
         }
       ]
     },
@@ -739,6 +769,28 @@
                 "admin",
                 "technicians",
                 "bookings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/stats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "stats"
               ]
             }
           }

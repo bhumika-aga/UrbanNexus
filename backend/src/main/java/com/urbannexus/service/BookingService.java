@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.random.RandomGenerator;
@@ -79,12 +80,16 @@ public class BookingService {
         Pricing pricing = pricingRepository.findByItemNameAndCategory(skill, PricingCategory.Technician)
                               .orElseThrow(() -> new RuntimeException("No pricing found for " + skill));
         
+        BigDecimal basePrice = pricing.getBasePrice();
+        BigDecimal gst = basePrice.multiply(new BigDecimal("0.18"));
+        BigDecimal totalPrice = basePrice.add(gst);
+        
         String transNo = "TXN-TECH-" + RandomGenerator.getDefault().nextInt(100000, 999999);
         Payment payment = new Payment();
         payment.setTransNo(transNo);
         payment.setStatus("Pending");
         payment.setType("Technician");
-        payment.setCost(pricing.getBasePrice());
+        payment.setCost(totalPrice);
         paymentRepository.save(payment);
         
         Resident resident = residentRepository.findById(residentId)
@@ -122,12 +127,16 @@ public class BookingService {
                               .findByItemNameAndCategory(amenity.getName(), PricingCategory.Amenity)
                               .orElseThrow(() -> new RuntimeException("No pricing found for " + amenity.getName()));
         
+        BigDecimal basePrice = pricing.getBasePrice();
+        BigDecimal gst = basePrice.multiply(new BigDecimal("0.18"));
+        BigDecimal totalPrice = basePrice.add(gst);
+        
         String transNo = "TXN-AMEN-" + RandomGenerator.getDefault().nextInt(100000, 999999);
         Payment payment = new Payment();
         payment.setTransNo(transNo);
         payment.setStatus("Pending");
         payment.setType("Amenity");
-        payment.setCost(pricing.getBasePrice());
+        payment.setCost(totalPrice);
         paymentRepository.save(payment);
         
         Resident resident = residentRepository.findById(residentId)

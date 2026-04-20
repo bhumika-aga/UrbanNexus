@@ -17,9 +17,23 @@ environments, the system utilizes a normalized relational schema:
   `urbannexus_db.mv.db`). This allows the platform to maintain data persistence across restarts without requiring a
   dedicated external database server.
 - **Boot Consistency**: The system utilizes Spring SQL Initialization (`schema.sql` and `data.sql`) to reconstruct the
-  operational environment on every boot, ensuring a reliable state for field operations.
+  operational environment on every boot. This is critical for maintaining an audit-ready state in field operations.
 
-### 2. Business Engine (Spring Boot 3.5 & Java 17)
+### 2. Logical Flow & Data Orchestration
+
+UrbanNexus operates on a **Tri-Hub Model**:
+
+1. **Administrative Command**: Admins manage the lifecycle of Residents and Technicians. When a resident is added, a
+   secure account is automatically provisioned.
+2. **Service Lifecycle**: Residents request slots (Amenity or Technician). The system performs real-time **Collision
+   Detection** (ensuring no double-bookings for slots) and **Availability Validation** (assigning only ready
+   technicians).
+3. **Financial Integrity**: Every booking generates a `Payment` record. The `Audit Service` records every system
+   mutation (Add/Delete/Status Change) into a permanent ledger for transparency.
+4. **Bulk Processing**: The system simulates "Bank-Grade" transitions. Admins can trigger the `Overdue Processor`, which
+   implements a cursor-like logic to transition pending dues to overdue status based on 30-day windows.
+
+### 3. Business Engine (Spring Boot 3.x & Java 21)
 
 The backend acts as the intelligent orchestrator, housing the complex business logic that ensures community stability:
 
@@ -79,9 +93,10 @@ To run with a local MySQL instance, use the `dev` profile:
 
 ## 🧪 API Verification (Postman)
 
-- **Path**: `resources/UrbanNexus_Postman_Collection.json`
+- **Path**: `./UrbanNexus_Postman_Collection.json`
 - **Admin**: `admin` / `pwd123#`
-- **Resident**: `john_doe` / `pwd123#`
+- **Resident**: `charles` / `pwd123#`
+- **Technician**: `max` / `pwd123#`
 
 ---
 

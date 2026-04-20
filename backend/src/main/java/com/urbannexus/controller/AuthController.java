@@ -29,7 +29,10 @@ import com.urbannexus.model.Technician;
 import com.urbannexus.repository.ResidentRepository;
 import com.urbannexus.repository.TechnicianRepository;
 import com.urbannexus.security.UserPrincipal;
+import com.urbannexus.service.AdminService;
 import com.urbannexus.service.AuthService;
+import com.urbannexus.service.ResidentService;
+import com.urbannexus.service.TechnicianService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -48,6 +51,9 @@ public class AuthController {
     private final AuthService authService;
     private final ResidentRepository residentRepository;
     private final TechnicianRepository technicianRepository;
+    private final ResidentService residentService;
+    private final TechnicianService technicianService;
+    private final AdminService adminService;
     
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -65,19 +71,43 @@ public class AuthController {
     @GetMapping("/profile/me")
     public ResponseEntity<?> getProfile(@AuthenticationPrincipal UserPrincipal currentUser) {
         try {
-            if (currentUser.getResidentId() != null) {
+            if ("Resident".equals(currentUser.getRole())) {
                 Resident r = residentRepository.findById(currentUser.getResidentId())
                                  .orElseThrow(() -> new RuntimeException("Resident not found"));
-                return ResponseEntity.ok(Map.of("name", r.getName(), "contact", r.getContact()));
-            } else if (currentUser.getTechId() != null) {
+                return ResponseEntity.ok(r);
+            } else if ("Technician".equals(currentUser.getRole())) {
                 Technician t = technicianRepository.findById(currentUser.getTechId())
                                    .orElseThrow(() -> new RuntimeException("Technician not found"));
-                return ResponseEntity.ok(Map.of("name", t.getName(), "contact", t.getContact()));
+                return ResponseEntity.ok(t);
+            } else if ("SuperAdmin".equals(currentUser.getRole())) {
+                return ResponseEntity.ok(Map.of("username", currentUser.getUsername(), "role", "SuperAdmin"));
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to fetch profile info"));
+        }
+    }
+    
+    @PutMapping("/profile/update")
+    public ResponseEntity<?> updateProfile(@AuthenticationPrincipal UserPrincipal currentUser,
+                                           @RequestBody Map<String, Object> updates) {
+        try {
+            if ("Resident".equals(currentUser.getRole())) {
+                residentService.updateResidentProfile(currentUser.getResidentId(), updates);
+                return ResponseEntity.ok(Map.of("message", "Profile updated successfully."));
+            } else if ("Technician".equals(currentUser.getRole())) {
+                technicianService.updateTechnicianProfile(currentUser.getTechId(), updates);
+                return ResponseEntity.ok(Map.of("message", "Profile updated successfully."));
+            } else if ("SuperAdmin".equals(currentUser.getRole())) {
+                adminService.updateAdminProfile(currentUser.getId(), updates);
+                return ResponseEntity.ok(Map.of("message", "Profile updated successfully."));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid user role."));
+        } catch (Exception e) {
+            log.error("Update profile failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                       .body(Map.of("error", "Failed to update profile: " + e.getMessage()));
         }
     }
 }

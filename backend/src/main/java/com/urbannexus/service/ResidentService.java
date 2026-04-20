@@ -47,6 +47,7 @@ public class ResidentService {
     private final PaymentRepository paymentRepository;
     private final AmenityMgmtRepository amenityMgmtRepository;
     private final TechnicianManagementRepository technicianManagementRepository;
+    private final AuditService auditService;
     
     @Transactional
     public Map<String, Object> addResident(String name, String houseBlock, String houseFloor, String houseUnit,
@@ -76,6 +77,8 @@ public class ResidentService {
         
         adminRepository.save(admin);
         log.info("Resident created successfully inside database with generated username: {}", username);
+        
+        auditService.log("resident", newResidentId.toString(), "ADD", "Added new resident: " + name);
         
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Resident and Login created!");
@@ -109,6 +112,34 @@ public class ResidentService {
         if (resident.isEmpty()) {
             throw new RuntimeException("Resident not found.");
         }
-        residentRepository.delete(resident.get());
+        Resident r = resident.get();
+        auditService.log("resident", residentId.toString(), "DELETE", "Deleted resident: " + r.getName());
+        residentRepository.delete(r);
+    }
+    
+    @Transactional
+    public void updateResidentProfile(Long residentId, Map<String, Object> updates) {
+        Resident resident = residentRepository.findById(residentId)
+                                .orElseThrow(() -> new RuntimeException("Resident not found."));
+        
+        StringBuilder details = new StringBuilder("Updated: ");
+        if (updates.containsKey("name")) {
+            resident.setName((String) updates.get("name"));
+            details.append("name, ");
+        }
+        if (updates.containsKey("contact")) {
+            resident.setContact((String) updates.get("contact"));
+            details.append("contact, ");
+        }
+        if (updates.containsKey("no_of_members")) {
+            resident.setNoOfMembers(((Number) updates.get("no_of_members")).intValue());
+            details.append("no_of_members, ");
+        }
+        // House details are Admin only - implementation choice: ignore them here or
+        // throw error
+        // As per feedback "Admin only" for house details.
+        
+        residentRepository.save(resident);
+        auditService.log("resident", residentId.toString(), "UPDATE", details.toString());
     }
 }

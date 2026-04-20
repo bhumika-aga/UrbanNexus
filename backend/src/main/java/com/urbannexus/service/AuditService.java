@@ -20,41 +20,28 @@
  * SOFTWARE.
  */
 
-import axios from 'axios';
+package com.urbannexus.service;
 
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+import com.urbannexus.model.AuditLog;
+import com.urbannexus.repository.AuditLogRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-// Request interceptor to add JWT token
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+@Service
+@RequiredArgsConstructor
+public class AuditService {
+    
+    private final AuditLogRepository auditLogRepository;
+    
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void log(String table, String recordId, String action, String details) {
+        AuditLog log = new AuditLog();
+        log.setTableAffected(table);
+        log.setRecordId(recordId);
+        log.setActionType(action);
+        log.setDetails(details);
+        auditLogRepository.save(log);
     }
-);
-
-// Response interceptor to handle unauthenticated errors
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401 || error.response?.status === 403) {
-            localStorage.removeItem('token');
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-            }
-        }
-        return Promise.reject(error);
-    }
-);
-
-export default api;
+}

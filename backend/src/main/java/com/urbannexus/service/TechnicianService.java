@@ -47,6 +47,7 @@ public class TechnicianService {
     private final TechnicianManagementRepository technicianManagementRepository;
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
     
     @Transactional
     public Map<String, Object> addTechnician(Long techId, String name, String contact, String skill) {
@@ -69,6 +70,8 @@ public class TechnicianService {
         admin.setTechnician(tech);
         
         adminRepository.save(admin);
+        
+        auditService.log("technician", techId.toString(), "ADD", "Added new technician: " + name);
         
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Technician profile configured successfully.");
@@ -104,7 +107,9 @@ public class TechnicianService {
         if (tech.isEmpty()) {
             throw new RuntimeException("Technician not found.");
         }
-        technicianRepository.delete(tech.get());
+        Technician t = tech.get();
+        auditService.log("technician", techId.toString(), "DELETE", "Deleted technician: " + t.getName());
+        technicianRepository.delete(t);
     }
     
     public Technician getTechnician(Long techId) {
@@ -117,6 +122,30 @@ public class TechnicianService {
         Technician tech = getTechnician(techId);
         tech.setAvailable(available);
         technicianRepository.save(tech);
+        auditService.log("technician", techId.toString(), "UPDATE", "Updated availability to: " + available);
         return Map.of("message", "Availability updated to " + available);
+    }
+    
+    @Transactional
+    public void updateTechnicianProfile(Long techId, Map<String, Object> updates) {
+        Technician tech = technicianRepository.findById(techId)
+                              .orElseThrow(() -> new RuntimeException("Technician not found."));
+        
+        StringBuilder details = new StringBuilder("Updated: ");
+        if (updates.containsKey("name")) {
+            tech.setName((String) updates.get("name"));
+            details.append("name, ");
+        }
+        if (updates.containsKey("contact")) {
+            tech.setContact((String) updates.get("contact"));
+            details.append("contact, ");
+        }
+        if (updates.containsKey("skill")) {
+            tech.setSkill((String) updates.get("skill"));
+            details.append("skill, ");
+        }
+        
+        technicianRepository.save(tech);
+        auditService.log("technician", techId.toString(), "UPDATE", details.toString());
     }
 }
