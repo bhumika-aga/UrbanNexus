@@ -27,8 +27,11 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -78,9 +81,9 @@ public class AmenityController {
         }
     }
 
-    @org.springframework.web.bind.annotation.PutMapping("/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<?> updateAmenity(@AuthenticationPrincipal UserPrincipal currentUser,
-            @org.springframework.web.bind.annotation.PathVariable Long id, @RequestBody Map<String, Object> payload) {
+            @PathVariable Long id, @RequestBody Map<String, Object> payload) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
         }
@@ -101,9 +104,9 @@ public class AmenityController {
         }
     }
 
-    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteAmenity(@AuthenticationPrincipal UserPrincipal currentUser,
-            @org.springframework.web.bind.annotation.PathVariable Long id) {
+            @PathVariable Long id) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
         }

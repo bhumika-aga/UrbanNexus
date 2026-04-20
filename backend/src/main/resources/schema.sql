@@ -131,4 +131,5 @@ CREATE TABLE pricing (
   PRIMARY KEY (item_name, category)
 );
 
--- Logic (Triggers, Procedures) moved to Java Service Layer for DB-agnosticism.
+-- Primary DDL (Tables)
+-- Note: Platform-specific logic (Procedures, Triggers) is located in schema-mysql.sql and schema-h2.sql.

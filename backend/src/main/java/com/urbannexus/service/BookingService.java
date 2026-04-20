@@ -39,6 +39,7 @@ import com.urbannexus.model.Technician;
 import com.urbannexus.model.TechnicianManagement;
 import com.urbannexus.repository.AmenityMgmtRepository;
 import com.urbannexus.repository.AmenityRepository;
+import com.urbannexus.repository.BookingRepository;
 import com.urbannexus.repository.PaymentRepository;
 import com.urbannexus.repository.PricingRepository;
 import com.urbannexus.repository.ResidentRepository;
@@ -51,106 +52,115 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BookingService {
 
-    private final TechnicianRepository technicianRepository;
-    private final TechnicianManagementRepository technicianManagementRepository;
-    private final ResidentRepository residentRepository;
-    private final PricingRepository pricingRepository;
-    private final PaymentRepository paymentRepository;
-    private final AmenityRepository amenityRepository;
-    private final AmenityMgmtRepository amenityMgmtRepository;
+        private final BookingRepository bookingRepository;
+        private final TechnicianRepository technicianRepository;
+        private final TechnicianManagementRepository technicianManagementRepository;
+        private final ResidentRepository residentRepository;
+        private final PricingRepository pricingRepository;
+        private final PaymentRepository paymentRepository;
+        private final AmenityRepository amenityRepository;
+        private final AmenityMgmtRepository amenityMgmtRepository;
 
-    @Transactional
-    public Map<String, Object> bookTechnician(Long residentId, String skill, Integer slot, String assignDateStr) {
-        LocalDate assignDate = LocalDate.parse(assignDateStr);
-
-        // 1. Find Available Technician
-        Technician tech = technicianRepository.findBySkill(skill).stream()
-                .filter(t -> !technicianManagementRepository
-                        .existsByTechnician_TechIdAndAssignDateAndSlot(t.getTechId(), assignDate, slot))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException(
-                        "Booking Failed: No available technicians with that skill for the requested date and slot."));
-
-        // 2. Fetch Pricing
-        Pricing pricing = pricingRepository.findByItemNameAndCategory(skill, PricingCategory.Technician)
-                .orElseThrow(() -> new RuntimeException("Booking Failed: No pricing found for skill: " + skill));
-
-        // 3. Create Payment (GST auto-calculated in @PrePersist)
-        String transNo = "TXN-TECH-" + RandomGenerator.getDefault().nextInt(100000, 999999);
-        Payment payment = new Payment();
-        payment.setTransNo(transNo);
-        payment.setStatus("Pending");
-        payment.setType("Technician");
-        payment.setCost(pricing.getBasePrice());
-        paymentRepository.save(payment);
-
-        // 4. Create Assignment
-        Resident resident = residentRepository.findById(residentId)
-                .orElseThrow(() -> new RuntimeException("Resident not found"));
-
-        TechnicianManagement assignment = new TechnicianManagement();
-        assignment.setResident(resident);
-        assignment.setTechnician(tech);
-        assignment.setTransNo(transNo);
-        assignment.setAssignDate(assignDate);
-        assignment.setSlot(slot);
-        assignment.setStatus("Assigned");
-        technicianManagementRepository.save(assignment);
-
-        return Map.of(
-                "assignment_id", assignment.getAssignmentId(),
-                "technician_name", tech.getName(),
-                "trans_no", transNo,
-                "total_with_gst", payment.getCost() // This will be the original cost until after commit, but that's
-                                                    // fine for the immediate response
-        );
-    }
-
-    @Transactional
-    public Map<String, Object> bookAmenity(Long residentId, Long amenityId, String dateStr, Integer slot,
-            Integer capacityBooked) {
-        LocalDate date = LocalDate.parse(dateStr);
-
-        // 1. Validate Amenity & Capacity
-        Amenity amenity = amenityRepository.findById(amenityId)
-                .orElseThrow(() -> new RuntimeException("Amenity not found"));
-
-        if (capacityBooked > amenity.getCapacity()) {
-            throw new RuntimeException("Booking failed: Capacity requested exceeds max capacity.");
+        /**
+         * Entry Point: Calls the Database Procedure (MySQL proc or H2 Alias)
+         */
+        @Transactional
+        public Map<String, Object> bookTechnician(Long residentId, String skill, Integer slot, String assignDate) {
+                return bookingRepository.autoBookTechnician(residentId, skill, slot, assignDate);
         }
 
-        // 2. Fetch Pricing
-        Pricing pricing = pricingRepository.findByItemNameAndCategory(amenity.getName(), PricingCategory.Amenity)
-                .orElseThrow(() -> new RuntimeException(
-                        "Booking Failed: No pricing found for amenity: " + amenity.getName()));
+        @Transactional
+        public Map<String, Object> bookAmenity(Long residentId, Long amenityId, String date, Integer slot,
+                        Integer capacityBooked) {
+                return bookingRepository.autoBookAmenity(residentId, amenityId, date, slot, capacityBooked);
+        }
 
-        // 3. Create Payment
-        String transNo = "TXN-AMEN-" + RandomGenerator.getDefault().nextInt(100000, 999999);
-        Payment payment = new Payment();
-        payment.setTransNo(transNo);
-        payment.setStatus("Pending");
-        payment.setType("Amenity");
-        payment.setCost(pricing.getBasePrice());
-        paymentRepository.save(payment);
+        /**
+         * H2 Internal Logic: Executed via ALIAS
+         */
+        @Transactional
+        public Map<String, Object> executeTechnicianBooking(Long residentId, String skill, Integer slot,
+                        String assignDateStr) {
+                LocalDate assignDate = LocalDate.parse(assignDateStr);
 
-        // 4. Create Booking
-        Resident resident = residentRepository.findById(residentId)
-                .orElseThrow(() -> new RuntimeException("Resident not found"));
+                Technician tech = technicianRepository.findBySkill(skill).stream()
+                                .filter(t -> !technicianManagementRepository
+                                                .existsByTechnician_TechIdAndAssignDateAndSlot(t.getTechId(),
+                                                                assignDate, slot))
+                                .findFirst()
+                                .orElseThrow(() -> new RuntimeException("Booking Failed: No available technicians."));
 
-        AmenityMgmt booking = new AmenityMgmt();
-        booking.setResident(resident);
-        booking.setAmenity(amenity);
-        booking.setTransNo(transNo);
-        booking.setDate(date);
-        booking.setSlot(slot);
-        booking.setCapacityBooked(capacityBooked);
-        booking.setStatus("Confirmed");
-        amenityMgmtRepository.save(booking);
+                Pricing pricing = pricingRepository.findByItemNameAndCategory(skill, PricingCategory.Technician)
+                                .orElseThrow(() -> new RuntimeException("No pricing found for " + skill));
 
-        return Map.of(
-                "booking_id", booking.getBookingId(),
-                "amenity_name", amenity.getName(),
-                "trans_no", transNo,
-                "total_with_gst", payment.getCost());
-    }
+                String transNo = "TXN-TECH-" + RandomGenerator.getDefault().nextInt(100000, 999999);
+                Payment payment = new Payment();
+                payment.setTransNo(transNo);
+                payment.setStatus("Pending");
+                payment.setType("Technician");
+                payment.setCost(pricing.getBasePrice());
+                paymentRepository.save(payment);
+
+                Resident resident = residentRepository.findById(residentId)
+                                .orElseThrow(() -> new RuntimeException("Resident not found"));
+
+                TechnicianManagement assignment = new TechnicianManagement();
+                assignment.setResident(resident);
+                assignment.setTechnician(tech);
+                assignment.setTransNo(transNo);
+                assignment.setAssignDate(assignDate);
+                assignment.setSlot(slot);
+                assignment.setStatus("Assigned");
+                technicianManagementRepository.save(assignment);
+
+                return Map.of(
+                                "assignment_id", assignment.getAssignmentId(),
+                                "technician_name", tech.getName(),
+                                "trans_no", transNo,
+                                "total_with_gst", payment.getCost());
+        }
+
+        @Transactional
+        public Map<String, Object> executeAmenityBooking(Long residentId, Long amenityId, String dateStr, Integer slot,
+                        Integer capacityBooked) {
+                LocalDate date = LocalDate.parse(dateStr);
+
+                Amenity amenity = amenityRepository.findById(amenityId)
+                                .orElseThrow(() -> new RuntimeException("Amenity not found"));
+
+                if (capacityBooked > amenity.getCapacity()) {
+                        throw new RuntimeException("Capacity exceeded.");
+                }
+
+                Pricing pricing = pricingRepository
+                                .findByItemNameAndCategory(amenity.getName(), PricingCategory.Amenity)
+                                .orElseThrow(() -> new RuntimeException("No pricing found for " + amenity.getName()));
+
+                String transNo = "TXN-AMEN-" + RandomGenerator.getDefault().nextInt(100000, 999999);
+                Payment payment = new Payment();
+                payment.setTransNo(transNo);
+                payment.setStatus("Pending");
+                payment.setType("Amenity");
+                payment.setCost(pricing.getBasePrice());
+                paymentRepository.save(payment);
+
+                Resident resident = residentRepository.findById(residentId)
+                                .orElseThrow(() -> new RuntimeException("Resident not found"));
+
+                AmenityMgmt booking = new AmenityMgmt();
+                booking.setResident(resident);
+                booking.setAmenity(amenity);
+                booking.setTransNo(transNo);
+                booking.setDate(date);
+                booking.setSlot(slot);
+                booking.setCapacityBooked(capacityBooked);
+                booking.setStatus("Confirmed");
+                amenityMgmtRepository.save(booking);
+
+                return Map.of(
+                                "booking_id", booking.getBookingId(),
+                                "amenity_name", amenity.getName(),
+                                "trans_no", transNo,
+                                "total_with_gst", payment.getCost());
+        }
 }

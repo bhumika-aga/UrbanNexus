@@ -22,11 +22,21 @@
 
 package com.urbannexus.repository;
 
+import java.util.Map;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.stereotype.Repository;
 
 import com.urbannexus.model.TechnicianManagement;
 
 @Repository
 public interface BookingRepository extends JpaRepository<TechnicianManagement, Long> {
+
+    @Procedure(procedureName = "AutoBookTechnician")
+    Map<String, Object> autoBookTechnician(Long resident_id, String skill, Integer slot, String assign_date);
+
+    @Procedure(procedureName = "AutoBookAmenity")
+    Map<String, Object> autoBookAmenity(Long resident_id, Long amenity_id, String date, Integer slot,
+            Integer capacity_booked);
 }
