@@ -22,59 +22,57 @@
 
 package com.urbannexus.service;
 
-import java.util.Optional;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.urbannexus.dto.AuthResponse;
 import com.urbannexus.dto.LoginRequest;
 import com.urbannexus.model.Admin;
 import com.urbannexus.repository.AdminRepository;
 import com.urbannexus.security.JwtTokenProvider;
 import com.urbannexus.security.UserPrincipal;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-
+    
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
-
+    
     public AuthResponse login(LoginRequest request) {
         log.debug("Attempting to find admin with username: {}", request.getUsername());
         Optional<Admin> adminOpt = adminRepository.findByUsername(request.getUsername());
-
+        
         if (adminOpt.isEmpty()) {
             throw new RuntimeException("Invalid username or password");
         }
-
+        
         Admin admin = adminOpt.get();
         if (!passwordEncoder.matches(request.getPassword(), admin.getPasswordHash())) {
             throw new RuntimeException("Invalid username or password");
         }
-
+        
         Long residentId = admin.getResident() != null ? admin.getResident().getResidentId() : null;
         Long techId = admin.getTechnician() != null ? admin.getTechnician().getTechId() : null;
-
+        
         UserPrincipal principal = new UserPrincipal(
-                admin.getAdminId(),
-                admin.getUsername(),
-                admin.getPasswordHash(),
-                admin.getRole(),
-                residentId,
-                techId);
-
+            admin.getAdminId(),
+            admin.getUsername(),
+            admin.getPasswordHash(),
+            admin.getRole(),
+            residentId,
+            techId);
+        
         String token = tokenProvider.generateToken(principal);
         log.info("Successfully generated JWT token for user: {} with role: {}", principal.getUsername(),
-                principal.getRole());
-
+            principal.getRole());
+        
         return new AuthResponse("Login successful!", token, new AuthResponse.AdminInfo(
-                principal.getUsername(), principal.getRole()));
+            principal.getUsername(), principal.getRole()));
     }
 }

@@ -31,7 +31,7 @@ public class AuthResponse {
     private String message;
     private String token;
     private AdminInfo admin;
-
+    
     @Data
     @AllArgsConstructor
     public static class AdminInfo {

@@ -49,7 +49,7 @@ npm install
 
 ### 2. Environment Mapping
 
-Standard connections check against `http://localhost:4720/api` natively mapping toward the Java API server. Ensure any `.env` mapping (`VITE_API_BASE_URL`) aligns sequentially with the backend Tomcat host.
+Standard connections check against `http://localhost:8080/api` natively mapping toward the Java API server. Ensure any `.env` mapping (`VITE_API_BASE_URL`) aligns sequentially with the backend Tomcat host.
 
 ### 3. Execution
 

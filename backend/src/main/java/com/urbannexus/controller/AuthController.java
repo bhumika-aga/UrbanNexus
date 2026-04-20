@@ -22,17 +22,6 @@
 
 package com.urbannexus.controller;
 
-import java.util.Map;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.urbannexus.dto.AuthResponse;
 import com.urbannexus.dto.LoginRequest;
 import com.urbannexus.model.Resident;
@@ -41,20 +30,25 @@ import com.urbannexus.repository.ResidentRepository;
 import com.urbannexus.repository.TechnicianRepository;
 import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.AuthService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
-
+    
     private final AuthService authService;
     private final ResidentRepository residentRepository;
     private final TechnicianRepository technicianRepository;
-
+    
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         log.info("Login attempt for user: {}", loginRequest.getUsername());
@@ -67,23 +61,23 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         }
     }
-
+    
     @GetMapping("/profile/me")
     public ResponseEntity<?> getProfile(@AuthenticationPrincipal UserPrincipal currentUser) {
         try {
             if (currentUser.getResidentId() != null) {
                 Resident r = residentRepository.findById(currentUser.getResidentId())
-                        .orElseThrow(() -> new RuntimeException("Resident not found"));
+                                 .orElseThrow(() -> new RuntimeException("Resident not found"));
                 return ResponseEntity.ok(Map.of("name", r.getName(), "contact", r.getContact()));
             } else if (currentUser.getTechId() != null) {
                 Technician t = technicianRepository.findById(currentUser.getTechId())
-                        .orElseThrow(() -> new RuntimeException("Technician not found"));
+                                   .orElseThrow(() -> new RuntimeException("Technician not found"));
                 return ResponseEntity.ok(Map.of("name", t.getName(), "contact", t.getContact()));
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to fetch profile info"));
+                       .body(Map.of("error", "Failed to fetch profile info"));
         }
     }
 }

@@ -22,34 +22,28 @@
 
 package com.urbannexus.model;
 
-import java.math.BigDecimal;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 @Entity
 @Table(name = "pricing")
 @IdClass(PricingId.class)
 public class Pricing {
-
+    
     @Id
     @Column(name = "item_name")
     private String itemName;
-
+    
     @Id
     @Enumerated(EnumType.STRING)
     private PricingCategory category;
-
+    
     @Column(name = "base_price", nullable = false)
     private BigDecimal basePrice;
-
+    
     public enum PricingCategory {
         Technician, Amenity
     }

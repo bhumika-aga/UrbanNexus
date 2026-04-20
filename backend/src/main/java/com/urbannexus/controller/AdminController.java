@@ -22,50 +22,44 @@
 
 package com.urbannexus.controller;
 
-import java.util.Map;
-
+import com.urbannexus.security.UserPrincipal;
+import com.urbannexus.service.AdminService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.urbannexus.security.UserPrincipal;
-import com.urbannexus.service.AdminService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 @Slf4j
 public class AdminController {
-
+    
     private final AdminService adminService;
-
+    
     @GetMapping("/residents/search")
     public ResponseEntity<?> searchResidents(@AuthenticationPrincipal UserPrincipal currentUser,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String block,
-            @RequestParam(required = false) String floor,
-            @RequestParam(required = false) String unit) {
+                                             @RequestParam(required = false) String name,
+                                             @RequestParam(required = false) String block,
+                                             @RequestParam(required = false) String floor,
+                                             @RequestParam(required = false) String unit) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Access denied. SuperAdmin clearance required."));
+                       .body(Map.of("error", "Access denied. SuperAdmin clearance required."));
         }
-
+        
         try {
             return ResponseEntity.ok(adminService.searchResidents(name, block, floor, unit));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to search residents."));
+                       .body(Map.of("error", "Failed to search residents."));
         }
     }
-
+    
     @GetMapping("/technicians")
     public ResponseEntity<?> getTechnicians(@AuthenticationPrincipal UserPrincipal currentUser) {
         if (!"SuperAdmin".equals(currentUser.getRole()) && !"Resident".equals(currentUser.getRole())) {
@@ -75,62 +69,62 @@ public class AdminController {
             return ResponseEntity.ok(adminService.getTechnicians());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to fetch technicians"));
+                       .body(Map.of("error", "Failed to fetch technicians"));
         }
     }
-
+    
     @GetMapping("/transactions")
     public ResponseEntity<?> getTransactions(@AuthenticationPrincipal UserPrincipal currentUser,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String block,
-            @RequestParam(required = false) String resident_name) {
+                                             @RequestParam(required = false) String status,
+                                             @RequestParam(required = false) String block,
+                                             @RequestParam(required = false) String resident_name) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Access denied. SuperAdmin clearance required."));
+                       .body(Map.of("error", "Access denied. SuperAdmin clearance required."));
         }
-
+        
         try {
             return ResponseEntity.ok(adminService.searchTransactions(status, block, resident_name));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to search transactions."));
+                       .body(Map.of("error", "Failed to search transactions."));
         }
     }
-
+    
     @PostMapping("/process-overdue")
     public ResponseEntity<?> processOverdue(@AuthenticationPrincipal UserPrincipal currentUser) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Access denied. SuperAdmin clearance required."));
+                       .body(Map.of("error", "Access denied. SuperAdmin clearance required."));
         }
-
+        
         try {
             log.info("SuperAdmin {} is processing overdue payments", currentUser.getUsername());
             adminService.processOverduePayments();
             return ResponseEntity
-                    .ok(Map.of("message", "Successfully ran the cursor. Pending payments are now marked as Overdue."));
+                       .ok(Map.of("message", "Successfully ran the cursor. Pending payments are now marked as Overdue."));
         } catch (Exception e) {
             log.error("Failed to process overdue payments", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to process overdue payments."));
+                       .body(Map.of("error", "Failed to process overdue payments."));
         }
     }
-
+    
     @GetMapping("/audit-logs")
     public ResponseEntity<?> getAuditLogs(@AuthenticationPrincipal UserPrincipal currentUser) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Access denied. SuperAdmin clearance required."));
+                       .body(Map.of("error", "Access denied. SuperAdmin clearance required."));
         }
-
+        
         try {
             return ResponseEntity.ok(adminService.getAuditLogs());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to fetch audit logs."));
+                       .body(Map.of("error", "Failed to fetch audit logs."));
         }
     }
-
+    
     @GetMapping("/stats")
     public ResponseEntity<?> getDashboardStats(@AuthenticationPrincipal UserPrincipal currentUser) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
@@ -140,10 +134,10 @@ public class AdminController {
             return ResponseEntity.ok(adminService.getDashboardStats());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to fetch dashboard statistics."));
+                       .body(Map.of("error", "Failed to fetch dashboard statistics."));
         }
     }
-
+    
     @GetMapping("/assignments")
     public ResponseEntity<?> getAllAssignments(@AuthenticationPrincipal UserPrincipal currentUser) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
@@ -151,7 +145,7 @@ public class AdminController {
         }
         return ResponseEntity.ok(adminService.getAllAssignments());
     }
-
+    
     @GetMapping("/amenities/bookings")
     public ResponseEntity<?> getAllAmenityBookings(@AuthenticationPrincipal UserPrincipal currentUser) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
@@ -159,7 +153,7 @@ public class AdminController {
         }
         return ResponseEntity.ok(adminService.getAllAmenityBookings());
     }
-
+    
     @GetMapping("/technicians/bookings")
     public ResponseEntity<?> getAllTechnicianBookings(@AuthenticationPrincipal UserPrincipal currentUser) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {

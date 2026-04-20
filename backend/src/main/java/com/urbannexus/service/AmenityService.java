@@ -22,23 +22,22 @@
 
 package com.urbannexus.service;
 
+import com.urbannexus.model.Amenity;
+import com.urbannexus.repository.AmenityRepository;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.stereotype.Service;
-
-import com.urbannexus.model.Amenity;
-import com.urbannexus.repository.AmenityRepository;
-
 @Service
 public class AmenityService {
-
+    
     private final AmenityRepository amenityRepository;
-
+    
     public AmenityService(AmenityRepository amenityRepository) {
         this.amenityRepository = amenityRepository;
     }
-
+    
     public void addAmenity(Long amenityId, String name, Integer capacity) {
         Amenity amenity = new Amenity();
         amenity.setAmenityId(amenityId);
@@ -46,11 +45,11 @@ public class AmenityService {
         amenity.setCapacity(capacity);
         amenityRepository.save(amenity);
     }
-
+    
     public List<Amenity> getAllAmenities() {
         return amenityRepository.findAll();
     }
-
+    
     public void updateAmenity(Long id, String name, Integer capacity) {
         Optional<Amenity> amenityOpt = amenityRepository.findById(id);
         if (amenityOpt.isEmpty()) {
@@ -63,7 +62,7 @@ public class AmenityService {
             amenity.setCapacity(capacity);
         amenityRepository.save(amenity);
     }
-
+    
     public void deleteAmenity(Long id) {
         if (!amenityRepository.existsById(id)) {
             throw new RuntimeException("Amenity not found.");

@@ -32,20 +32,20 @@ import lombok.Data;
 @Entity
 @Table(name = "technician")
 public class Technician {
-
+    
     @Id
     @Column(name = "tech_id")
     private Long techId;
-
+    
     @Column(nullable = false)
     private String name;
-
+    
     @Column(nullable = false)
     private String skill;
-
+    
     @Column(nullable = false)
     private String contact;
-
+    
     @Column(nullable = false)
     private Boolean available = true;
 }

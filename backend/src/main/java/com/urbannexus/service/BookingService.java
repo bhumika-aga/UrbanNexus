@@ -22,146 +22,131 @@
 
 package com.urbannexus.service;
 
+import com.urbannexus.model.*;
+import com.urbannexus.model.Pricing.PricingCategory;
+import com.urbannexus.repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.random.RandomGenerator;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.urbannexus.model.Amenity;
-import com.urbannexus.model.AmenityMgmt;
-import com.urbannexus.model.Payment;
-import com.urbannexus.model.Pricing;
-import com.urbannexus.model.Pricing.PricingCategory;
-import com.urbannexus.model.Resident;
-import com.urbannexus.model.Technician;
-import com.urbannexus.model.TechnicianManagement;
-import com.urbannexus.repository.AmenityMgmtRepository;
-import com.urbannexus.repository.AmenityRepository;
-import com.urbannexus.repository.BookingRepository;
-import com.urbannexus.repository.PaymentRepository;
-import com.urbannexus.repository.PricingRepository;
-import com.urbannexus.repository.ResidentRepository;
-import com.urbannexus.repository.TechnicianManagementRepository;
-import com.urbannexus.repository.TechnicianRepository;
-
-import lombok.RequiredArgsConstructor;
-
 @Service
 @RequiredArgsConstructor
 public class BookingService {
-
-        private final BookingRepository bookingRepository;
-        private final TechnicianRepository technicianRepository;
-        private final TechnicianManagementRepository technicianManagementRepository;
-        private final ResidentRepository residentRepository;
-        private final PricingRepository pricingRepository;
-        private final PaymentRepository paymentRepository;
-        private final AmenityRepository amenityRepository;
-        private final AmenityMgmtRepository amenityMgmtRepository;
-
-        /**
-         * Entry Point: Calls the Database Procedure (MySQL proc or H2 Alias)
-         */
-        @Transactional
-        public Map<String, Object> bookTechnician(Long residentId, String skill, Integer slot, String assignDate) {
-                return bookingRepository.autoBookTechnician(residentId, skill, slot, assignDate);
-        }
-
-        @Transactional
-        public Map<String, Object> bookAmenity(Long residentId, Long amenityId, String date, Integer slot,
-                        Integer capacityBooked) {
-                return bookingRepository.autoBookAmenity(residentId, amenityId, date, slot, capacityBooked);
-        }
-
-        /**
-         * H2 Internal Logic: Executed via ALIAS
-         */
-        @Transactional
-        public Map<String, Object> executeTechnicianBooking(Long residentId, String skill, Integer slot,
-                        String assignDateStr) {
-                LocalDate assignDate = LocalDate.parse(assignDateStr);
-
-                Technician tech = technicianRepository.findBySkill(skill).stream()
-                                .filter(Technician::getAvailable)
-                                .filter(t -> !technicianManagementRepository
+    
+    private final BookingRepository bookingRepository;
+    private final TechnicianRepository technicianRepository;
+    private final TechnicianManagementRepository technicianManagementRepository;
+    private final ResidentRepository residentRepository;
+    private final PricingRepository pricingRepository;
+    private final PaymentRepository paymentRepository;
+    private final AmenityRepository amenityRepository;
+    private final AmenityMgmtRepository amenityMgmtRepository;
+    
+    /**
+     * Entry Point: Calls the Database Procedure (MySQL proc or H2 Alias)
+     */
+    @Transactional
+    public Map<String, Object> bookTechnician(Long residentId, String skill, Integer slot, String assignDate) {
+        return bookingRepository.autoBookTechnician(residentId, skill, slot, assignDate);
+    }
+    
+    @Transactional
+    public Map<String, Object> bookAmenity(Long residentId, Long amenityId, String date, Integer slot,
+                                           Integer capacityBooked) {
+        return bookingRepository.autoBookAmenity(residentId, amenityId, date, slot, capacityBooked);
+    }
+    
+    /**
+     * H2 Internal Logic: Executed via ALIAS
+     */
+    @Transactional
+    public Map<String, Object> executeTechnicianBooking(Long residentId, String skill, Integer slot,
+                                                        String assignDateStr) {
+        LocalDate assignDate = LocalDate.parse(assignDateStr);
+        
+        Technician tech = technicianRepository.findBySkill(skill).stream()
+                              .filter(Technician::getAvailable)
+                              .filter(t -> !technicianManagementRepository
                                                 .existsByTechnician_TechIdAndAssignDateAndSlot(t.getTechId(),
-                                                                assignDate, slot))
-                                .findFirst()
-                                .orElseThrow(() -> new RuntimeException("Booking Failed: No available technicians."));
-
-                Pricing pricing = pricingRepository.findByItemNameAndCategory(skill, PricingCategory.Technician)
-                                .orElseThrow(() -> new RuntimeException("No pricing found for " + skill));
-
-                String transNo = "TXN-TECH-" + RandomGenerator.getDefault().nextInt(100000, 999999);
-                Payment payment = new Payment();
-                payment.setTransNo(transNo);
-                payment.setStatus("Pending");
-                payment.setType("Technician");
-                payment.setCost(pricing.getBasePrice());
-                paymentRepository.save(payment);
-
-                Resident resident = residentRepository.findById(residentId)
+                                                    assignDate, slot))
+                              .findFirst()
+                              .orElseThrow(() -> new RuntimeException("Booking Failed: No available technicians."));
+        
+        Pricing pricing = pricingRepository.findByItemNameAndCategory(skill, PricingCategory.Technician)
+                              .orElseThrow(() -> new RuntimeException("No pricing found for " + skill));
+        
+        String transNo = "TXN-TECH-" + RandomGenerator.getDefault().nextInt(100000, 999999);
+        Payment payment = new Payment();
+        payment.setTransNo(transNo);
+        payment.setStatus("Pending");
+        payment.setType("Technician");
+        payment.setCost(pricing.getBasePrice());
+        paymentRepository.save(payment);
+        
+        Resident resident = residentRepository.findById(residentId)
                                 .orElseThrow(() -> new RuntimeException("Resident not found"));
-
-                TechnicianManagement assignment = new TechnicianManagement();
-                assignment.setResident(resident);
-                assignment.setTechnician(tech);
-                assignment.setTransNo(transNo);
-                assignment.setAssignDate(assignDate);
-                assignment.setSlot(slot);
-                assignment.setStatus("Assigned");
-                technicianManagementRepository.save(assignment);
-
-                return Map.of(
-                                "assignment_id", assignment.getAssignmentId(),
-                                "technician_name", tech.getName(),
-                                "trans_no", transNo,
-                                "total_with_gst", payment.getCost());
+        
+        TechnicianManagement assignment = new TechnicianManagement();
+        assignment.setResident(resident);
+        assignment.setTechnician(tech);
+        assignment.setTransNo(transNo);
+        assignment.setAssignDate(assignDate);
+        assignment.setSlot(slot);
+        assignment.setStatus("Assigned");
+        technicianManagementRepository.save(assignment);
+        
+        return Map.of(
+            "assignment_id", assignment.getAssignmentId(),
+            "technician_name", tech.getName(),
+            "trans_no", transNo,
+            "total_with_gst", payment.getCost());
+    }
+    
+    @Transactional
+    public Map<String, Object> executeAmenityBooking(Long residentId, Long amenityId, String dateStr, Integer slot,
+                                                     Integer capacityBooked) {
+        LocalDate date = LocalDate.parse(dateStr);
+        
+        Amenity amenity = amenityRepository.findById(amenityId)
+                              .orElseThrow(() -> new RuntimeException("Amenity not found"));
+        
+        if (capacityBooked > amenity.getCapacity()) {
+            throw new RuntimeException("Capacity exceeded.");
         }
-
-        @Transactional
-        public Map<String, Object> executeAmenityBooking(Long residentId, Long amenityId, String dateStr, Integer slot,
-                        Integer capacityBooked) {
-                LocalDate date = LocalDate.parse(dateStr);
-
-                Amenity amenity = amenityRepository.findById(amenityId)
-                                .orElseThrow(() -> new RuntimeException("Amenity not found"));
-
-                if (capacityBooked > amenity.getCapacity()) {
-                        throw new RuntimeException("Capacity exceeded.");
-                }
-
-                Pricing pricing = pricingRepository
-                                .findByItemNameAndCategory(amenity.getName(), PricingCategory.Amenity)
-                                .orElseThrow(() -> new RuntimeException("No pricing found for " + amenity.getName()));
-
-                String transNo = "TXN-AMEN-" + RandomGenerator.getDefault().nextInt(100000, 999999);
-                Payment payment = new Payment();
-                payment.setTransNo(transNo);
-                payment.setStatus("Pending");
-                payment.setType("Amenity");
-                payment.setCost(pricing.getBasePrice());
-                paymentRepository.save(payment);
-
-                Resident resident = residentRepository.findById(residentId)
+        
+        Pricing pricing = pricingRepository
+                              .findByItemNameAndCategory(amenity.getName(), PricingCategory.Amenity)
+                              .orElseThrow(() -> new RuntimeException("No pricing found for " + amenity.getName()));
+        
+        String transNo = "TXN-AMEN-" + RandomGenerator.getDefault().nextInt(100000, 999999);
+        Payment payment = new Payment();
+        payment.setTransNo(transNo);
+        payment.setStatus("Pending");
+        payment.setType("Amenity");
+        payment.setCost(pricing.getBasePrice());
+        paymentRepository.save(payment);
+        
+        Resident resident = residentRepository.findById(residentId)
                                 .orElseThrow(() -> new RuntimeException("Resident not found"));
-
-                AmenityMgmt booking = new AmenityMgmt();
-                booking.setResident(resident);
-                booking.setAmenity(amenity);
-                booking.setTransNo(transNo);
-                booking.setDate(date);
-                booking.setSlot(slot);
-                booking.setCapacityBooked(capacityBooked);
-                booking.setStatus("Confirmed");
-                amenityMgmtRepository.save(booking);
-
-                return Map.of(
-                                "booking_id", booking.getBookingId(),
-                                "amenity_name", amenity.getName(),
-                                "trans_no", transNo,
-                                "total_with_gst", payment.getCost());
-        }
+        
+        AmenityMgmt booking = new AmenityMgmt();
+        booking.setResident(resident);
+        booking.setAmenity(amenity);
+        booking.setTransNo(transNo);
+        booking.setDate(date);
+        booking.setSlot(slot);
+        booking.setCapacityBooked(capacityBooked);
+        booking.setStatus("Confirmed");
+        amenityMgmtRepository.save(booking);
+        
+        return Map.of(
+            "booking_id", booking.getBookingId(),
+            "amenity_name", amenity.getName(),
+            "trans_no", transNo,
+            "total_with_gst", payment.getCost());
+    }
 }

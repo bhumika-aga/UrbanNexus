@@ -22,37 +22,36 @@
 
 package com.urbannexus.repository;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-
+import com.urbannexus.model.TechnicianManagement;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.urbannexus.model.TechnicianManagement;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 public interface TechnicianManagementRepository extends JpaRepository<TechnicianManagement, Long> {
-
-        @Modifying
-        @Query("UPDATE TechnicianManagement t SET t.status = :status WHERE t.assignmentId = :assignmentId")
-        void updateTaskStatus(@Param("assignmentId") Long assignmentId, @Param("status") String status);
-
-        @Query(value = "SELECT tm.assignment_id, t.name as technician, t.skill, tm.assign_date, tm.slot, tm.status " +
-                        "FROM technician_management tm " +
-                        "JOIN technician t ON tm.tech_id = t.tech_id " +
-                        "WHERE tm.resident_id = :residentId", nativeQuery = true)
-        List<Map<String, Object>> findBookingsByResidentId(@Param("residentId") Long residentId);
-
-        @Query(value = """
-                        SELECT tm.assignment_id, r.name as resident_name, t.name as technician, t.skill, tm.assign_date, tm.slot, tm.status, tm.trans_no
-                        FROM technician_management tm
-                        JOIN resident r ON tm.resident_id = r.resident_id
-                        JOIN technician t ON tm.tech_id = t.tech_id
-                        ORDER BY tm.assign_date DESC
-                        """, nativeQuery = true)
-        List<Map<String, Object>> findAllAssignmentsDetailed();
-
-        boolean existsByTechnician_TechIdAndAssignDateAndSlot(Long techId, LocalDate assignDate, Integer slot);
+    
+    @Modifying
+    @Query("UPDATE TechnicianManagement t SET t.status = :status WHERE t.assignmentId = :assignmentId")
+    void updateTaskStatus(@Param("assignmentId") Long assignmentId, @Param("status") String status);
+    
+    @Query(value = "SELECT tm.assignment_id, t.name as technician, t.skill, tm.assign_date, tm.slot, tm.status " +
+                       "FROM technician_management tm " +
+                       "JOIN technician t ON tm.tech_id = t.tech_id " +
+                       "WHERE tm.resident_id = :residentId", nativeQuery = true)
+    List<Map<String, Object>> findBookingsByResidentId(@Param("residentId") Long residentId);
+    
+    @Query(value = """
+        SELECT tm.assignment_id, r.name as resident_name, t.name as technician, t.skill, tm.assign_date, tm.slot, tm.status, tm.trans_no
+        FROM technician_management tm
+        JOIN resident r ON tm.resident_id = r.resident_id
+        JOIN technician t ON tm.tech_id = t.tech_id
+        ORDER BY tm.assign_date DESC
+        """, nativeQuery = true)
+    List<Map<String, Object>> findAllAssignmentsDetailed();
+    
+    boolean existsByTechnician_TechIdAndAssignDateAndSlot(Long techId, LocalDate assignDate, Integer slot);
 }
