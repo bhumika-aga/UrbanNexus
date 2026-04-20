@@ -25,7 +25,7 @@ logging:
   level:
     root: INFO
     com.urbannexus: DEBUG
-    org.springframework.web: INFO
+    org.springframework.web: DEBUG
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.orm.jdbc.bind: DEBUG
