@@ -19,6 +19,7 @@ BEGIN
     SELECT t.tech_id INTO v_tech_id
     FROM technician t
     WHERE t.skill = p_skill
+    AND t.available = 1
     AND NOT EXISTS (
         SELECT 1 FROM technician_management tm 
         WHERE tm.tech_id = t.tech_id 

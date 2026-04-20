@@ -41,10 +41,12 @@ import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.TechnicianService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/technicians")
 @RequiredArgsConstructor
+@Slf4j
 public class TechnicianController {
 
     private final TechnicianService technicianService;
@@ -57,6 +59,7 @@ public class TechnicianController {
         }
 
         try {
+            log.info("SuperAdmin {} is adding technician: {}", currentUser.getUsername(), payload.get("name"));
             Long techId = payload.get("tech_id") != null ? Long.parseLong(payload.get("tech_id").toString()) : null;
             if (techId == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Tech ID must be a number."));

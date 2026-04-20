@@ -36,10 +36,12 @@ import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.BookingService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
+@Slf4j
 public class BookingController {
 
         private final BookingService bookingService;
@@ -47,6 +49,7 @@ public class BookingController {
         @PostMapping("/technician")
         public ResponseEntity<?> bookTechnician(@AuthenticationPrincipal UserPrincipal currentUser,
                         @RequestBody Map<String, Object> payload) {
+                log.info("Booking request for technician by user: {}", currentUser.getUsername());
                 try {
                         Long residentId = "Resident".equals(currentUser.getRole()) ? currentUser.getResidentId()
                                         : (payload.get("resident_id") != null

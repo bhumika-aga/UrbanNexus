@@ -43,10 +43,12 @@ import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
@@ -55,10 +57,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        log.info("Login attempt for user: {}", loginRequest.getUsername());
         try {
             AuthResponse response = authService.login(loginRequest);
+            log.info("Login successful for user: {}", loginRequest.getUsername());
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
+            log.warn("Login failed for user: {}. Reason: {}", loginRequest.getUsername(), e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         }
     }

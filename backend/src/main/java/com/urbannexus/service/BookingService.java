@@ -84,6 +84,7 @@ public class BookingService {
                 LocalDate assignDate = LocalDate.parse(assignDateStr);
 
                 Technician tech = technicianRepository.findBySkill(skill).stream()
+                                .filter(Technician::getAvailable)
                                 .filter(t -> !technicianManagementRepository
                                                 .existsByTechnician_TechIdAndAssignDateAndSlot(t.getTechId(),
                                                                 assignDate, slot))

@@ -37,10 +37,12 @@ import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.AdminService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+@Slf4j
 public class AdminController {
 
     private final AdminService adminService;
@@ -103,10 +105,12 @@ public class AdminController {
         }
 
         try {
+            log.info("SuperAdmin {} is processing overdue payments", currentUser.getUsername());
             adminService.processOverduePayments();
             return ResponseEntity
                     .ok(Map.of("message", "Successfully ran the cursor. Pending payments are now marked as Overdue."));
         } catch (Exception e) {
+            log.error("Failed to process overdue payments", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to process overdue payments."));
         }

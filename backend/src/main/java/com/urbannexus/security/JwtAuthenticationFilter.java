@@ -37,9 +37,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
@@ -47,6 +49,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        String path = request.getRequestURI();
+        log.debug("Processing request: {} {}", request.getMethod(), path);
+
         try {
             String jwt = getJwtFromRequest(request);
 
@@ -55,10 +60,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 Long id = claims.get("id", Long.class);
                 String role = claims.get("role", String.class);
-                Long residentId = claims.get("resident_id", Long.class);
-                Long techId = claims.get("tech_id", Long.class);
+                log.debug("Authenticated user {} with role {} for path {}", id, role, path);
 
-                UserPrincipal userDetails = new UserPrincipal(id, null, null, role, residentId, techId);
+                UserPrincipal userDetails = new UserPrincipal(id, null, null, role,
+                        claims.get("resident_id", Long.class), claims.get("tech_id", Long.class));
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
@@ -67,7 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception ex) {
-            logger.error("Could not set user authentication in security context", ex);
+            log.error("Could not set user authentication in security context for path: " + path, ex);
         }
 
         filterChain.doFilter(request, response);

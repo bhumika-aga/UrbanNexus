@@ -27,11 +27,11 @@ CREATE TABLE amenity (
 CREATE TABLE resident (
   resident_id BIGINT NOT NULL AUTO_INCREMENT,
   name VARCHAR(100) NOT NULL,
-  house_block VARCHAR(10) NULL DEFAULT NULL,
-  house_floor VARCHAR(10) NULL DEFAULT NULL,
-  house_unit VARCHAR(10) NULL DEFAULT NULL,
-  ownership_status VARCHAR(50) NULL DEFAULT NULL,
-  contact VARCHAR(20) NULL DEFAULT NULL,
+  house_block VARCHAR(10) NOT NULL,
+  house_floor VARCHAR(10) NOT NULL,
+  house_unit VARCHAR(10) NOT NULL,
+  ownership_status VARCHAR(50) NOT NULL,
+  contact VARCHAR(20) NOT NULL,
   no_of_members INT NULL DEFAULT NULL,
   PRIMARY KEY (resident_id)
 );
@@ -72,8 +72,9 @@ CREATE TABLE amenity_mgmt (
 CREATE TABLE technician (
   tech_id BIGINT NOT NULL,
   name VARCHAR(100) NOT NULL,
-  contact VARCHAR(20) NULL DEFAULT NULL,
-  skill VARCHAR(50) NULL DEFAULT NULL,
+  contact VARCHAR(20) NOT NULL,
+  skill VARCHAR(50) NOT NULL,
+  available BIT(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (tech_id)
 );
 
