@@ -46,7 +46,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"toto_admin\",\n  \"password\": \"pwd123#\"\n}"
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"pwd123#\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/login",

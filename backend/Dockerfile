@@ -37,11 +37,11 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 # Expose the application port
-EXPOSE 8080
+EXPOSE 4720
 
 # Health check for container orchestration
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
-    CMD wget -q --spider http://localhost:8080/api/v1/health || exit 1
+    CMD wget -q --spider http://localhost:4720/api/v1/health || exit 1
 
 # JVM options optimized for low memory (512MB free tier)
 # - Xmx384m: Hard limit heap to 384MB
@@ -53,5 +53,6 @@ ENTRYPOINT ["java", \
     "-Xmx384m", \
     "-XX:+UseSerialGC", \
     "-XX:TieredStopAtLevel=1", \
+    "-Dspring.profiles.active=prod", \
     "-Djava.security.egd=file:/dev/./urandom", \
     "-jar", "app.jar"]

@@ -67,8 +67,8 @@ To run with a local MySQL instance, use the `dev` profile:
 ## 🧪 API Verification (Postman)
 
 - **Path**: `resources/UrbanNexus_Postman_Collection.json`
-- **Admin**: `toto_admin` / `pwd123#`
-- **Resident**: `sir_lewis` / `pwd123#`
+- **Admin**: `admin` / `pwd123#`
+- **Resident**: `john_doe` / `pwd123#`
 
 ---
 
