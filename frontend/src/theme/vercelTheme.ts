@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import {createTheme} from '@mui/material/styles';
+import { createTheme } from '@mui/material/styles';
 
 const vercelTheme = createTheme({
     palette: {
@@ -57,14 +57,14 @@ const vercelTheme = createTheme({
             'Arial',
             'sans-serif',
         ].join(','),
-        h1: {fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a'},
-        h2: {fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a'},
-        h3: {fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a'},
-        h4: {fontWeight: 700, letterSpacing: '-0.02em'},
-        h5: {fontWeight: 700, letterSpacing: '-0.01em'},
-        h6: {fontWeight: 700},
-        button: {textTransform: 'none', fontWeight: 600, letterSpacing: '0.01em'},
-        caption: {letterSpacing: '0.05em'},
+        h1: { fontWeight: 800, letterSpacing: '-0.04em', color: '#0f172a' },
+        h2: { fontWeight: 800, letterSpacing: '-0.03em', color: '#0f172a' },
+        h3: { fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' },
+        h4: { fontWeight: 700, letterSpacing: '-0.02em' },
+        h5: { fontWeight: 700, letterSpacing: '-0.01em' },
+        h6: { fontWeight: 700 },
+        button: { textTransform: 'none', fontWeight: 600, letterSpacing: '0.01em' },
+        caption: { letterSpacing: '0.05em' },
     },
     shape: {
         borderRadius: 12,
@@ -90,7 +90,7 @@ const vercelTheme = createTheme({
             },
             variants: [
                 {
-                    props: {variant: 'contained', color: 'primary'},
+                    props: { variant: 'contained', color: 'primary' },
                     style: {
                         background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
                         color: '#ffffff',
@@ -98,7 +98,7 @@ const vercelTheme = createTheme({
                     },
                 },
                 {
-                    props: {variant: 'outlined', color: 'primary'},
+                    props: { variant: 'outlined', color: 'primary' },
                     style: {
                         borderColor: 'rgba(99, 102, 241, 0.2)',
                         backgroundColor: 'rgba(99, 102, 241, 0.02)',

@@ -65,16 +65,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(cors -> cors.configurationSource(request -> {
-            CorsConfiguration config = new CorsConfiguration();
-            config.setAllowedOriginPatterns(List.of("http://localhost:*", "https://*.onrender.com"));
-            config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-            config.setAllowedHeaders(List.of("*"));
-            config.setAllowCredentials(true);
-            return config;
-        })).csrf(AbstractHttpConfigurer::disable).sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(requests -> requests.requestMatchers("/", "/error", "/api/login", "/h2-console/**", "/actuator/**").permitAll().anyRequest().authenticated()).headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)).exceptionHandling(exceptions -> exceptions.accessDeniedHandler((request, response, accessDeniedException) -> {
-            System.err.println("Access Denied for " + request.getRequestURI() + ": " + accessDeniedException.getMessage());
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
-        }));
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOriginPatterns(List.of("http://localhost:*", "https://*.onrender.com"));
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                config.setAllowedHeaders(List.of("*"));
+                config.setAllowCredentials(true);
+                return config;
+            })).csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(requests -> requests
+                                                   .requestMatchers("/", "/error", "/api/login", "/h2-console/**", "/actuator/**").permitAll()
+                                                   .anyRequest().authenticated())
+            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+            .exceptionHandling(
+                exceptions -> exceptions.accessDeniedHandler((request, response, accessDeniedException) -> {
+                    System.err.println("Access Denied for " + request.getRequestURI() + ": "
+                                           + accessDeniedException.getMessage());
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
+                }));
         
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         

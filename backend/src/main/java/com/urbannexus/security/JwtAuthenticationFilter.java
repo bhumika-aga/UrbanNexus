@@ -82,8 +82,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     private Long extractLong(Claims claims, String key) {
         Object val = claims.get(key);
-        if (val == null) return null;
-        if (val instanceof Number) return ((Number) val).longValue();
+        if (val == null)
+            return null;
+        if (val instanceof Number)
+            return ((Number) val).longValue();
         return null;
     }
     

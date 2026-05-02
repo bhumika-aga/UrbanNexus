@@ -20,156 +20,185 @@
  * SOFTWARE.
  */
 
-import {AppBar, Avatar, Box, Button, Chip, Container, Toolbar, Tooltip, Typography} from "@mui/material";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faGaugeHigh, faSignOutAlt, faUser,} from "@fortawesome/free-solid-svg-icons";
+import {
+  faGaugeHigh,
+  faSignOutAlt,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  AppBar,
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  Container,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import React from "react";
-import {Navigate} from "react-router-dom";
-import {useAuth} from "../context/AuthContext";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import AdminDashboard from "./admin/AdminDashboard";
 import ProfileView from "./ProfileView";
 import ResidentDashboard from "./resident/ResidentDashboard";
 import TechnicianDashboard from "./technician/TechnicianDashboard";
 
 const Dashboard: React.FC = () => {
-    const {user, token, logout, isLoading} = useAuth();
-    const [isProfileView, setIsProfileView] = React.useState(false);
+  const { user, token, logout, isLoading } = useAuth();
+  const [isProfileView, setIsProfileView] = React.useState(false);
 
-    if (isLoading) {
-        return null; // Or a loading spinner
+  if (isLoading) {
+    return null; // Or a loading spinner
+  }
+
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const renderDashboard = () => {
+    switch (user.role) {
+      case "SuperAdmin":
+        return <AdminDashboard />;
+      case "Resident":
+        return <ResidentDashboard />;
+      case "Technician":
+        return <TechnicianDashboard />;
+      default:
+        return <Typography>Unknown Role</Typography>;
     }
+  };
 
-    if (!token || !user) {
-        return <Navigate to="/login" replace/>;
-    }
+  return (
+    <Box sx={{ minHeight: "100vh", backgroundColor: "#fafafa" }}>
+      <AppBar position="sticky" elevation={0}>
+        <Container maxWidth="lg">
+          <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                sx={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "6px",
+                  backgroundColor: "primary.main",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <FontAwesomeIcon
+                  icon={faGaugeHigh}
+                  style={{ fontSize: 18, color: "white" }}
+                />
+              </Box>
+              <Typography
+                variant="h6"
+                noWrap
+                onClick={() => setIsProfileView(false)}
+                sx={{
+                  fontWeight: 800,
+                  letterSpacing: "-0.02em",
+                  textTransform: "uppercase",
+                  fontSize: "1.1rem",
+                  cursor: "pointer",
+                }}
+              >
+                UrbanNexus
+              </Typography>
+            </Box>
 
-    const renderDashboard = () => {
-        switch (user.role) {
-            case "SuperAdmin":
-                return <AdminDashboard/>;
-            case "Resident":
-                return <ResidentDashboard/>;
-            case "Technician":
-                return <TechnicianDashboard/>;
-            default:
-                return <Typography>Unknown Role</Typography>;
-        }
-    };
+            <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+              <Button
+                size="small"
+                onClick={() => setIsProfileView(false)}
+                startIcon={
+                  <FontAwesomeIcon
+                    icon={faGaugeHigh}
+                    style={{ fontSize: 16 }}
+                  />
+                }
+                sx={{
+                  color: !isProfileView ? "primary.main" : "#666",
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                }}
+              >
+                Dashboard
+              </Button>
+              <Button
+                size="small"
+                onClick={() => setIsProfileView(true)}
+                startIcon={
+                  <FontAwesomeIcon icon={faUser} style={{ fontSize: 16 }} />
+                }
+                sx={{
+                  color: isProfileView ? "primary.main" : "#666",
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                }}
+              >
+                Profile
+              </Button>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Chip
+                  label={user.role}
+                  size="small"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: "0.65rem",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    backgroundColor: "#f0f0f0",
+                    color: "#666",
+                    height: 20,
+                  }}
+                />
+                <Tooltip title={user.username}>
+                  <Avatar
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      fontSize: "0.8rem",
+                      backgroundColor: "primary.main",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faUser} style={{ fontSize: 14 }} />
+                  </Avatar>
+                </Tooltip>
+              </Box>
 
-    return (
-        <Box sx={{minHeight: "100vh", backgroundColor: "#fafafa"}}>
-            <AppBar position="sticky" elevation={0}>
-                <Container maxWidth="lg">
-                    <Toolbar disableGutters sx={{justifyContent: "space-between"}}>
-                        <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                            <Box
-                                sx={{
-                                    width: 32,
-                                    height: 32,
-                                    borderRadius: "6px",
-                                    backgroundColor: "primary.main",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <FontAwesomeIcon icon={faGaugeHigh} style={{fontSize: 18, color: "white"}}/>
-                            </Box>
-                            <Typography
-                                variant="h6"
-                                noWrap
-                                onClick={() => setIsProfileView(false)}
-                                sx={{
-                                    fontWeight: 800,
-                                    letterSpacing: "-0.02em",
-                                    textTransform: "uppercase",
-                                    fontSize: "1.1rem",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                UrbanNexus
-                            </Typography>
-                        </Box>
+              <Button
+                size="small"
+                onClick={logout}
+                startIcon={
+                  <FontAwesomeIcon
+                    icon={faSignOutAlt}
+                    style={{ fontSize: 16 }}
+                  />
+                }
+                sx={{
+                  color: "#666",
+                  fontWeight: 600,
+                  "&:hover": {
+                    color: "primary.main",
+                    backgroundColor: "transparent",
+                  },
+                }}
+              >
+                Logout
+              </Button>
+            </Box>
+          </Toolbar>
+        </Container>
+      </AppBar>
 
-                        <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
-                            <Button
-                                size="small"
-                                onClick={() => setIsProfileView(false)}
-                                startIcon={<FontAwesomeIcon icon={faGaugeHigh} style={{fontSize: 16}}/>}
-                                sx={{
-                                    color: !isProfileView ? "primary.main" : "#666",
-                                    fontWeight: 700,
-                                    fontSize: "0.8rem",
-                                }}
-                            >
-                                Dashboard
-                            </Button>
-                            <Button
-                                size="small"
-                                onClick={() => setIsProfileView(true)}
-                                startIcon={<FontAwesomeIcon icon={faUser} style={{fontSize: 16}}/>}
-                                sx={{
-                                    color: isProfileView ? "primary.main" : "#666",
-                                    fontWeight: 700,
-                                    fontSize: "0.8rem",
-                                }}
-                            >
-                                Profile
-                            </Button>
-                            <Box sx={{display: "flex", alignItems: "center", gap: 1}}>
-                                <Chip
-                                    label={user.role}
-                                    size="small"
-                                    sx={{
-                                        fontWeight: 700,
-                                        fontSize: "0.65rem",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        backgroundColor: "#f0f0f0",
-                                        color: "#666",
-                                        height: 20,
-                                    }}
-                                />
-                                <Tooltip title={user.username}>
-                                    <Avatar
-                                        sx={{
-                                            width: 28,
-                                            height: 28,
-                                            fontSize: "0.8rem",
-                                            backgroundColor: "primary.main",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        <FontAwesomeIcon icon={faUser} style={{fontSize: 14}}/>
-                                    </Avatar>
-                                </Tooltip>
-                            </Box>
-
-                            <Button
-                                size="small"
-                                onClick={logout}
-                                startIcon={<FontAwesomeIcon icon={faSignOutAlt} style={{fontSize: 16}}/>}
-                                sx={{
-                                    color: "#666",
-                                    fontWeight: 600,
-                                    "&:hover": {
-                                        color: "primary.main",
-                                        backgroundColor: "transparent",
-                                    },
-                                }}
-                            >
-                                Logout
-                            </Button>
-                        </Box>
-                    </Toolbar>
-                </Container>
-            </AppBar>
-
-            <Container maxWidth="lg" sx={{py: 6}}>
-                {isProfileView ? <ProfileView/> : renderDashboard()}
-            </Container>
-        </Box>
-    );
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        {isProfileView ? <ProfileView /> : renderDashboard()}
+      </Container>
+    </Box>
+  );
 };
 
 export default Dashboard;

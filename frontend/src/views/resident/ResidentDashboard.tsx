@@ -20,181 +20,201 @@
  * SOFTWARE.
  */
 
-import {Box, Card, CardActionArea, CardContent, Grid, Typography} from "@mui/material";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCalendarAlt, faCreditCard, faHistory, faWrench,} from "@fortawesome/free-solid-svg-icons";
-import React, {useState} from "react";
+import {
+  faCalendarAlt,
+  faCreditCard,
+  faHistory,
+  faWrench,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  Box,
+  Card,
+  CardActionArea,
+  CardContent,
+  Grid,
+  Typography,
+} from "@mui/material";
+import React, { useState } from "react";
 import AmenityBooker from "./AmenityBooker";
 import DuesManager from "./DuesManager";
 import HistoryManager from "./HistoryManager";
 import TechBooker from "./TechBooker";
 
 const ResidentDashboard: React.FC = () => {
-    const [activeView, setActiveView] = useState<
-        "menu" | "dues" | "amenities" | "technicians" | "history"
-    >("menu");
+  const [activeView, setActiveView] = useState<
+    "menu" | "dues" | "amenities" | "technicians" | "history"
+  >("menu");
 
-    const renderView = () => {
-        switch (activeView) {
-            case "dues":
-                return <DuesManager onBack={() => setActiveView("menu")}/>;
-            case "history":
-                return <HistoryManager onBack={() => setActiveView("menu")}/>;
-            case "amenities":
-                return <AmenityBooker onBack={() => setActiveView("menu")}/>;
-            case "technicians":
-                return <TechBooker onBack={() => setActiveView("menu")}/>;
-            default:
-                return (
-                    <Box>
-                        <Box sx={{mb: 6}}>
-                            <Typography variant="h3" sx={{fontWeight: 800, mb: 1}}>
-                                Resident Portal
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary">
-                                Securely manage your home services and financial grid status.
-                            </Typography>
-                        </Box>
+  const renderView = () => {
+    switch (activeView) {
+      case "dues":
+        return <DuesManager onBack={() => setActiveView("menu")} />;
+      case "history":
+        return <HistoryManager onBack={() => setActiveView("menu")} />;
+      case "amenities":
+        return <AmenityBooker onBack={() => setActiveView("menu")} />;
+      case "technicians":
+        return <TechBooker onBack={() => setActiveView("menu")} />;
+      default:
+        return (
+          <Box>
+            <Box sx={{ mb: 6 }}>
+              <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
+                Resident Portal
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Securely manage your home services and financial grid status.
+              </Typography>
+            </Box>
 
-                        <Grid container spacing={4}>
-                            <Grid size={{xs: 12, md: 6, lg: 3}}>
-                                <Card sx={{height: "100%"}}>
-                                    <CardActionArea
-                                        onClick={() => setActiveView("dues")}
-                                        sx={{height: "100%", p: 2}}
-                                    >
-                                        <CardContent>
-                                            <Box
-                                                sx={{
-                                                    width: 48,
-                                                    height: 48,
-                                                    borderRadius: "12px",
-                                                    backgroundColor: "#fef2f2",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    mb: 3,
-                                                }}
-                                            >
-                                                <FontAwesomeIcon icon={faCreditCard}
-                                                                 style={{color: "#991b1b", fontSize: 24}}/>
-                                            </Box>
-                                            <Typography variant="h5" sx={{fontWeight: 800, mb: 1}}>
-                                                My Dues
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                Pay pending invoices and view financial history.
-                                            </Typography>
-                                        </CardContent>
-                                    </CardActionArea>
-                                </Card>
-                            </Grid>
+            <Grid container spacing={4}>
+              <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                <Card sx={{ height: "100%" }}>
+                  <CardActionArea
+                    onClick={() => setActiveView("dues")}
+                    sx={{ height: "100%", p: 2 }}
+                  >
+                    <CardContent>
+                      <Box
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "12px",
+                          backgroundColor: "#fef2f2",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          mb: 3,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faCreditCard}
+                          style={{ color: "#991b1b", fontSize: 24 }}
+                        />
+                      </Box>
+                      <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
+                        My Dues
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Pay pending invoices and view financial history.
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
 
-                            <Grid size={{xs: 12, md: 6, lg: 3}}>
-                                <Card sx={{height: "100%"}}>
-                                    <CardActionArea
-                                        onClick={() => setActiveView("amenities")}
-                                        sx={{height: "100%", p: 2}}
-                                    >
-                                        <CardContent>
-                                            <Box
-                                                sx={{
-                                                    width: 48,
-                                                    height: 48,
-                                                    borderRadius: "12px",
-                                                    backgroundColor: "#f0fdf4",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    mb: 3,
-                                                }}
-                                            >
-                                                <FontAwesomeIcon icon={faCalendarAlt}
-                                                                 style={{color: "#166534", fontSize: 24}}/>
-                                            </Box>
-                                            <Typography variant="h5" sx={{fontWeight: 800, mb: 1}}>
-                                                Facilities
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                Reserve common amenities and track capacity.
-                                            </Typography>
-                                        </CardContent>
-                                    </CardActionArea>
-                                </Card>
-                            </Grid>
+              <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                <Card sx={{ height: "100%" }}>
+                  <CardActionArea
+                    onClick={() => setActiveView("amenities")}
+                    sx={{ height: "100%", p: 2 }}
+                  >
+                    <CardContent>
+                      <Box
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "12px",
+                          backgroundColor: "#f0fdf4",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          mb: 3,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faCalendarAlt}
+                          style={{ color: "#166534", fontSize: 24 }}
+                        />
+                      </Box>
+                      <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
+                        Facilities
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Reserve common amenities and track capacity.
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
 
-                            <Grid size={{xs: 12, md: 6, lg: 3}}>
-                                <Card sx={{height: "100%"}}>
-                                    <CardActionArea
-                                        onClick={() => setActiveView("technicians")}
-                                        sx={{height: "100%", p: 2}}
-                                    >
-                                        <CardContent>
-                                            <Box
-                                                sx={{
-                                                    width: 48,
-                                                    height: 48,
-                                                    borderRadius: "12px",
-                                                    backgroundColor: "rgba(99, 102, 241, 0.1)",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    mb: 3,
-                                                }}
-                                            >
-                                                <FontAwesomeIcon icon={faWrench}
-                                                                 style={{color: "#6366f1", fontSize: 24}}/>
-                                            </Box>
-                                            <Typography variant="h5" sx={{fontWeight: 800, mb: 1}}>
-                                                Staff Support
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                Book on-call technicians for home repairs.
-                                            </Typography>
-                                        </CardContent>
-                                    </CardActionArea>
-                                </Card>
-                            </Grid>
+              <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                <Card sx={{ height: "100%" }}>
+                  <CardActionArea
+                    onClick={() => setActiveView("technicians")}
+                    sx={{ height: "100%", p: 2 }}
+                  >
+                    <CardContent>
+                      <Box
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "12px",
+                          backgroundColor: "rgba(99, 102, 241, 0.1)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          mb: 3,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faWrench}
+                          style={{ color: "#6366f1", fontSize: 24 }}
+                        />
+                      </Box>
+                      <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
+                        Staff Support
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Book on-call technicians for home repairs.
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
 
-                            <Grid size={{xs: 12, md: 6, lg: 3}}>
-                                <Card sx={{height: "100%"}}>
-                                    <CardActionArea
-                                        onClick={() => setActiveView("history")}
-                                        sx={{height: "100%", p: 2}}
-                                    >
-                                        <CardContent>
-                                            <Box
-                                                sx={{
-                                                    width: 48,
-                                                    height: 48,
-                                                    borderRadius: "12px",
-                                                    backgroundColor: "rgba(99, 102, 241, 0.1)",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    mb: 3,
-                                                }}
-                                            >
-                                                <FontAwesomeIcon icon={faHistory}
-                                                                 style={{color: "#6366f1", fontSize: 24}}/>
-                                            </Box>
-                                            <Typography variant="h5" sx={{fontWeight: 800, mb: 1}}>
-                                                My Activity
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                Audit your past bookings and service requests.
-                                            </Typography>
-                                        </CardContent>
-                                    </CardActionArea>
-                                </Card>
-                            </Grid>
-                        </Grid>
-                    </Box>
-                );
-        }
-    };
+              <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                <Card sx={{ height: "100%" }}>
+                  <CardActionArea
+                    onClick={() => setActiveView("history")}
+                    sx={{ height: "100%", p: 2 }}
+                  >
+                    <CardContent>
+                      <Box
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "12px",
+                          backgroundColor: "rgba(99, 102, 241, 0.1)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          mb: 3,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faHistory}
+                          style={{ color: "#6366f1", fontSize: 24 }}
+                        />
+                      </Box>
+                      <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
+                        My Activity
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Audit your past bookings and service requests.
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
+            </Grid>
+          </Box>
+        );
+    }
+  };
 
-    return <Box>{renderView()}</Box>;
+  return <Box>{renderView()}</Box>;
 };
 
 export default ResidentDashboard;
