@@ -53,7 +53,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { Resident } from "../../types";
 
@@ -72,24 +72,24 @@ const ResidentManager: React.FC = () => {
     noOfMembers: 1,
   });
 
-  const fetchResidents = async () => {
+  const fetchResidents = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get(`/admin/residents/search?name=${searchTerm}`);
       setResidents(res.data || []);
-    } catch (err) {
+    } catch {
       console.error("Resident lookup failed");
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm]);
 
   const handleAdd = async () => {
     try {
       await api.post("/residents", formData);
       setOpenModal(false);
       fetchResidents();
-    } catch (err) {
+    } catch {
       alert("Failed to add resident");
     }
   };
@@ -103,7 +103,7 @@ const ResidentManager: React.FC = () => {
       try {
         await api.delete(`/residents/${id}`);
         fetchResidents();
-      } catch (err) {
+      } catch {
         alert("Delete failed");
       }
     }
@@ -114,7 +114,7 @@ const ResidentManager: React.FC = () => {
       fetchResidents();
     }, 300);
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  }, [fetchResidents]);
 
   return (
     <Box>

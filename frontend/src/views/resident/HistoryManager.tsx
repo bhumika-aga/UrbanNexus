@@ -56,7 +56,7 @@ const HistoryManager: React.FC<Props> = ({ onBack }) => {
     try {
       const res = await api.get("/residents/me/bookings");
       setBookings(res.data);
-    } catch (err) {
+    } catch {
       console.error("Failed to fetch history");
     } finally {
       setLoading(false);

@@ -84,7 +84,7 @@ const ServiceHistory: React.FC = () => {
                   <TableCell
                     sx={{ fontFamily: "monospace", fontSize: "0.75rem" }}
                   >
-                    {(h as any).trans_no || "N/A"}
+                    {h.trans_no || "N/A"}
                   </TableCell>
                   <TableCell>
                     <Box

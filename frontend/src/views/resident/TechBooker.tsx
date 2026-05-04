@@ -34,6 +34,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import axios from "axios";
 
 import {
   faChevronLeft,
@@ -66,11 +67,10 @@ const TechBooker: React.FC<Props> = ({ onBack }) => {
         "Support ticket created! A technician will be assigned according to the community grid availability.",
       );
       onBack();
-    } catch (err: unknown) {
-      const errorMsg =
-        err && typeof err === "object" && "response" in err
-          ? (err as any).response?.data?.error
-          : "Failed to request technician.";
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? err.response?.data?.error
+        : null;
       alert(errorMsg || "Failed to request technician.");
     } finally {
       setSubmitting(false);

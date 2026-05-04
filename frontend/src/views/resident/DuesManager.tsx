@@ -53,7 +53,7 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
     try {
       const res = await api.get("/residents/me/dues");
       setInvoices(res.data.invoices);
-    } catch (err) {
+    } catch {
       console.error("Failed to fetch dues");
     } finally {
       setLoading(false);
@@ -65,7 +65,7 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
       await api.post(`/payments/${transNo}/pay`);
       alert("Payment confirmed! Ledger updated.");
       fetchDues();
-    } catch (err) {
+    } catch {
       alert("Payment failed");
     }
   };

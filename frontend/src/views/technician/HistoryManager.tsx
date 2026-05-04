@@ -102,7 +102,7 @@ const HistoryManager: React.FC<HistoryManagerProps> = ({ tasks }) => {
                   </Typography>
                 </Box>
                 <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                  {(task as any).resident_name}
+                  {task.resident_name}
                 </Typography>
                 <Box
                   sx={{
@@ -125,7 +125,7 @@ const HistoryManager: React.FC<HistoryManagerProps> = ({ tasks }) => {
                       Unit{" "}
                       {task.booking_id
                         ? "N/A"
-                        : `${(task as any).house_block}-${(task as any).house_unit}`}
+                        : `${task.house_block}-${task.house_unit}`}
                     </Typography>
                   </Box>
                   <Box

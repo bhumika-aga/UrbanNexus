@@ -48,6 +48,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { Technician } from "../../types";
@@ -86,11 +87,10 @@ const TechnicianManager: React.FC = () => {
       setOpenModal(false);
       setFormData({ techId: "", name: "", contact: "", skill: "Plumber" });
       fetchTechs();
-    } catch (err: unknown) {
-      const errorMsg =
-        err && typeof err === "object" && "response" in err
-          ? (err as any).response?.data?.error
-          : "Action failed.";
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? err.response?.data?.error
+        : null;
       alert("Failed to sign crew: " + (errorMsg || "Unknown error"));
     }
   };

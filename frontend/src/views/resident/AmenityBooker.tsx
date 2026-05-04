@@ -36,6 +36,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { Amenity } from "../../types";
@@ -60,7 +61,7 @@ const AmenityBooker: React.FC<Props> = ({ onBack }) => {
     try {
       const res = await api.get("/amenities");
       setAmenities(res.data);
-    } catch (err) {
+    } catch {
       console.error("Failed to fetch amenities");
     } finally {
       setLoading(false);
@@ -73,11 +74,10 @@ const AmenityBooker: React.FC<Props> = ({ onBack }) => {
       await api.post("/bookings/amenity", formData);
       alert("Reservation confirmed! Please check History for details.");
       onBack();
-    } catch (err: unknown) {
-      const errorMsg =
-        err && typeof err === "object" && "response" in err
-          ? (err as any).response?.data?.error
-          : "Booking failed. Capacity might be full.";
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? err.response?.data?.error
+        : null;
       alert(errorMsg || "Booking failed. Capacity might be full.");
     } finally {
       setSubmitting(false);

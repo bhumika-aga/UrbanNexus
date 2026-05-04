@@ -56,7 +56,7 @@ const TechnicianDashboard: React.FC = () => {
     try {
       const res = await api.get("/technicians/me");
       setIsAvailable(res.data.available);
-    } catch (err) {
+    } catch {
       console.error("Profile sync failed");
     } finally {
       setProfileLoading(false);
@@ -67,7 +67,7 @@ const TechnicianDashboard: React.FC = () => {
     try {
       const res = await api.get("/technicians/me/tasks");
       setTasks(res.data);
-    } catch (err) {
+    } catch {
       console.error("Task sync failed");
     } finally {
       setLoading(false);
@@ -79,7 +79,7 @@ const TechnicianDashboard: React.FC = () => {
     try {
       await api.put("/technicians/me/availability", { available: newState });
       setIsAvailable(newState);
-    } catch (err) {
+    } catch {
       alert("Status update failed");
     }
   };
@@ -88,7 +88,7 @@ const TechnicianDashboard: React.FC = () => {
     try {
       await api.put(`/technicians/tasks/${id}/status`, { status });
       fetchTasks();
-    } catch (err) {
+    } catch {
       alert("Status update failed");
     }
   };
@@ -253,7 +253,7 @@ const TechnicianDashboard: React.FC = () => {
                     }}
                   >
                     <Chip
-                      label={`Unit ${(task as any).house_block}-${(task as any).house_unit}`}
+                      label={`Unit ${task.house_block}-${task.house_unit}`}
                       size="small"
                       sx={{
                         backgroundColor: alpha("#6366f1", 0.08),
@@ -270,7 +270,7 @@ const TechnicianDashboard: React.FC = () => {
                     </Typography>
                   </Box>
                   <Typography variant="h6" sx={{ fontWeight: 800, mb: 1 }}>
-                    {(task as any).resident_name}
+                    {task.resident_name}
                   </Typography>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
                     <Box

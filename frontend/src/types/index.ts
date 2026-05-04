@@ -102,6 +102,8 @@ export interface Booking {
   house_block?: string;
   house_unit?: string;
   resident_name?: string;
+  capacity_booked?: number;
+  trans_no?: string;
 }
 
 export interface DecodedToken {

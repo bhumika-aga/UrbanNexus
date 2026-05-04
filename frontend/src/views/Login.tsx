@@ -40,6 +40,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import axios from "axios";
 import { motion } from "framer-motion";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -65,11 +66,10 @@ const Login: React.FC = () => {
       const response = await api.post("/login", { username, password });
       login(response.data.token);
       navigate("/dashboard");
-    } catch (err: unknown) {
-      const errorMessage =
-        err && typeof err === "object" && "response" in err
-          ? (err as any).response?.data?.error
-          : "Failed to connect to the community grid.";
+    } catch (err) {
+      const errorMessage = axios.isAxiosError(err)
+        ? err.response?.data?.error
+        : null;
       setError(errorMessage || "Failed to connect to the community grid.");
     } finally {
       setLoading(false);

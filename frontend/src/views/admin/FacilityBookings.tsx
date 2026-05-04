@@ -79,7 +79,7 @@ const FacilityBookings: React.FC = () => {
                   <TableCell>{b.amenity}</TableCell>
                   <TableCell>{b.date}</TableCell>
                   <TableCell>Slot {b.slot}</TableCell>
-                  <TableCell>{(b as any).capacity_booked || 1}</TableCell>
+                  <TableCell>{b.capacity_booked ?? 1}</TableCell>
                   <TableCell>
                     <Box
                       sx={{

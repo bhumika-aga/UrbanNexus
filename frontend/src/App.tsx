@@ -28,7 +28,7 @@ import {
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthProvider";
 import vercelTheme from "./theme/vercelTheme";
 import Dashboard from "./views/Dashboard";
 import Login from "./views/Login";

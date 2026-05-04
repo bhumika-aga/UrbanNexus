@@ -41,7 +41,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import axios from "axios";
+import React, { useCallback, useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { Transaction } from "../../types";
 
@@ -51,28 +52,27 @@ const FinanceManager: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     setLoading(true);
     try {
       const queryParam = search ? `resident_name=${search}` : "";
       const res = await api.get(`/admin/transactions?${queryParam}`);
       setTransactions(res.data || []);
-    } catch (err) {
+    } catch {
       console.error("Ledger sync failed");
     } finally {
       setLoading(false);
     }
-  };
+  }, [search]);
 
   const processPayment = async (transNo: string) => {
     try {
       await api.post(`/payments/${transNo}/pay`);
       fetchTransactions();
-    } catch (err: unknown) {
-      const errorMsg =
-        err && typeof err === "object" && "response" in err
-          ? (err as any).response?.data?.error
-          : "Processing failed";
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? err.response?.data?.error
+        : null;
       alert(errorMsg || "Processing failed");
     }
   };
@@ -83,7 +83,7 @@ const FinanceManager: React.FC = () => {
       await api.post("/admin/process-overdue");
       alert("Overdue cursor executed mapping penalties to the ledger.");
       fetchTransactions();
-    } catch (err) {
+    } catch {
       alert("Scan failed");
     } finally {
       setScanning(false);
@@ -95,7 +95,7 @@ const FinanceManager: React.FC = () => {
       fetchTransactions();
     }, 300);
     return () => clearTimeout(delayDebounceFn);
-  }, [search]);
+  }, [fetchTransactions]);
 
   return (
     <Box>

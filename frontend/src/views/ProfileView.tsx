@@ -41,16 +41,31 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import axios from "axios";
+import React, { useCallback, useEffect, useState } from "react";
 import api from "../api/axiosClient";
 import { useAuth } from "../context/AuthContext";
 
+interface ProfileData {
+  name?: string;
+  username?: string;
+  contact?: string;
+  houseBlock?: string;
+  houseFloor?: string;
+  houseUnit?: string;
+  ownershipStatus?: string;
+  noOfMembers?: number | string;
+  skill?: string;
+  available?: boolean;
+  [key: string]: string | number | boolean | undefined;
+}
+
 const ProfileView: React.FC = () => {
   const { user } = useAuth();
-  const [profileData, setProfileData] = useState<any>(null);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<ProfileData>({});
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -58,29 +73,31 @@ const ProfileView: React.FC = () => {
     severity: "success" as "success" | "error",
   });
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  const showSnackbar = (message: string, severity: "success" | "error") => {
+    setSnackbar({ open: true, message, severity });
+  };
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get("/profile/me");
       setProfileData(response.data);
       setFormData(response.data);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to fetch profile:", error);
-      const msg = error.response?.data?.error || "Failed to load profile data";
-      showSnackbar(msg, "error");
-      setProfileData(null); // Ensure null on failure
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.error
+        : null;
+      showSnackbar(msg || "Failed to load profile data", "error");
+      setProfileData(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const showSnackbar = (message: string, severity: "success" | "error") => {
-    setSnackbar({ open: true, message, severity });
-  };
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleUpdate = async () => {
     try {
