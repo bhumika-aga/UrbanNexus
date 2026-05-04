@@ -34,11 +34,11 @@ import java.util.Map;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, String> {
-
+    
     @Modifying
     @Query(value = "UPDATE payment SET status = 'Overdue' WHERE status = 'Pending' AND payment_date < NOW() - INTERVAL '30' DAY", nativeQuery = true)
     void processOverduePayments();
-
+    
     @Query(value = """
         SELECT
             p.trans_no,

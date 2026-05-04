@@ -36,7 +36,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class BookingService {
-
+    
     private final TechnicianRepository technicianRepository;
     private final TechnicianManagementRepository technicianManagementRepository;
     private final ResidentRepository residentRepository;
@@ -44,11 +44,11 @@ public class BookingService {
     private final PaymentRepository paymentRepository;
     private final AmenityRepository amenityRepository;
     private final AmenityMgmtRepository amenityMgmtRepository;
-
+    
     @Transactional
     public Map<String, Object> bookTechnician(Long residentId, String skill, Integer slot, String assignDateStr) {
         LocalDate assignDate = LocalDate.parse(assignDateStr);
-
+        
         Technician tech = technicianRepository.findBySkill(skill).stream()
                               .filter(Technician::getAvailable)
                               .filter(t -> !technicianManagementRepository
@@ -56,10 +56,10 @@ public class BookingService {
                                                     assignDate, slot))
                               .findFirst()
                               .orElseThrow(() -> new RuntimeException("Booking Failed: No available technicians."));
-
+        
         Pricing pricing = pricingRepository.findByItemNameAndCategory(skill, PricingCategory.Technician)
                               .orElseThrow(() -> new RuntimeException("No pricing found for " + skill));
-
+        
         String transNo = "TXN-TECH-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
         Payment payment = new Payment();
         payment.setTransNo(transNo);
@@ -67,10 +67,10 @@ public class BookingService {
         payment.setType("Technician");
         payment.setCost(pricing.getBasePrice()); // @PrePersist applies 18% GST
         payment = paymentRepository.saveAndFlush(payment);
-
+        
         Resident resident = residentRepository.findById(residentId)
                                 .orElseThrow(() -> new RuntimeException("Resident not found"));
-
+        
         TechnicianManagement assignment = new TechnicianManagement();
         assignment.setResident(resident);
         assignment.setTechnician(tech);
@@ -79,30 +79,30 @@ public class BookingService {
         assignment.setSlot(slot);
         assignment.setStatus("Assigned");
         technicianManagementRepository.save(assignment);
-
+        
         return Map.of(
             "assignment_id", assignment.getAssignmentId(),
             "technician_name", tech.getName(),
             "trans_no", transNo,
             "total_with_gst", payment.getCost());
     }
-
+    
     @Transactional
     public Map<String, Object> bookAmenity(Long residentId, Long amenityId, String dateStr, Integer slot,
                                            Integer capacityBooked) {
         LocalDate date = LocalDate.parse(dateStr);
-
+        
         Amenity amenity = amenityRepository.findById(amenityId)
                               .orElseThrow(() -> new RuntimeException("Amenity not found"));
-
+        
         if (capacityBooked > amenity.getCapacity()) {
             throw new RuntimeException("Capacity exceeded.");
         }
-
+        
         Pricing pricing = pricingRepository
                               .findByItemNameAndCategory(amenity.getName(), PricingCategory.Amenity)
                               .orElseThrow(() -> new RuntimeException("No pricing found for " + amenity.getName()));
-
+        
         String transNo = "TXN-AMEN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
         Payment payment = new Payment();
         payment.setTransNo(transNo);
@@ -110,10 +110,10 @@ public class BookingService {
         payment.setType("Amenity");
         payment.setCost(pricing.getBasePrice()); // @PrePersist applies 18% GST
         payment = paymentRepository.saveAndFlush(payment);
-
+        
         Resident resident = residentRepository.findById(residentId)
                                 .orElseThrow(() -> new RuntimeException("Resident not found"));
-
+        
         AmenityMgmt booking = new AmenityMgmt();
         booking.setResident(resident);
         booking.setAmenity(amenity);
@@ -123,7 +123,7 @@ public class BookingService {
         booking.setCapacityBooked(capacityBooked);
         booking.setStatus("Confirmed");
         amenityMgmtRepository.save(booking);
-
+        
         return Map.of(
             "booking_id", booking.getBookingId(),
             "amenity_name", amenity.getName(),
