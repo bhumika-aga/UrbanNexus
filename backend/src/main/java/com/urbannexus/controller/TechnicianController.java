@@ -86,7 +86,11 @@ public class TechnicianController {
     }
     
     @PutMapping("/tasks/{id}/status")
-    public ResponseEntity<?> updateTaskStatus(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> updateTaskStatus(@AuthenticationPrincipal UserPrincipal currentUser,
+                                              @PathVariable Long id, @RequestBody Map<String, String> payload) {
+        if (!"Technician".equals(currentUser.getRole()) && !"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
+        }
         try {
             String status = payload.get("status");
             return ResponseEntity.ok(technicianService.updateTaskStatus(id, status));

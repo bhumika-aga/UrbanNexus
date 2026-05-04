@@ -36,7 +36,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -87,29 +86,15 @@ public class TechnicianService {
     @Transactional
     public Map<String, Object> updateTaskStatus(Long assignmentId, String status) {
         technicianManagementRepository.updateTaskStatus(assignmentId, status);
-        
-        Map<String, Object> taskDetails = technicianRepository.getTaskDetails(assignmentId);
-        if (taskDetails != null && "Completed".equalsIgnoreCase(status)) {
-            String contact = (String) taskDetails.get("contact");
-            if (contact != null) {
-                log.info("contact is {}", contact);
-            }
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Task status updated to " + status + ". Notification sent.");
-        return response;
+        return Map.of("message", "Task status updated to " + status + ".");
     }
     
     @Transactional
     public void deleteTechnician(Long techId) {
-        Optional<Technician> tech = technicianRepository.findById(techId);
-        if (tech.isEmpty()) {
-            throw new RuntimeException("Technician not found.");
-        }
-        Technician t = tech.get();
-        auditService.log("technician", techId.toString(), "DELETE", "Deleted technician: " + t.getName());
-        technicianRepository.delete(t);
+        Technician tech = technicianRepository.findById(techId)
+                              .orElseThrow(() -> new RuntimeException("Technician not found."));
+        auditService.log("technician", techId.toString(), "DELETE", "Deleted technician: " + tech.getName());
+        technicianRepository.delete(tech);
     }
     
     public Technician getTechnician(Long techId) {

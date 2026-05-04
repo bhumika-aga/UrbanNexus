@@ -48,4 +48,6 @@ public interface AmenityMgmtRepository extends JpaRepository<AmenityMgmt, Long> 
         ORDER BY am.date DESC
         """, nativeQuery = true)
     List<Map<String, Object>> findAllBookingsDetailed();
+    
+    long countByStatus(String status);
 }

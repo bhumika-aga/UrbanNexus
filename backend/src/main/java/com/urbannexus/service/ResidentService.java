@@ -135,10 +135,6 @@ public class ResidentService {
             resident.setNoOfMembers(((Number) updates.get("no_of_members")).intValue());
             details.append("no_of_members, ");
         }
-        // House details are Admin only - implementation choice: ignore them here or
-        // throw error
-        // As per feedback "Admin only" for house details.
-        
         residentRepository.save(resident);
         auditService.log("resident", residentId.toString(), "UPDATE", details.toString());
     }

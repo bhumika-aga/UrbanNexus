@@ -104,7 +104,7 @@ public class ResidentController {
     public ResponseEntity<?> deleteResident(@AuthenticationPrincipal UserPrincipal currentUser, @PathVariable Long id) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                       .body(Map.of("error", "Only SuperAdmin can remove drivers from the grid."));
+                       .body(Map.of("error", "Only SuperAdmin can remove residents from the grid."));
         }
         
         try {

@@ -24,20 +24,19 @@ package com.urbannexus.service;
 
 import com.urbannexus.model.Amenity;
 import com.urbannexus.repository.AmenityRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class AmenityService {
     
     private final AmenityRepository amenityRepository;
     
-    public AmenityService(AmenityRepository amenityRepository) {
-        this.amenityRepository = amenityRepository;
-    }
-    
+    @Transactional
     public void addAmenity(Long amenityId, String name, Integer capacity) {
         Amenity amenity = new Amenity();
         amenity.setAmenityId(amenityId);
@@ -50,19 +49,16 @@ public class AmenityService {
         return amenityRepository.findAll();
     }
     
+    @Transactional
     public void updateAmenity(Long id, String name, Integer capacity) {
-        Optional<Amenity> amenityOpt = amenityRepository.findById(id);
-        if (amenityOpt.isEmpty()) {
-            throw new RuntimeException("Amenity not found.");
-        }
-        Amenity amenity = amenityOpt.get();
-        if (name != null)
-            amenity.setName(name);
-        if (capacity != null)
-            amenity.setCapacity(capacity);
+        Amenity amenity = amenityRepository.findById(id)
+                              .orElseThrow(() -> new RuntimeException("Amenity not found."));
+        if (name != null) amenity.setName(name);
+        if (capacity != null) amenity.setCapacity(capacity);
         amenityRepository.save(amenity);
     }
     
+    @Transactional
     public void deleteAmenity(Long id) {
         if (!amenityRepository.existsById(id)) {
             throw new RuntimeException("Amenity not found.");

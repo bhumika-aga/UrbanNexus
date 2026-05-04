@@ -49,25 +49,15 @@ public class AdminService {
     
     public DashboardStatsDTO getDashboardStats() {
         long totalResidents = residentRepository.count();
-        
-        BigDecimal unpaidLedger = paymentRepository.findAll().stream()
-                                      .filter(p -> "Pending".equals(p.getStatus()) || "Overdue".equals(p.getStatus()))
-                                      .map(com.urbannexus.model.Payment::getCost)
-                                      .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        long pendingAssignments = technicianManagementRepository.findAll().stream()
-                                      .filter(tm -> "Assigned".equals(tm.getStatus()))
-                                      .count();
-        
-        long pendingAmenities = amenityMgmtRepository.findAll().stream()
-                                    .filter(am -> "Confirmed".equals(am.getStatus()))
-                                    .count();
+        BigDecimal unpaidLedger = paymentRepository.sumUnpaidCosts();
+        long pendingAssignments = technicianManagementRepository.countByStatus("Assigned");
+        long pendingAmenities = amenityMgmtRepository.countByStatus("Confirmed");
         
         return DashboardStatsDTO.builder()
                    .totalResidents(totalResidents)
                    .unpaidLedger(unpaidLedger)
                    .pendingTickets(pendingAssignments + pendingAmenities)
-                   .gridUptime("99.8%") // Simulated infrastructure metric
+                   .gridUptime("99.8%")
                    .build();
     }
     
@@ -114,7 +104,6 @@ public class AdminService {
     }
     
     public List<Map<String, Object>> getAllTechnicianBookings() {
-        // Current assignments detailed view serves as the history for technicians
-        return technicianManagementRepository.findAllAssignmentsDetailed();
+        return technicianManagementRepository.findCompletedAssignmentsDetailed();
     }
 }

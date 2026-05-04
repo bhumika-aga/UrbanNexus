@@ -65,12 +65,12 @@ export interface Technician {
 }
 
 export interface AuditLogEntry {
-  logId: number;
-  tableAffected: string;
-  recordId: string;
-  actionType: string;
+  log_id: number;
+  table_affected: string;
+  record_id: string;
+  action_type: string;
   details: string;
-  changedAt: string;
+  changed_at: string;
 }
 
 export interface Amenity {

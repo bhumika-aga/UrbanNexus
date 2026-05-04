@@ -25,6 +25,7 @@ package com.urbannexus.config;
 import com.urbannexus.security.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,6 +44,7 @@ import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -77,10 +79,10 @@ public class SecurityConfig {
                                                    .requestMatchers("/", "/error", "/api/login", "/h2-console/**", "/actuator/**").permitAll()
                                                    .anyRequest().authenticated())
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-            .exceptionHandling(
-                exceptions -> exceptions.accessDeniedHandler((request, response, accessDeniedException) -> {
-                    System.err.println("Access Denied for " + request.getRequestURI() + ": "
-                                           + accessDeniedException.getMessage());
+            .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(
+                (request, response, accessDeniedException) -> {
+                    log.warn("Access denied for {}: {}", request.getRequestURI(),
+                        accessDeniedException.getMessage());
                     response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
                 }));
         

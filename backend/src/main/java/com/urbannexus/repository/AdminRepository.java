@@ -36,6 +36,6 @@ public interface AdminRepository extends JpaRepository<Admin, Long> {
     
     Optional<Admin> findByUsername(String username);
     
-    @Query(value = "SELECT * FROM audit_log ORDER BY changed_at DESC", nativeQuery = true)
+    @Query(value = "SELECT log_id, table_affected, action_type, record_id, details, changed_at FROM audit_log ORDER BY changed_at DESC", nativeQuery = true)
     List<Map<String, Object>> getAuditLogs();
 }

@@ -141,7 +141,7 @@ const AuditLog: React.FC = () => {
                 </TableRow>
               ) : (
                 logs.map((log) => (
-                  <TableRow key={log.logId} hover>
+                  <TableRow key={log.log_id} hover>
                     <TableCell>
                       <Box
                         sx={{
@@ -151,15 +151,15 @@ const AuditLog: React.FC = () => {
                           borderRadius: "6px",
                           fontSize: "0.7rem",
                           fontWeight: 800,
-                          bgcolor: alpha(getActionColor(log.actionType), 0.1),
-                          color: getActionColor(log.actionType),
+                          bgcolor: alpha(getActionColor(log.action_type), 0.1),
+                          color: getActionColor(log.action_type),
                         }}
                       >
-                        {log.actionType}
+                        {log.action_type}
                       </Box>
                     </TableCell>
                     <TableCell sx={{ fontWeight: 600, fontSize: "0.85rem" }}>
-                      {log.tableAffected.toUpperCase()}
+                      {log.table_affected.toUpperCase()}
                     </TableCell>
                     <TableCell
                       sx={{
@@ -168,13 +168,13 @@ const AuditLog: React.FC = () => {
                         color: "#64748b",
                       }}
                     >
-                      #{log.recordId}
+                      #{log.record_id}
                     </TableCell>
                     <TableCell sx={{ fontSize: "0.85rem" }}>
                       {log.details}
                     </TableCell>
                     <TableCell sx={{ fontSize: "0.85rem", color: "#64748b" }}>
-                      {new Date(log.changedAt).toLocaleString()}
+                      {new Date(log.changed_at).toLocaleString()}
                     </TableCell>
                   </TableRow>
                 ))

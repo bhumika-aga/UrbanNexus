@@ -56,11 +56,7 @@ public class PaymentController {
             paymentService.payInvoice(transNo, currentUser.getResidentId());
             return ResponseEntity.ok(Map.of("message", "Transaction " + transNo + " processed successfully!"));
         } catch (RuntimeException e) {
-            if (e.getMessage() != null && e.getMessage().contains("permission")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
-            }
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                       .body(Map.of("error", "Payment processing failed."));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 }

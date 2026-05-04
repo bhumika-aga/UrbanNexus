@@ -77,7 +77,9 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     @Modifying
     @Query(value = """
         UPDATE payment p SET p.status = 'Paid'
-        WHERE p.trans_no = :transNo AND (
+        WHERE p.trans_no = :transNo
+        AND p.status != 'Paid'
+        AND (
             EXISTS (SELECT 1 FROM amenity_mgmt am WHERE am.trans_no = p.trans_no AND am.resident_id = :residentId)
             OR
             EXISTS (SELECT 1 FROM technician_management tm WHERE tm.trans_no = p.trans_no AND tm.resident_id = :residentId)
@@ -86,6 +88,9 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     int payTransactionForResident(@Param("transNo") String transNo, @Param("residentId") Long residentId);
     
     @Modifying
-    @Query(value = "UPDATE payment SET status = 'Paid' WHERE trans_no = :transNo", nativeQuery = true)
+    @Query(value = "UPDATE payment SET status = 'Paid' WHERE trans_no = :transNo AND status != 'Paid'", nativeQuery = true)
     int payTransaction(@Param("transNo") String transNo);
+    
+    @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status IN ('Pending', 'Overdue')", nativeQuery = true)
+    java.math.BigDecimal sumUnpaidCosts();
 }

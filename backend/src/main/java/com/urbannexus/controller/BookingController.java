@@ -47,6 +47,10 @@ public class BookingController {
     @PostMapping("/technician")
     public ResponseEntity<?> bookTechnician(@AuthenticationPrincipal UserPrincipal currentUser,
                                             @RequestBody Map<String, Object> payload) {
+        if (!"Resident".equals(currentUser.getRole()) && !"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                       .body(Map.of("error", "Only Residents or Admins can create bookings."));
+        }
         log.info("Booking request for technician by user: {}", currentUser.getUsername());
         try {
             Long residentId = "Resident".equals(currentUser.getRole()) ? currentUser.getResidentId()
@@ -94,10 +98,10 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.CREATED)
                        .body(bookingService.bookAmenity(residentId, amenityId, date, slot,
                            capacityBooked));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            String errorMsg = e.getMessage() != null && e.getMessage().contains("45000") ? e.getMessage()
-                                  : "Failed to book amenity.";
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", errorMsg));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to book amenity."));
         }
     }
 }
