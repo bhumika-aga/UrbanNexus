@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -70,7 +71,7 @@ public class AdminService {
     }
     
     public List<Map<String, Object>> searchTransactions(String status, String block, String residentName) {
-        return paymentRepository.searchTransactions(status, block, residentName);
+        return normalizeMaps(paymentRepository.searchTransactions(status, block, residentName));
     }
     
     @Transactional
@@ -92,18 +93,28 @@ public class AdminService {
     }
     
     public List<Map<String, Object>> getAuditLogs() {
-        return adminRepository.getAuditLogs();
+        return normalizeMaps(adminRepository.getAuditLogs());
     }
     
     public List<Map<String, Object>> getAllAssignments() {
-        return technicianManagementRepository.findAllAssignmentsDetailed();
+        return normalizeMaps(technicianManagementRepository.findAllAssignmentsDetailed());
     }
     
     public List<Map<String, Object>> getAllAmenityBookings() {
-        return amenityMgmtRepository.findAllBookingsDetailed();
+        return normalizeMaps(amenityMgmtRepository.findAllBookingsDetailed());
     }
     
     public List<Map<String, Object>> getAllTechnicianBookings() {
-        return technicianManagementRepository.findCompletedAssignmentsDetailed();
+        return normalizeMaps(technicianManagementRepository.findCompletedAssignmentsDetailed());
+    }
+    
+    private List<Map<String, Object>> normalizeMaps(List<Map<String, Object>> rows) {
+        return rows.stream()
+                   .map(row -> row.entrySet().stream()
+                                   .collect(Collectors.toMap(
+                                       e -> e.getKey().toLowerCase(),
+                                       Map.Entry::getValue
+                                   )))
+                   .collect(Collectors.toList());
     }
 }

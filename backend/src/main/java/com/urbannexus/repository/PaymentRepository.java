@@ -56,7 +56,7 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     
     @Query(value = """
         SELECT
-            p.trans_no, p.status, p.type, p.cost,
+            p.trans_no, p.status, p.type as service_type, p.cost,
             COALESCE(r_am.name, r_tm.name, 'UrbanNexus System') AS resident_name,
             COALESCE(r_am.house_block, r_tm.house_block, 'SYS') AS house_block,
             COALESCE(r_am.house_unit, r_tm.house_unit, 'ADMIN') AS house_unit

@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -88,7 +89,7 @@ public class ResidentService {
     }
     
     public Map<String, Object> getPendingDues(Long residentId) {
-        List<Map<String, Object>> dues = paymentRepository.findPendingDuesByResidentId(residentId);
+        List<Map<String, Object>> dues = normalizeMaps(paymentRepository.findPendingDuesByResidentId(residentId));
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Your pending dues retrieved successfully.");
         response.put("total_unpaid_invoices", dues.size());
@@ -97,13 +98,23 @@ public class ResidentService {
     }
     
     public Map<String, Object> getBookings(Long residentId) {
-        List<Map<String, Object>> amenities = amenityMgmtRepository.getAmenityBookingsForResident(residentId);
-        List<Map<String, Object>> technicians = technicianManagementRepository.findBookingsByResidentId(residentId);
+        List<Map<String, Object>> amenities = normalizeMaps(amenityMgmtRepository.getAmenityBookingsForResident(residentId));
+        List<Map<String, Object>> technicians = normalizeMaps(technicianManagementRepository.findBookingsByResidentId(residentId));
         
         Map<String, Object> response = new HashMap<>();
         response.put("amenities", amenities);
         response.put("technicians", technicians);
         return response;
+    }
+    
+    private List<Map<String, Object>> normalizeMaps(List<Map<String, Object>> rows) {
+        return rows.stream()
+                   .map(row -> row.entrySet().stream()
+                                   .collect(Collectors.toMap(
+                                       e -> e.getKey().toLowerCase(),
+                                       Map.Entry::getValue
+                                   )))
+                   .collect(Collectors.toList());
     }
     
     @Transactional
