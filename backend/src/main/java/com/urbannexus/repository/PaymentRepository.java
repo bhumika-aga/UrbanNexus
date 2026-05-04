@@ -26,7 +26,6 @@ import com.urbannexus.model.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -35,13 +34,11 @@ import java.util.Map;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, String> {
-    
-    @Procedure(procedureName = "ProcessOverduePayments")
+
+    @Modifying
+    @Query(value = "UPDATE payment SET status = 'Overdue' WHERE status = 'Pending' AND payment_date < NOW() - INTERVAL '30' DAY", nativeQuery = true)
     void processOverduePayments();
-    
-    @Procedure(procedureName = "GetResidentPendingDues")
-    List<Map<String, Object>> getPendingDues(Long resident_id);
-    
+
     @Query(value = """
         SELECT
             p.trans_no,
@@ -91,8 +88,4 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     @Modifying
     @Query(value = "UPDATE payment SET status = 'Paid' WHERE trans_no = :transNo", nativeQuery = true)
     int payTransaction(@Param("transNo") String transNo);
-    
-    @Modifying
-    @Query(value = "UPDATE payment SET status = 'Overdue' WHERE status = 'Pending' AND payment_date < DATEADD('DAY', -30, CURRENT_TIMESTAMP)", nativeQuery = true)
-    void processOverdueH2();
 }

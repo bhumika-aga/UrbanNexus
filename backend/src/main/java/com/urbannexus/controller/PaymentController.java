@@ -47,11 +47,16 @@ public class PaymentController {
     @PostMapping("/{trans_no}/pay")
     public ResponseEntity<?> payBill(@AuthenticationPrincipal UserPrincipal currentUser,
                                      @PathVariable("trans_no") String transNo) {
+        String role = currentUser.getRole();
+        if (!"Resident".equals(role) && !"SuperAdmin".equals(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                       .body(Map.of("error", "Only Residents and Admins can process payments."));
+        }
         try {
             paymentService.payInvoice(transNo, currentUser.getResidentId());
             return ResponseEntity.ok(Map.of("message", "Transaction " + transNo + " processed successfully!"));
         } catch (RuntimeException e) {
-            if (e.getMessage().contains("permission")) {
+            if (e.getMessage() != null && e.getMessage().contains("permission")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
             }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

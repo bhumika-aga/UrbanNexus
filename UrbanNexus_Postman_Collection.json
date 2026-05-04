@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "UrbanNexus API Collection",
-    "description": "Comprehensive Postman collection for the UrbanNexus Spring Boot Backend.",
+    "description": "Comprehensive Postman collection for the UrbanNexus Spring Boot Backend.\n\nCredentials:\n- Admin: username=admin, password=Bhumika@1234\n- Resident: username=jane_s, password=pwd123#\n- Technician: username=tech_tom, password=pwd123#\n\nWorkflow: Run 'Login' first — the test script auto-saves the JWT to {{jwt_token}}.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -21,7 +21,43 @@
       "name": "1. Authentication",
       "item": [
         {
-          "name": "Login",
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.token) {",
+                  "    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+                  "    console.log('Token saved to jwt_token variable');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Bhumika@1234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            }
+          }
+        },
+        {
+          "name": "Login (Resident)",
           "event": [
             {
               "listen": "test",
@@ -46,21 +82,52 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"pwd123#\"\n}"
+              "raw": "{\n  \"username\": \"jane_s\",\n  \"password\": \"pwd123#\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "login"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["login"]
             }
           }
         },
         {
-          "name": "Get Profile",
+          "name": "Login (Technician)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.token) {",
+                  "    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"tech_tom\",\n  \"password\": \"pwd123#\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            }
+          }
+        },
+        {
+          "name": "Get My Profile",
           "request": {
             "method": "GET",
             "header": [
@@ -71,13 +138,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/profile/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "profile",
-                "me"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["profile", "me"]
             }
           }
         },
@@ -101,13 +163,8 @@
             },
             "url": {
               "raw": "{{base_url}}/profile/update",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "profile",
-                "update"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["profile", "update"]
             }
           }
         }
@@ -117,7 +174,7 @@
       "name": "2. Residents",
       "item": [
         {
-          "name": "Add Resident (Admin)",
+          "name": "Add Resident (Admin only)",
           "request": {
             "method": "POST",
             "header": [
@@ -136,17 +193,13 @@
             },
             "url": {
               "raw": "{{base_url}}/residents",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "residents"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["residents"]
             }
           }
         },
         {
-          "name": "Get My Dues",
+          "name": "Get My Dues (Resident only)",
           "request": {
             "method": "GET",
             "header": [
@@ -157,19 +210,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/residents/me/dues",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "residents",
-                "me",
-                "dues"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["residents", "me", "dues"]
             }
           }
         },
         {
-          "name": "Get My Bookings",
+          "name": "Get My Bookings (Resident only)",
           "request": {
             "method": "GET",
             "header": [
@@ -180,19 +227,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/residents/me/bookings",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "residents",
-                "me",
-                "bookings"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["residents", "me", "bookings"]
             }
           }
         },
         {
-          "name": "Delete Resident",
+          "name": "Delete Resident (Admin only)",
           "request": {
             "method": "DELETE",
             "header": [
@@ -202,14 +243,9 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/residents/1",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "residents",
-                "1"
-              ]
+              "raw": "{{base_url}}/residents/27",
+              "host": ["{{base_url}}"],
+              "path": ["residents", "27"]
             }
           }
         }
@@ -219,7 +255,7 @@
       "name": "3. Technicians",
       "item": [
         {
-          "name": "Add Technician (Admin)",
+          "name": "Add Technician (Admin only)",
           "request": {
             "method": "POST",
             "header": [
@@ -234,21 +270,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tech_id\": 101,\n  \"name\": \"Max Verstappen\",\n  \"contact\": \"9876543210\",\n  \"skill\": \"Plumber\"\n}"
+              "raw": "{\n  \"tech_id\": 17,\n  \"name\": \"Max Verstappen\",\n  \"contact\": \"9876543210\",\n  \"skill\": \"Plumber\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/technicians",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "technicians"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["technicians"]
             }
           }
         },
         {
-          "name": "Get My Tasks",
+          "name": "Get My Tasks (Technician only)",
           "request": {
             "method": "GET",
             "header": [
@@ -259,19 +291,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/technicians/me/tasks",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "technicians",
-                "me",
-                "tasks"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["technicians", "me", "tasks"]
             }
           }
         },
         {
-          "name": "Update Task Status",
+          "name": "Update Task Status (Technician only)",
           "request": {
             "method": "PUT",
             "header": [
@@ -290,51 +316,13 @@
             },
             "url": {
               "raw": "{{base_url}}/technicians/tasks/1/status",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "technicians",
-                "tasks",
-                "1",
-                "status"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["technicians", "tasks", "1", "status"]
             }
           }
         },
         {
-          "name": "Update Availability",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"available\": true\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/technicians/me/availability",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "technicians",
-                "me",
-                "availability"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Tech Profile",
+          "name": "Get My Profile (Technician only)",
           "request": {
             "method": "GET",
             "header": [
@@ -345,95 +333,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/technicians/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "technicians",
-                "me"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["technicians", "me"]
             }
           }
         },
         {
-          "name": "Delete Technician",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/technicians/101",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "technicians",
-                "101"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "4. Amenities",
-      "item": [
-        {
-          "name": "Add Amenity (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"amenity_id\": 4,\n  \"name\": \"Sauber Tennis Court\",\n  \"capacity\": 4\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/amenities",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "amenities"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Amenities",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/amenities",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "amenities"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Update Amenity",
+          "name": "Update Availability (Technician only)",
           "request": {
             "method": "PUT",
             "header": [
@@ -448,22 +354,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Sauber Tennis Court Updated\",\n  \"capacity\": 6\n}"
+              "raw": "{\n  \"available\": false\n}"
             },
             "url": {
-              "raw": "{{base_url}}/amenities/4",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "amenities",
-                "4"
-              ]
+              "raw": "{{base_url}}/technicians/me/availability",
+              "host": ["{{base_url}}"],
+              "path": ["technicians", "me", "availability"]
             }
           }
         },
         {
-          "name": "Delete Amenity",
+          "name": "Delete Technician (Admin only)",
           "request": {
             "method": "DELETE",
             "header": [
@@ -473,14 +374,98 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/amenities/4",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "amenities",
-                "4"
-              ]
+              "raw": "{{base_url}}/technicians/17",
+              "host": ["{{base_url}}"],
+              "path": ["technicians", "17"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Amenities",
+      "item": [
+        {
+          "name": "Get All Amenities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/amenities",
+              "host": ["{{base_url}}"],
+              "path": ["amenities"]
+            }
+          }
+        },
+        {
+          "name": "Add Amenity (Admin only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rooftop Garden\",\n  \"capacity\": 30\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/amenities",
+              "host": ["{{base_url}}"],
+              "path": ["amenities"]
+            }
+          }
+        },
+        {
+          "name": "Update Amenity (Admin only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rooftop Garden\",\n  \"capacity\": 40\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/amenities/6",
+              "host": ["{{base_url}}"],
+              "path": ["amenities", "6"]
+            }
+          }
+        },
+        {
+          "name": "Delete Amenity (Admin only)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/amenities/6",
+              "host": ["{{base_url}}"],
+              "path": ["amenities", "6"]
             }
           }
         }
@@ -490,7 +475,7 @@
       "name": "5. Bookings",
       "item": [
         {
-          "name": "Book Technician",
+          "name": "Book Technician (Resident)",
           "request": {
             "method": "POST",
             "header": [
@@ -505,22 +490,17 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"resident_id\": 1,\n  \"skill\": \"Plumber\",\n  \"slot\": 1,\n  \"assign_date\": \"2026-05-10\"\n}"
+              "raw": "{\n  \"skill\": \"Plumber\",\n  \"slot\": 1,\n  \"assign_date\": \"2026-06-10\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/bookings/technician",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "bookings",
-                "technician"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "technician"]
             }
           }
         },
         {
-          "name": "Book Amenity",
+          "name": "Book Amenity (Resident)",
           "request": {
             "method": "POST",
             "header": [
@@ -535,17 +515,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"resident_id\": 1,\n  \"amenity_id\": 1,\n  \"date\": \"2026-05-15\",\n  \"slot\": 2,\n  \"capacity_booked\": 4\n}"
+              "raw": "{\n  \"amenity_id\": 1,\n  \"date\": \"2026-06-15\",\n  \"slot\": 2,\n  \"capacity_booked\": 4\n}"
             },
             "url": {
               "raw": "{{base_url}}/bookings/amenity",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "bookings",
-                "amenity"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "amenity"]
             }
           }
         }
@@ -555,7 +530,7 @@
       "name": "6. Payments",
       "item": [
         {
-          "name": "Pay Transaction",
+          "name": "Pay Transaction (Resident or Admin)",
           "request": {
             "method": "POST",
             "header": [
@@ -565,15 +540,9 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/payments/TXN-12345/pay",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payments",
-                "TXN-12345",
-                "pay"
-              ]
+              "raw": "{{base_url}}/payments/TXN-101/pay",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "TXN-101", "pay"]
             }
           }
         }
@@ -582,6 +551,23 @@
     {
       "name": "7. Admin Dashboard",
       "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/stats",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "stats"]
+            }
+          }
+        },
         {
           "name": "Search Residents",
           "request": {
@@ -593,26 +579,24 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/admin/residents/search?name=Lewis",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "residents",
-                "search"
-              ],
+              "raw": "{{base_url}}/admin/residents/search?name=John&block=A",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "residents", "search"],
               "query": [
                 {
                   "key": "name",
-                  "value": "Lewis"
+                  "value": "John"
+                },
+                {
+                  "key": "block",
+                  "value": "A"
                 }
               ]
             }
           }
         },
         {
-          "name": "Get Technicians",
+          "name": "Get All Technicians",
           "request": {
             "method": "GET",
             "header": [
@@ -623,13 +607,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/admin/technicians",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "technicians"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["admin", "technicians"]
             }
           }
         },
@@ -644,18 +623,22 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/admin/transactions?status=Pending",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "transactions"
-              ],
+              "raw": "{{base_url}}/admin/transactions?status=Pending&block=A",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "transactions"],
               "query": [
                 {
                   "key": "status",
                   "value": "Pending"
+                },
+                {
+                  "key": "block",
+                  "value": "A"
+                },
+                {
+                  "key": "resident_name",
+                  "value": "",
+                  "disabled": true
                 }
               ]
             }
@@ -673,13 +656,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/admin/process-overdue",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "process-overdue"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["admin", "process-overdue"]
             }
           }
         },
@@ -695,18 +673,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/admin/audit-logs",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "audit-logs"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["admin", "audit-logs"]
             }
           }
         },
         {
-          "name": "Get Open Assignments",
+          "name": "Get Open Technician Assignments",
           "request": {
             "method": "GET",
             "header": [
@@ -717,18 +690,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/admin/assignments",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "assignments"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["admin", "assignments"]
             }
           }
         },
         {
-          "name": "Get Facility Bookings History",
+          "name": "Get Amenity Bookings History",
           "request": {
             "method": "GET",
             "header": [
@@ -739,19 +707,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/admin/amenities/bookings",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "amenities",
-                "bookings"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["admin", "amenities", "bookings"]
             }
           }
         },
         {
-          "name": "Get Service History",
+          "name": "Get Technician Service History",
           "request": {
             "method": "GET",
             "header": [
@@ -762,36 +724,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/admin/technicians/bookings",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "technicians",
-                "bookings"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Dashboard Stats",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/admin/stats",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "stats"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["admin", "technicians", "bookings"]
             }
           }
         }

@@ -8,6 +8,7 @@ spring:
     password: ${DB_PASSWORD:Bhumika@1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
+    open-in-view: false
     show-sql: true
     hibernate:
       ddl-auto: update
@@ -27,7 +28,6 @@ app:
 logging:
   level:
     root: INFO
-    com.urbannexus: DEBUG
-    org.springframework.web: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE
+    com.urbannexus: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN

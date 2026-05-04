@@ -73,11 +73,11 @@ VALUES ('Plumber', 'Technician', 500.00),
        ('Spa & Wellness Center', 'Amenity', 2000.00),
        ('Community Theater', 'Amenity', 5000.00);
 
--- ADMIN ACCOUNTS (Credentials for all roles)
+-- ADMIN ACCOUNTS (Credentials: admin → Bhumika@1234, all others → pwd123#)
 INSERT INTO admin (username, password_hash, role, resident_id, tech_id)
 VALUES
--- SuperAdmin
-('admin', '$2b$10$qzIQR37Qo.GBQvgaXFSMeerZukbS7G1WTAHwRROGlB5IHjf9j3mR6', 'SuperAdmin', NULL, NULL),
+-- SuperAdmin (password: Bhumika@1234)
+('admin', '$2b$10$aogJTIwzhG8DFV5eBbw3qOtiYHtQCKV8vVQkgqd6XIMMFa1.w7VFC', 'SuperAdmin', NULL, NULL),
 
 -- Residents (1-26)
 ('john_doe', '$2b$10$qzIQR37Qo.GBQvgaXFSMeerZukbS7G1WTAHwRROGlB5IHjf9j3mR6', 'Resident', 1, NULL),

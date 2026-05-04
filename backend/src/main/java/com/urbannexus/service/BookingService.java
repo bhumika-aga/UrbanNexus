@@ -29,16 +29,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
-import java.util.random.RandomGenerator;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class BookingService {
-    
-    private final BookingRepository bookingRepository;
+
     private final TechnicianRepository technicianRepository;
     private final TechnicianManagementRepository technicianManagementRepository;
     private final ResidentRepository residentRepository;
@@ -46,29 +44,11 @@ public class BookingService {
     private final PaymentRepository paymentRepository;
     private final AmenityRepository amenityRepository;
     private final AmenityMgmtRepository amenityMgmtRepository;
-    
-    /**
-     * Entry Point: Calls the Database Procedure (MySQL proc or H2 Alias)
-     */
+
     @Transactional
-    public Map<String, Object> bookTechnician(Long residentId, String skill, Integer slot, String assignDate) {
-        return bookingRepository.autoBookTechnician(residentId, skill, slot, assignDate);
-    }
-    
-    @Transactional
-    public Map<String, Object> bookAmenity(Long residentId, Long amenityId, String date, Integer slot,
-                                           Integer capacityBooked) {
-        return bookingRepository.autoBookAmenity(residentId, amenityId, date, slot, capacityBooked);
-    }
-    
-    /**
-     * H2 Internal Logic: Executed via ALIAS
-     */
-    @Transactional
-    public Map<String, Object> executeTechnicianBooking(Long residentId, String skill, Integer slot,
-                                                        String assignDateStr) {
+    public Map<String, Object> bookTechnician(Long residentId, String skill, Integer slot, String assignDateStr) {
         LocalDate assignDate = LocalDate.parse(assignDateStr);
-        
+
         Technician tech = technicianRepository.findBySkill(skill).stream()
                               .filter(Technician::getAvailable)
                               .filter(t -> !technicianManagementRepository
@@ -76,25 +56,21 @@ public class BookingService {
                                                     assignDate, slot))
                               .findFirst()
                               .orElseThrow(() -> new RuntimeException("Booking Failed: No available technicians."));
-        
+
         Pricing pricing = pricingRepository.findByItemNameAndCategory(skill, PricingCategory.Technician)
                               .orElseThrow(() -> new RuntimeException("No pricing found for " + skill));
-        
-        BigDecimal basePrice = pricing.getBasePrice();
-        BigDecimal gst = basePrice.multiply(new BigDecimal("0.18"));
-        BigDecimal totalPrice = basePrice.add(gst);
-        
-        String transNo = "TXN-TECH-" + RandomGenerator.getDefault().nextInt(100000, 999999);
+
+        String transNo = "TXN-TECH-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
         Payment payment = new Payment();
         payment.setTransNo(transNo);
         payment.setStatus("Pending");
         payment.setType("Technician");
-        payment.setCost(totalPrice);
-        paymentRepository.save(payment);
-        
+        payment.setCost(pricing.getBasePrice()); // @PrePersist applies 18% GST
+        payment = paymentRepository.saveAndFlush(payment);
+
         Resident resident = residentRepository.findById(residentId)
                                 .orElseThrow(() -> new RuntimeException("Resident not found"));
-        
+
         TechnicianManagement assignment = new TechnicianManagement();
         assignment.setResident(resident);
         assignment.setTechnician(tech);
@@ -103,45 +79,41 @@ public class BookingService {
         assignment.setSlot(slot);
         assignment.setStatus("Assigned");
         technicianManagementRepository.save(assignment);
-        
+
         return Map.of(
             "assignment_id", assignment.getAssignmentId(),
             "technician_name", tech.getName(),
             "trans_no", transNo,
             "total_with_gst", payment.getCost());
     }
-    
+
     @Transactional
-    public Map<String, Object> executeAmenityBooking(Long residentId, Long amenityId, String dateStr, Integer slot,
-                                                     Integer capacityBooked) {
+    public Map<String, Object> bookAmenity(Long residentId, Long amenityId, String dateStr, Integer slot,
+                                           Integer capacityBooked) {
         LocalDate date = LocalDate.parse(dateStr);
-        
+
         Amenity amenity = amenityRepository.findById(amenityId)
                               .orElseThrow(() -> new RuntimeException("Amenity not found"));
-        
+
         if (capacityBooked > amenity.getCapacity()) {
             throw new RuntimeException("Capacity exceeded.");
         }
-        
+
         Pricing pricing = pricingRepository
                               .findByItemNameAndCategory(amenity.getName(), PricingCategory.Amenity)
                               .orElseThrow(() -> new RuntimeException("No pricing found for " + amenity.getName()));
-        
-        BigDecimal basePrice = pricing.getBasePrice();
-        BigDecimal gst = basePrice.multiply(new BigDecimal("0.18"));
-        BigDecimal totalPrice = basePrice.add(gst);
-        
-        String transNo = "TXN-AMEN-" + RandomGenerator.getDefault().nextInt(100000, 999999);
+
+        String transNo = "TXN-AMEN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
         Payment payment = new Payment();
         payment.setTransNo(transNo);
         payment.setStatus("Pending");
         payment.setType("Amenity");
-        payment.setCost(totalPrice);
-        paymentRepository.save(payment);
-        
+        payment.setCost(pricing.getBasePrice()); // @PrePersist applies 18% GST
+        payment = paymentRepository.saveAndFlush(payment);
+
         Resident resident = residentRepository.findById(residentId)
                                 .orElseThrow(() -> new RuntimeException("Resident not found"));
-        
+
         AmenityMgmt booking = new AmenityMgmt();
         booking.setResident(resident);
         booking.setAmenity(amenity);
@@ -151,7 +123,7 @@ public class BookingService {
         booking.setCapacityBooked(capacityBooked);
         booking.setStatus("Confirmed");
         amenityMgmtRepository.save(booking);
-        
+
         return Map.of(
             "booking_id", booking.getBookingId(),
             "amenity_name", amenity.getName(),
