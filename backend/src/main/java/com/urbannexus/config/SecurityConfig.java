@@ -79,12 +79,17 @@ public class SecurityConfig {
                                                    .requestMatchers("/", "/error", "/api/login", "/h2-console/**", "/actuator/**").permitAll()
                                                    .anyRequest().authenticated())
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-            .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(
-                (request, response, accessDeniedException) -> {
-                    log.warn("Access denied for {}: {}", request.getRequestURI(),
-                        accessDeniedException.getMessage());
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
-                }));
+            .exceptionHandling(exceptions -> exceptions
+                                                 .authenticationEntryPoint((request, response, authException) -> {
+                                                     log.warn("Unauthenticated access to {}: {}", request.getRequestURI(),
+                                                         authException.getMessage());
+                                                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                                                 })
+                                                 .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                                     log.warn("Access denied for {}: {}", request.getRequestURI(),
+                                                         accessDeniedException.getMessage());
+                                                     response.sendError(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage());
+                                                 }));
         
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
