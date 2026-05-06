@@ -13,7 +13,8 @@ import java.math.BigDecimal;
 @Builder
 public class DashboardStatsDTO {
     private long totalResidents;
-    private BigDecimal unpaidLedger;
+    private BigDecimal pendingLedger;
+    private BigDecimal overdueLedger;
     private long pendingTickets;
     private String gridUptime;
 }

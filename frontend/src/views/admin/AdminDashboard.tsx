@@ -49,7 +49,8 @@ import TechnicianManager from "./TechnicianManager";
 
 interface DashboardStats {
   totalResidents: number;
-  unpaidLedger: number;
+  pendingLedger: number;
+  overdueLedger: number;
   pendingTickets: number;
   gridUptime: string;
 }
@@ -194,7 +195,9 @@ const AdminDashboard: React.FC = () => {
                 {loading ? (
                   <CircularProgress size={24} />
                 ) : (
-                  formatCurrency(stats?.unpaidLedger || 0)
+                  formatCurrency(
+                    (stats?.pendingLedger || 0) + (stats?.overdueLedger || 0),
+                  )
                 )}
               </Typography>
               <Typography
@@ -204,6 +207,16 @@ const AdminDashboard: React.FC = () => {
               >
                 Unpaid Total
               </Typography>
+              {!loading && stats && (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: "block", mt: 0.5 }}
+                >
+                  {formatCurrency(stats.pendingLedger)} pending &middot;{" "}
+                  {formatCurrency(stats.overdueLedger)} overdue
+                </Typography>
+              )}
             </CardContent>
           </Card>
         </Grid>

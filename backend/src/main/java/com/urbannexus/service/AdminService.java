@@ -50,13 +50,15 @@ public class AdminService {
     
     public DashboardStatsDTO getDashboardStats() {
         long totalResidents = residentRepository.count();
-        BigDecimal unpaidLedger = paymentRepository.sumUnpaidCosts();
+        BigDecimal pendingLedger = paymentRepository.sumPendingCosts();
+        BigDecimal overdueLedger = paymentRepository.sumOverdueCosts();
         long pendingAssignments = technicianManagementRepository.countByStatus("Assigned");
         long pendingAmenities = amenityMgmtRepository.countByStatus("Confirmed");
         
         return DashboardStatsDTO.builder()
                    .totalResidents(totalResidents)
-                   .unpaidLedger(unpaidLedger)
+                   .pendingLedger(pendingLedger)
+                   .overdueLedger(overdueLedger)
                    .pendingTickets(pendingAssignments + pendingAmenities)
                    .gridUptime("99.8%")
                    .build();

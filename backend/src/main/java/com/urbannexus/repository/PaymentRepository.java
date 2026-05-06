@@ -91,6 +91,9 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     @Query(value = "UPDATE payment SET status = 'Paid' WHERE trans_no = :transNo AND status != 'Paid'", nativeQuery = true)
     int payTransaction(@Param("transNo") String transNo);
     
-    @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status IN ('Pending', 'Overdue')", nativeQuery = true)
-    java.math.BigDecimal sumUnpaidCosts();
+    @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status = 'Pending'", nativeQuery = true)
+    java.math.BigDecimal sumPendingCosts();
+    
+    @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status = 'Overdue'", nativeQuery = true)
+    java.math.BigDecimal sumOverdueCosts();
 }
