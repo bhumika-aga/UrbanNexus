@@ -86,7 +86,15 @@ const ResidentManager: React.FC = () => {
 
   const handleAdd = async () => {
     try {
-      await api.post("/residents", formData);
+      await api.post("/residents", {
+        name: formData.name,
+        house_block: formData.houseBlock,
+        house_floor: formData.houseFloor,
+        house_unit: formData.houseUnit,
+        ownership_status: formData.ownershipStatus,
+        contact: formData.contact,
+        no_of_members: formData.noOfMembers,
+      });
       setOpenModal(false);
       fetchResidents();
     } catch {

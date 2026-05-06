@@ -76,7 +76,7 @@ export interface AuditLogEntry {
 export interface Amenity {
   amenityId: number;
   name: string;
-  capacity: number;
+  capacity: number | null;
 }
 
 export interface Transaction {

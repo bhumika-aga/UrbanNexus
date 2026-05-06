@@ -88,8 +88,9 @@ const AssignmentManager: React.FC = () => {
                         py: 0.5,
                         borderRadius: 1,
                         backgroundColor:
-                          as.status === "Resolved" ? "#f0fdf4" : "#fff7ed",
-                        color: as.status === "Resolved" ? "#166534" : "#c2410c",
+                          as.status === "Completed" ? "#f0fdf4" : "#fff7ed",
+                        color:
+                          as.status === "Completed" ? "#166534" : "#c2410c",
                         fontWeight: 700,
                         fontSize: "0.65rem",
                         textTransform: "uppercase",

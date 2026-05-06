@@ -134,7 +134,9 @@ const AmenityBooker: React.FC<Props> = ({ onBack }) => {
                         {a.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Max Capacity: {a.capacity} per slot
+                        {a.capacity != null
+                          ? `Max Capacity: ${a.capacity} per slot`
+                          : "Open access"}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -171,7 +173,6 @@ const AmenityBooker: React.FC<Props> = ({ onBack }) => {
                   <MenuItem value={1}>09:00 AM - 12:00 PM</MenuItem>
                   <MenuItem value={2}>12:00 PM - 03:00 PM</MenuItem>
                   <MenuItem value={3}>03:00 PM - 06:00 PM</MenuItem>
-                  <MenuItem value={4}>06:00 PM - 09:00 PM</MenuItem>
                 </TextField>
                 <TextField
                   fullWidth

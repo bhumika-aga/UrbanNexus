@@ -48,14 +48,18 @@ public class AmenityController {
         }
         
         try {
-            Long amenityId = payload.get("amenity_id") != null ? Long.parseLong(payload.get("amenity_id").toString())
-                                 : null;
+            if (payload.get("amenity_id") == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "amenity_id is required."));
+            }
+            Long amenityId = Long.parseLong(payload.get("amenity_id").toString());
             String name = (String) payload.get("name");
             Integer capacity = payload.get("capacity") != null ? Integer.parseInt(payload.get("capacity").toString())
                                    : null;
             
             amenityService.addAmenity(amenityId, name, capacity);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Amenity added successfully!"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to add amenity"));

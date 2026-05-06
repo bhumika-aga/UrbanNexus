@@ -37,7 +37,7 @@ interface HistoryManagerProps {
 }
 
 const HistoryManager: React.FC<HistoryManagerProps> = ({ tasks }) => {
-  const resolvedTasks = tasks.filter((t) => t.status === "Resolved");
+  const resolvedTasks = tasks.filter((t) => t.status === "Completed");
 
   return (
     <Box>

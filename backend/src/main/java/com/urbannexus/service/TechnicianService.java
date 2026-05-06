@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -80,7 +81,17 @@ public class TechnicianService {
     }
     
     public List<Map<String, Object>> getTasks(Long techId) {
-        return technicianRepository.getTasksForTechnician(techId);
+        return normalizeMaps(technicianRepository.getTasksForTechnician(techId));
+    }
+    
+    private List<Map<String, Object>> normalizeMaps(List<Map<String, Object>> rows) {
+        return rows.stream()
+                   .map(row -> row.entrySet().stream()
+                                   .collect(Collectors.toMap(
+                                       e -> e.getKey().toLowerCase(),
+                                       Map.Entry::getValue
+                                   )))
+                   .collect(Collectors.toList());
     }
     
     @Transactional
@@ -128,6 +139,10 @@ public class TechnicianService {
         if (updates.containsKey("skill")) {
             tech.setSkill((String) updates.get("skill"));
             details.append("skill, ");
+        }
+        if (updates.containsKey("available")) {
+            tech.setAvailable((Boolean) updates.get("available"));
+            details.append("available, ");
         }
         
         technicianRepository.save(tech);

@@ -49,7 +49,18 @@ interface Props {
   onBack: () => void;
 }
 
-const techSkills = ["Plumber", "Electrician", "Carpenter", "Maintenance"];
+const techSkills = [
+  "Plumber",
+  "Electrician",
+  "Carpenter",
+  "Maintenance",
+  "HVAC",
+  "Painter",
+  "Mason",
+  "Pest Control",
+  "Security Expert",
+  "Landscaper",
+];
 
 const TechBooker: React.FC<Props> = ({ onBack }) => {
   const [submitting, setSubmitting] = useState(false);

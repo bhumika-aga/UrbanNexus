@@ -37,8 +37,8 @@ interface StatsGridProps {
 }
 
 const StatsGrid: React.FC<StatsGridProps> = ({ tasks }) => {
-  const resolvedCount = tasks.filter((t) => t.status === "Resolved").length;
-  const activeCount = tasks.filter((t) => t.status !== "Resolved").length;
+  const resolvedCount = tasks.filter((t) => t.status === "Completed").length;
+  const activeCount = tasks.filter((t) => t.status !== "Completed").length;
 
   const stats = [
     {

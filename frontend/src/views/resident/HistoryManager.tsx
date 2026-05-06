@@ -210,7 +210,7 @@ const HistoryManager: React.FC<Props> = ({ onBack }) => {
                     <Chip
                       size="small"
                       label={t.status}
-                      color={t.status === "Resolved" ? "success" : "warning"}
+                      color={t.status === "Completed" ? "success" : "warning"}
                       sx={{ fontWeight: 700, fontSize: "0.6rem" }}
                     />
                   </Paper>

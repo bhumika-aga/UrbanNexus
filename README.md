@@ -83,8 +83,9 @@ Seed data in `data.sql` stores costs at face value (pre-GST); the hook fires on 
 
 ### Audit Trail
 
-All critical mutations (resident/technician add/delete, task status changes) are written to `audit_log` via
-`AuditService`. The MySQL `LogResidentDeletion` trigger provides a DB-level fallback for direct SQL deletes.
+All critical mutations (resident/technician add/delete, task status changes, availability toggles) are written to
+`audit_log` via `AuditService`. The MySQL `LogResidentDeletion` trigger provides a DB-level fallback for direct SQL
+deletes.
 
 ---
 
@@ -93,7 +94,7 @@ All critical mutations (resident/technician add/delete, task status changes) are
 ### Prerequisites
 
 - JDK 17
-- Maven 3.8+ (or use the project's Maven wrapper via `mvnw`)
+- Maven 3.8+ (or `mvnw` if added to the project)
 - Node.js 18+
 
 ### Backend (H2 dev mode — no external DB required)
@@ -120,8 +121,9 @@ cd backend
 mvn spring-boot:run
 ```
 
-Run `schema-mysql.sql` manually in MySQL to create the stored procedures (Spring SQL init does not support the
-`DELIMITER` syntax required for MySQL procedures).
+Run `schema-mysql.sql` manually in MySQL once to create the stored procedures (Spring SQL init does not support the
+`DELIMITER` syntax required for MySQL procedures). The `application.yml` MySQL config intentionally does **not** run
+`schema.sql` on startup — use `ddl-auto: update` or run the DDL once manually.
 
 ### Frontend
 
@@ -184,7 +186,46 @@ password for auto-provisioned accounts is `pwd123#`.
 | GET    | `/api/admin/amenities/bookings`      | SuperAdmin             | All amenity bookings                 |
 | GET    | `/api/admin/technicians/bookings`    | SuperAdmin             | Completed technician service history |
 
-### Booking Request Bodies
+### Request Bodies
+
+**Add Resident** (`POST /api/residents`):
+
+```json
+{
+  "name": "Charles Leclerc",
+  "house_block": "B",
+  "house_floor": "16",
+  "house_unit": "1604",
+  "ownership_status": "Tenant",
+  "contact": "9123456780",
+  "no_of_members": 1
+}
+```
+
+**Add Technician** (`POST /api/technicians`):
+
+```json
+{
+  "tech_id": 17,
+  "name": "Max Verstappen",
+  "contact": "9876543210",
+  "skill": "Plumber"
+}
+```
+
+Note: `tech_id` is admin-assigned (no auto-increment on the technician table).
+
+**Add Amenity** (`POST /api/amenities`):
+
+```json
+{
+  "amenity_id": 6,
+  "name": "Rooftop Garden",
+  "capacity": 30
+}
+```
+
+Note: `amenity_id` is required (no auto-increment on the amenity table).
 
 **Book Technician** (`POST /api/bookings/technician`):
 
@@ -229,7 +270,7 @@ UrbanNexus/
 │   │   ├── security/        JwtTokenProvider, JwtAuthenticationFilter, UserPrincipal
 │   │   └── dto/             AuthResponse, LoginRequest, DashboardStatsDTO
 │   └── src/main/resources/
-│       ├── application.yml          Production (MySQL) config
+│       ├── application.yml          MySQL config (no SQL init — uses ddl-auto)
 │       ├── application-prod.yml     H2 config (Render deployment + local dev)
 │       ├── schema.sql               Universal DDL (H2 + MySQL compatible)
 │       ├── data.sql                 Seed data (residents, technicians, pricing)
@@ -262,6 +303,16 @@ need to query the admin table again to determine who is making a request.
 
 **Idempotent payments** — The `payTransaction` and `payTransactionForResident` queries include `AND status != 'Paid'`
 in the WHERE clause, so duplicate payment calls return a 400 error rather than silently re-confirming.
+
+**Manual IDs for amenities and technicians** — Both tables use non-auto-increment primary keys. IDs are admin-assigned,
+which keeps the catalog stable and predictable (e.g., amenity 1 is always the Paddock Club Lounge).
+
+**MySQL sql.init disabled** — The `application.yml` (MySQL profile) does not run `schema.sql` on startup. Running it
+would drop all tables on every restart. Schema management for MySQL uses `ddl-auto: update` or a one-time manual DDL
+run. Only the H2 `prod` profile runs `schema.sql` on startup, since H2's data is recreated fresh each time.
+
+**`@Modifying(clearAutomatically = true)`** — The `updateTaskStatus` JPQL update clears the persistence context after
+execution, preventing stale entity reads from JPA's first-level cache.
 
 ---
 

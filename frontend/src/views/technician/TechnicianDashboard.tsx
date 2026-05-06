@@ -106,7 +106,7 @@ const TechnicianDashboard: React.FC = () => {
     );
   }
 
-  const activeTasks = tasks.filter((t) => t.status !== "Resolved");
+  const activeTasks = tasks.filter((t) => t.status !== "Completed");
 
   return (
     <Box>
@@ -315,7 +315,7 @@ const TechnicianDashboard: React.FC = () => {
                       style={{ fontSize: 18 }}
                     />
                   }
-                  onClick={() => updateStatus(task.assignment_id!, "Resolved")}
+                  onClick={() => updateStatus(task.assignment_id!, "Completed")}
                 >
                   Resolve Task
                 </Button>

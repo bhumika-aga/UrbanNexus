@@ -65,6 +65,8 @@ public class BookingController {
             
             return ResponseEntity.status(HttpStatus.CREATED)
                        .body(bookingService.bookTechnician(residentId, skill, slot, assignDate));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Booking failed"));

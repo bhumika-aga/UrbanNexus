@@ -418,7 +418,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Rooftop Garden\",\n  \"capacity\": 30\n}"
+              "raw": "{\n  \"amenity_id\": 6,\n  \"name\": \"Rooftop Garden\",\n  \"capacity\": 30\n}"
             },
             "url": {
               "raw": "{{base_url}}/amenities",

@@ -94,8 +94,8 @@ const ServiceHistory: React.FC = () => {
                         py: 0.5,
                         borderRadius: 1,
                         backgroundColor:
-                          h.status === "Resolved" ? "#f0fdf4" : "#fff7ed",
-                        color: h.status === "Resolved" ? "#166534" : "#c2410c",
+                          h.status === "Completed" ? "#f0fdf4" : "#fff7ed",
+                        color: h.status === "Completed" ? "#166534" : "#c2410c",
                         fontWeight: 700,
                         fontSize: "0.65rem",
                         textTransform: "uppercase",

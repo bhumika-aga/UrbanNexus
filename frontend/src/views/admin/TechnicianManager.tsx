@@ -83,7 +83,12 @@ const TechnicianManager: React.FC = () => {
 
   const handleAdd = async () => {
     try {
-      await api.post("/technicians", formData);
+      await api.post("/technicians", {
+        tech_id: formData.techId,
+        name: formData.name,
+        contact: formData.contact,
+        skill: formData.skill,
+      });
       setOpenModal(false);
       setFormData({ techId: "", name: "", contact: "", skill: "Plumber" });
       fetchTechs();
@@ -326,6 +331,12 @@ const TechnicianManager: React.FC = () => {
                 <MenuItem value="Electrician">Electrician</MenuItem>
                 <MenuItem value="Maintenance">Maintenance</MenuItem>
                 <MenuItem value="Carpenter">Carpenter</MenuItem>
+                <MenuItem value="HVAC">HVAC</MenuItem>
+                <MenuItem value="Painter">Painter</MenuItem>
+                <MenuItem value="Mason">Mason</MenuItem>
+                <MenuItem value="Pest Control">Pest Control</MenuItem>
+                <MenuItem value="Security Expert">Security Expert</MenuItem>
+                <MenuItem value="Landscaper">Landscaper</MenuItem>
               </TextField>
             </Grid>
           </Grid>
