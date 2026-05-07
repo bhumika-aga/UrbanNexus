@@ -1,6 +1,6 @@
 # UrbanNexus — Residential Operations Platform
 
-UrbanNexus is a full-stack residential complex management system built with Spring Boot 3 and React 19. It covers the
+UrbanNexus is a full-stack residential complex management system built with Spring Boot 3.5 and React 19. It covers the
 complete operational lifecycle of a residential community: resident and technician management, amenity and technician
 booking, payment tracking with 18% GST, and an administrative audit trail.
 
@@ -8,7 +8,7 @@ booking, payment tracking with 18% GST, and an administrative audit trail.
 
 ## Architecture
 
-### Backend: Spring Boot 3 + Java 17
+### Backend: Spring Boot 3.5 + Java 17
 
 The backend is a RESTful JSON API with JWT-based stateless authentication. Key layers:
 
@@ -18,12 +18,14 @@ The backend is a RESTful JSON API with JWT-based stateless authentication. Key l
 - **Security** — `JwtAuthenticationFilter` extracts claims from every request; `UserPrincipal` carries `role`,
   `residentId`, `techId`
 - **Model** — JPA entities with a `@PrePersist` lifecycle hook on `Payment` that applies 18% GST before insert
+- **Utilities** — Lombok (`@Data`, `@RequiredArgsConstructor`) eliminates boilerplate across all layers
 
 ### Frontend: React 19 + Vite + TypeScript
 
-- Material UI (MUI) for the component library
-- Axios with a JWT interceptor for authenticated requests
-- React Router for role-based view routing (Admin dashboard, Resident portal, Technician portal)
+- Material UI (MUI) v9 for the component library; Font Awesome for supplemental icons
+- Framer Motion for page transitions and component animations
+- Axios with a JWT interceptor for authenticated requests; `jwt-decode` for client-side token parsing
+- React Router DOM v7 for role-based view routing (Admin dashboard, Resident portal, Technician portal)
 
 ### Database Strategy
 
@@ -53,9 +55,10 @@ compatibility mode ensures the same DDL and queries work identically on both eng
 2. System finds the first available technician with matching skill who has no conflicting slot on that date
 3. A `Payment` record is created with base price — `@PrePersist` automatically applies 18% GST
 4. An assignment record is created in `technician_management` linking resident, technician, and payment
-5. The response returns `total_with_gst` (GST-inclusive cost), `trans_no`, and `assignment_id`
+5. The response returns `assignment_id`, `technician_name`, `trans_no`, and `total_with_gst` (GST-inclusive cost)
 
-Amenity booking follows the same pattern: capacity validation → payment with GST → booking record.
+Amenity booking follows the same pattern: capacity validation → payment with GST → booking record. The response returns
+`booking_id`, `amenity_name`, `trans_no`, and `total_with_gst`.
 
 ### Payment Lifecycle
 
@@ -74,7 +77,9 @@ The `Payment` entity applies an 18% GST multiplier before every insert:
 
 @PrePersist
 public void calculateGST() {
-    this.cost = this.cost.multiply(new BigDecimal("1.18")).setScale(2, RoundingMode.HALF_UP);
+    if (this.cost != null) {
+        this.cost = this.cost.multiply(new BigDecimal("1.18")).setScale(2, RoundingMode.HALF_UP);
+    }
     if (this.paymentDate == null) this.paymentDate = LocalDateTime.now();
 }
 ```
@@ -133,7 +138,8 @@ npm install
 npm run dev
 ```
 
-Frontend runs at `http://localhost:5173` and proxies API calls to `http://localhost:8080`.
+Frontend runs at `http://localhost:5173`. API calls target `http://localhost:8080/api` by default. Override this with a
+`VITE_API_URL` environment variable (useful when pointing at a remote backend).
 
 ---
 
