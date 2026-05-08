@@ -41,6 +41,26 @@ compatibility mode ensures the same DDL and queries work identically on both eng
 
 ## Business Logic
 
+### Sign-up Utility — Admin-Provisioned Accounts
+
+UrbanNexus has no public self-registration. All accounts are provisioned by the `SuperAdmin`. The lifecycle is:
+
+1. **Admin creates resident or technician** via the admin dashboard (or `POST /api/residents` /
+   `POST /api/technicians`).
+2. **Backend auto-generates credentials** — username is derived as `<lowercase_name><id>` (e.g., `jane_smith42`), and a
+   default password of `pwd123#` is bcrypt-hashed and stored in the `admin` table alongside a role and a FK link to the
+   resident or technician record.
+3. **Credentials dialog** — the API response returns `{ username, password }` in plaintext (only on creation). The admin
+   dashboard shows this in a one-time modal with copy buttons. The admin must share the credentials with the new user;
+   they will not be surfaced again.
+4. **User logs in** with the provided credentials. The Login page explicitly states that accounts can only be obtained
+   from the administrator.
+5. **User changes password** from the Profile page using `PUT /api/profile/password`. The endpoint verifies the current
+   password (bcrypt match), then re-hashes and saves the new one. New password must be at least 6 characters.
+
+This design keeps account provisioning entirely inside a trust boundary (only authenticated admins can create accounts)
+while giving users ownership of their credentials after first login.
+
 ### Roles
 
 | Role         | Capabilities                                                                            |
@@ -165,6 +185,7 @@ password for auto-provisioned accounts is `pwd123#`.
 | POST   | `/api/login`                         | Public                 | Login; returns JWT                   |
 | GET    | `/api/profile/me`                    | Any                    | Get own profile                      |
 | PUT    | `/api/profile/update`                | Any                    | Update own contact info              |
+| PUT    | `/api/profile/password`              | Any                    | Change own password                  |
 | POST   | `/api/residents`                     | SuperAdmin             | Add resident + login account         |
 | GET    | `/api/residents/me/dues`             | Resident               | View pending/overdue invoices        |
 | GET    | `/api/residents/me/bookings`         | Resident               | View own bookings                    |
@@ -194,6 +215,18 @@ password for auto-provisioned accounts is `pwd123#`.
 
 ### Request Bodies
 
+**Change Password** (`PUT /api/profile/password`):
+
+```json
+{
+  "currentPassword": "pwd123#",
+  "newPassword": "newSecure@99"
+}
+```
+
+Response: `{ "message": "Password updated successfully." }` — `400` if current password is wrong or new password < 6
+chars.
+
 **Add Resident** (`POST /api/residents`):
 
 ```json
@@ -208,6 +241,8 @@ password for auto-provisioned accounts is `pwd123#`.
 }
 ```
 
+Response includes `{ "message", "username", "password" }` — the generated login credentials to hand to the resident.
+
 **Add Technician** (`POST /api/technicians`):
 
 ```json
@@ -218,6 +253,8 @@ password for auto-provisioned accounts is `pwd123#`.
   "skill": "Plumber"
 }
 ```
+
+Response includes `{ "message", "username", "password" }` — the generated login credentials to hand to the technician.
 
 Note: `tech_id` is admin-assigned (no auto-increment on the technician table).
 
@@ -293,6 +330,12 @@ UrbanNexus/
 ---
 
 ## Key Design Decisions
+
+**Admin-provisioned accounts, no self-registration** — There is no public sign-up endpoint. `POST /api/residents` and
+`POST /api/technicians` are `SuperAdmin`-only and atomically create both the domain record and a linked login entry in
+the `admin` table. The plaintext temporary password is returned once in the API response (and surfaced in the admin UI
+as a one-time credentials dialog), after which only the bcrypt hash remains in the database. Users change their password
+via `PUT /api/profile/password`, which bcrypt-verifies the current password before updating.
 
 **No stored procedures for booking logic** — The `AutoBookTechnician` and `AutoBookAmenity` MySQL procedures exist for
 direct DB use but are not called by the Java service layer. Booking logic lives in `BookingService.java` inside a

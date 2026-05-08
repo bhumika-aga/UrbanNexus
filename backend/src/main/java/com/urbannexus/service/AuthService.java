@@ -75,4 +75,15 @@ public class AuthService {
         return new AuthResponse("Login successful!", token, new AuthResponse.AdminInfo(
             principal.getUsername(), principal.getRole()));
     }
+    
+    public void changePassword(Long adminId, String currentPassword, String newPassword) {
+        Admin admin = adminRepository.findById(adminId)
+                          .orElseThrow(() -> new RuntimeException("Account not found."));
+        if (!passwordEncoder.matches(currentPassword, admin.getPasswordHash())) {
+            throw new RuntimeException("Current password is incorrect.");
+        }
+        admin.setPasswordHash(passwordEncoder.encode(newPassword));
+        adminRepository.save(admin);
+        log.info("Password changed for adminId: {}", adminId);
+    }
 }

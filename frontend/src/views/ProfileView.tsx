@@ -22,6 +22,9 @@
 
 import {
   faCheckCircle,
+  faEye,
+  faEyeSlash,
+  faLock,
   faSave,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
@@ -36,6 +39,8 @@ import {
   CircularProgress,
   Divider,
   Grid,
+  IconButton,
+  InputAdornment,
   Snackbar,
   Switch,
   TextField,
@@ -67,6 +72,17 @@ const ProfileView: React.FC = () => {
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState<ProfileData>({});
   const [saving, setSaving] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    next: false,
+    confirm: false,
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -116,6 +132,37 @@ const ProfileView: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      showSnackbar("New passwords do not match.", "error");
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      showSnackbar("New password must be at least 6 characters.", "error");
+      return;
+    }
+    try {
+      setChangingPassword(true);
+      await api.put("/profile/password", {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      showSnackbar("Password updated successfully!", "success");
+    } catch (error) {
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.error
+        : null;
+      showSnackbar(msg || "Failed to update password.", "error");
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   if (loading) {
@@ -419,6 +466,168 @@ const ProfileView: React.FC = () => {
                 </Grid>
               </>
             )}
+          </Grid>
+        </CardContent>
+      </Card>
+
+      <Card
+        sx={{
+          mt: 3,
+          borderRadius: 4,
+          border: "1px solid rgba(0,0,0,0.05)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.04)",
+          overflow: "visible",
+        }}
+      >
+        <CardContent sx={{ p: 4 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+            <FontAwesomeIcon icon={faLock} style={{ fontSize: 18 }} />
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              Change Password
+            </Typography>
+          </Box>
+          <Divider sx={{ mb: 4 }} />
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                fullWidth
+                label="Current Password"
+                type={showPasswords.current ? "text" : "password"}
+                value={passwordForm.currentPassword}
+                onChange={(e) =>
+                  setPasswordForm({
+                    ...passwordForm,
+                    currentPassword: e.target.value,
+                  })
+                }
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            setShowPasswords({
+                              ...showPasswords,
+                              current: !showPasswords.current,
+                            })
+                          }
+                        >
+                          <FontAwesomeIcon
+                            icon={showPasswords.current ? faEyeSlash : faEye}
+                            style={{ fontSize: 16 }}
+                          />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                fullWidth
+                label="New Password"
+                type={showPasswords.next ? "text" : "password"}
+                value={passwordForm.newPassword}
+                onChange={(e) =>
+                  setPasswordForm({
+                    ...passwordForm,
+                    newPassword: e.target.value,
+                  })
+                }
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            setShowPasswords({
+                              ...showPasswords,
+                              next: !showPasswords.next,
+                            })
+                          }
+                        >
+                          <FontAwesomeIcon
+                            icon={showPasswords.next ? faEyeSlash : faEye}
+                            style={{ fontSize: 16 }}
+                          />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                fullWidth
+                label="Confirm New Password"
+                type={showPasswords.confirm ? "text" : "password"}
+                value={passwordForm.confirmPassword}
+                onChange={(e) =>
+                  setPasswordForm({
+                    ...passwordForm,
+                    confirmPassword: e.target.value,
+                  })
+                }
+                error={
+                  !!passwordForm.confirmPassword &&
+                  passwordForm.newPassword !== passwordForm.confirmPassword
+                }
+                helperText={
+                  passwordForm.confirmPassword &&
+                  passwordForm.newPassword !== passwordForm.confirmPassword
+                    ? "Passwords do not match"
+                    : ""
+                }
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            setShowPasswords({
+                              ...showPasswords,
+                              confirm: !showPasswords.confirm,
+                            })
+                          }
+                        >
+                          <FontAwesomeIcon
+                            icon={showPasswords.confirm ? faEyeSlash : faEye}
+                            style={{ fontSize: 16 }}
+                          />
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Grid>
+            <Grid size={12}>
+              <Button
+                variant="contained"
+                onClick={handleChangePassword}
+                disabled={
+                  changingPassword ||
+                  !passwordForm.currentPassword ||
+                  !passwordForm.newPassword ||
+                  !passwordForm.confirmPassword
+                }
+                startIcon={
+                  changingPassword ? (
+                    <CircularProgress size={16} />
+                  ) : (
+                    <FontAwesomeIcon icon={faSave} style={{ fontSize: 16 }} />
+                  )
+                }
+                sx={{ borderRadius: "8px", fontWeight: 700 }}
+              >
+                Update Password
+              </Button>
+            </Grid>
           </Grid>
         </CardContent>
       </Card>

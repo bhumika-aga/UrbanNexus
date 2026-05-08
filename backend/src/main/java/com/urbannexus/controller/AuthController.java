@@ -108,6 +108,30 @@ public class AuthController {
         }
     }
     
+    @PutMapping("/profile/password")
+    public ResponseEntity<?> changePassword(@AuthenticationPrincipal UserPrincipal currentUser,
+                                            @RequestBody Map<String, String> payload) {
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+        String currentPassword = payload.get("currentPassword");
+        String newPassword = payload.get("newPassword");
+        if (currentPassword == null || currentPassword.isBlank() || newPassword == null || newPassword.length() < 6) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                       .body(Map.of("error", "New password must be at least 6 characters."));
+        }
+        try {
+            authService.changePassword(currentUser.getId(), currentPassword, newPassword);
+            return ResponseEntity.ok(Map.of("message", "Password updated successfully."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Password change failed for user '{}'", currentUser.getUsername(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                       .body(Map.of("error", "Failed to update password."));
+        }
+    }
+    
     @PutMapping("/profile/update")
     public ResponseEntity<?> updateProfile(@AuthenticationPrincipal UserPrincipal currentUser,
                                            @RequestBody Map<String, Object> updates) {

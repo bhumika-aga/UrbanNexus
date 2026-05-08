@@ -167,6 +167,32 @@
               "path": ["profile", "update"]
             }
           }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"pwd123#\",\n  \"newPassword\": \"newSecure@99\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/password",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "password"]
+            },
+            "description": "Allows any authenticated user (Resident, Technician, SuperAdmin) to change their own password. Requires the correct current password. New password must be at least 6 characters. Returns 400 if currentPassword is wrong."
+          }
         }
       ]
     },
@@ -195,7 +221,8 @@
               "raw": "{{base_url}}/residents",
               "host": ["{{base_url}}"],
               "path": ["residents"]
-            }
+            },
+            "description": "Creates a resident record and a linked login account. The response includes the generated username (name + residentId) and the temporary password (pwd123#). The admin must share these credentials with the resident. New users cannot self-register — all accounts are provisioned by the admin."
           }
         },
         {
@@ -276,7 +303,8 @@
               "raw": "{{base_url}}/technicians",
               "host": ["{{base_url}}"],
               "path": ["technicians"]
-            }
+            },
+            "description": "Creates a technician record and a linked login account. The response includes the generated username (name + techId) and the temporary password (pwd123#). The admin must share these credentials with the technician. New users cannot self-register — all accounts are provisioned by the admin."
           }
         },
         {

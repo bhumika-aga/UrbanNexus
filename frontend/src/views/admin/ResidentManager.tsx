@@ -21,7 +21,9 @@
  */
 
 import {
+  faCopy,
   faHome,
+  faKey,
   faPhone,
   faSearch,
   faTrashAlt,
@@ -31,6 +33,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  Alert,
   Box,
   Button,
   CircularProgress,
@@ -57,11 +60,17 @@ import React, { useCallback, useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { Resident } from "../../types";
 
+interface Credentials {
+  username: string;
+  password: string;
+}
+
 const ResidentManager: React.FC = () => {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
+  const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     houseBlock: "",
@@ -86,7 +95,7 @@ const ResidentManager: React.FC = () => {
 
   const handleAdd = async () => {
     try {
-      await api.post("/residents", {
+      const res = await api.post("/residents", {
         name: formData.name,
         house_block: formData.houseBlock,
         house_floor: formData.houseFloor,
@@ -96,6 +105,19 @@ const ResidentManager: React.FC = () => {
         no_of_members: formData.noOfMembers,
       });
       setOpenModal(false);
+      setFormData({
+        name: "",
+        houseBlock: "",
+        houseFloor: "",
+        houseUnit: "",
+        ownershipStatus: "Owner",
+        contact: "",
+        noOfMembers: 1,
+      });
+      setCredentials({
+        username: res.data.username,
+        password: res.data.password,
+      });
       fetchResidents();
     } catch {
       alert("Failed to add resident");
@@ -438,6 +460,116 @@ const ResidentManager: React.FC = () => {
             disabled={!formData.name || !formData.contact}
           >
             Add to Community
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!credentials} maxWidth="xs" fullWidth onClose={() => {}}>
+        <DialogTitle
+          sx={{
+            fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <FontAwesomeIcon icon={faKey} style={{ fontSize: 18 }} />
+          Account Credentials
+        </DialogTitle>
+        <DialogContent dividers>
+          <Alert
+            severity="warning"
+            sx={{ mb: 3, borderRadius: 2, fontSize: "0.8rem" }}
+          >
+            Share these credentials with the resident now. This dialog will not
+            appear again.
+          </Alert>
+          {credentials && (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  backgroundColor: "#fafafa",
+                  border: "1px solid #eaeaea",
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1.5,
+                }}
+              >
+                <Box>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      textTransform: "uppercase",
+                      fontWeight: 700,
+                      fontSize: "0.6rem",
+                    }}
+                  >
+                    Username
+                  </Typography>
+                  <Typography sx={{ fontFamily: "monospace", fontWeight: 600 }}>
+                    {credentials.username}
+                  </Typography>
+                </Box>
+                <Tooltip title="Copy username">
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      navigator.clipboard.writeText(credentials.username)
+                    }
+                  >
+                    <FontAwesomeIcon icon={faCopy} style={{ fontSize: 14 }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  backgroundColor: "#fafafa",
+                  border: "1px solid #eaeaea",
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1.5,
+                }}
+              >
+                <Box>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      textTransform: "uppercase",
+                      fontWeight: 700,
+                      fontSize: "0.6rem",
+                    }}
+                  >
+                    Temporary Password
+                  </Typography>
+                  <Typography sx={{ fontFamily: "monospace", fontWeight: 600 }}>
+                    {credentials.password}
+                  </Typography>
+                </Box>
+                <Tooltip title="Copy password">
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      navigator.clipboard.writeText(credentials.password)
+                    }
+                  >
+                    <FontAwesomeIcon icon={faCopy} style={{ fontSize: 14 }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button variant="contained" onClick={() => setCredentials(null)}>
+            Got it
           </Button>
         </DialogActions>
       </Dialog>

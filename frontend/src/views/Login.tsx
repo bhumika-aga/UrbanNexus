@@ -240,6 +240,14 @@ const Login: React.FC = () => {
                   "Sign In"
                 )}
               </Button>
+              <Typography
+                variant="caption"
+                color="text.disabled"
+                align="center"
+                sx={{ mt: 3, display: "block" }}
+              >
+                No account? Contact your community administrator.
+              </Typography>
             </Box>
           </Paper>
         </motion.div>
