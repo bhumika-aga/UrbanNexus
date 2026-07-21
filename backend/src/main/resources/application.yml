@@ -2,11 +2,19 @@ server:
   port: 8080
 
 spring:
+  # Local development uses an embedded H2 database running in PostgreSQL
+  # compatibility mode, so the same schema.sql / data.sql / native queries that
+  # run against Supabase in production behave identically here. No external
+  # database is required for local development.
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:3306/${DB_NAME:UrbanNexus}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:Bhumika@1234}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:h2:file:./data/urbannexus;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
   jpa:
     open-in-view: false
     show-sql: true
@@ -18,11 +26,13 @@ spring:
   sql:
     init:
       mode: always
-      separator: ";" # Default to semicolon for H2/General Compatibility
+      separator: ";"
 
 app:
   jwt:
-    secret: ${JWT_SECRET:dGhpcy1pcy1hLXZlcnktc2VjdXJlLWtleS0yNTZiaXRzLW1pbmltdW0tc28taXQtY2FuLWJlLXVzZWQ=}
+    # Secret is supplied via the JWT_SECRET environment variable (no default);
+    # generate one with: openssl rand -base64 48
+    secret: ${JWT_SECRET}
     expiration: 86400000 # 24 hours in milliseconds
 
 logging:

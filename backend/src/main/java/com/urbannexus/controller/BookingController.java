@@ -55,8 +55,8 @@ public class BookingController {
         try {
             Long residentId = "Resident".equals(currentUser.getRole()) ? currentUser.getResidentId()
                                   : (payload.get("resident_id") != null
-                                     ? Long.parseLong(payload.get("resident_id").toString())
-                                     : null);
+                                         ? Long.parseLong(payload.get("resident_id").toString())
+                                         : null);
             
             String skill = (String) payload.get("skill");
             Integer slot = payload.get("slot") != null ? Integer.parseInt(payload.get("slot").toString())
@@ -84,8 +84,8 @@ public class BookingController {
         try {
             Long residentId = "Resident".equals(currentUser.getRole()) ? currentUser.getResidentId()
                                   : (payload.get("resident_id") != null
-                                     ? Long.parseLong(payload.get("resident_id").toString())
-                                     : null);
+                                         ? Long.parseLong(payload.get("resident_id").toString())
+                                         : null);
             
             Long amenityId = payload.get("amenity_id") != null
                                  ? Long.parseLong(payload.get("amenity_id").toString())

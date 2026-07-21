@@ -1,6 +1,11 @@
 /target/
 !.mvn/wrapper/maven-wrapper.jar
 
+# Local H2 development database
+/data/
+*.mv.db
+*.trace.db
+
 ### STS ###
 .apt_generated
 .classpath

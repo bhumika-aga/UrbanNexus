@@ -78,6 +78,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(requests -> requests
                                                    .requestMatchers("/", "/error", "/api/login", "/h2-console/**", "/actuator/**").permitAll()
                                                    .anyRequest().authenticated())
+            // Allow the H2 console (local development only) to render in a frame.
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
             .exceptionHandling(exceptions -> exceptions
                                                  .authenticationEntryPoint((request, response, authException) -> {

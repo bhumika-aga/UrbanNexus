@@ -76,7 +76,7 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     
     @Modifying
     @Query(value = """
-        UPDATE payment p SET p.status = 'Paid'
+        UPDATE payment p SET status = 'Paid'
         WHERE p.trans_no = :transNo
         AND p.status != 'Paid'
         AND (

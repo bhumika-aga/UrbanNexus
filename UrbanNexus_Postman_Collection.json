@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "UrbanNexus API Collection",
-    "description": "Comprehensive Postman collection for the UrbanNexus Spring Boot Backend.\n\nCredentials:\n- Admin: username=admin, password=Bhumika@1234\n- Resident: username=jane_s, password=pwd123#\n- Technician: username=tech_tom, password=pwd123#\n\nWorkflow: Run 'Login' first — the test script auto-saves the JWT to {{jwt_token}}.",
+    "description": "Comprehensive Postman collection for the UrbanNexus Spring Boot Backend.\n\nCredentials:\n- Admin: username=admin, password=Bhumika@1234\n- Resident: username=jane_s, password=pwd123#\n- Technician: username=tech_tom, password=pwd123#\n\nWorkflow: Run 'Login' first \u2014 the test script auto-saves the JWT to {{jwt_token}}.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -54,7 +54,41 @@
               "host": ["{{base_url}}"],
               "path": ["login"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Bhumika@1234\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhZG1pbiIsImlkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6IlN1cGVyQWRtaW4iLCJpYXQiOjE3ODQ2Mjc0MjMsImV4cCI6MTc4NDcxMzgyM30.aAGsGbyqrHZimJKV-Pq4EdCNRuabcW6tN1TVTUOTA2jtl_TZ2zn7iY_Z7wRsrHl5\",\n  \"admin\": {\n    \"username\": \"admin\",\n    \"role\": \"SuperAdmin\"\n  }\n}"
+            }
+          ]
         },
         {
           "name": "Login (Resident)",
@@ -89,7 +123,41 @@
               "host": ["{{base_url}}"],
               "path": ["login"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"jane_s\",\n  \"password\": \"pwd123#\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJqb2huX2RvZSIsImlkIjoyLCJ1c2VybmFtZSI6ImpvaG5fZG9lIiwicm9sZSI6IlJlc2lkZW50IiwicmVzaWRlbnRfaWQiOjEsImlhdCI6MTc4NDYyNzQyMywiZXhwIjoxNzg0NzEzODIzfQ.3PeVL1qqvHMJyZyijSXhpxn_MNDZiaDYy4xk2i9yORshQJMvgZnWeTsTtZeKEzHT\",\n  \"admin\": {\n    \"username\": \"john_doe\",\n    \"role\": \"Resident\"\n  }\n}"
+            }
+          ]
         },
         {
           "name": "Login (Technician)",
@@ -124,7 +192,41 @@
               "host": ["{{base_url}}"],
               "path": ["login"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"tech_tom\",\n  \"password\": \"pwd123#\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZWNoX3RvbSIsImlkIjoyOCwidXNlcm5hbWUiOiJ0ZWNoX3RvbSIsInJvbGUiOiJUZWNobmljaWFuIiwidGVjaF9pZCI6MSwiaWF0IjoxNzg0NjI3NDI0LCJleHAiOjE3ODQ3MTM4MjR9.bz2_2hLgcvThCmojT8ngDE7OE0yFOODcDH_5OFYK3YCdA6fr2JdFBerdhxsiNDMH\",\n  \"admin\": {\n    \"username\": \"tech_tom\",\n    \"role\": \"Technician\"\n  }\n}"
+            }
+          ]
         },
         {
           "name": "Get My Profile",
@@ -141,7 +243,37 @@
               "host": ["{{base_url}}"],
               "path": ["profile", "me"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/profile/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["profile", "me"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"residentId\": 1,\n  \"name\": \"John Doe\",\n  \"houseBlock\": \"A\",\n  \"houseFloor\": \"4\",\n  \"houseUnit\": \"44\",\n  \"ownershipStatus\": \"Owner\",\n  \"contact\": \"9444444444\",\n  \"noOfMembers\": 2\n}"
+            }
+          ]
         },
         {
           "name": "Update Profile",
@@ -166,7 +298,45 @@
               "host": ["{{base_url}}"],
               "path": ["profile", "update"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"contact\": \"9999999999\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/profile/update",
+                  "host": ["{{base_url}}"],
+                  "path": ["profile", "update"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Profile updated successfully.\"\n}"
+            }
+          ]
         },
         {
           "name": "Change Password",
@@ -192,7 +362,46 @@
               "path": ["profile", "password"]
             },
             "description": "Allows any authenticated user (Resident, Technician, SuperAdmin) to change their own password. Requires the correct current password. New password must be at least 6 characters. Returns 400 if currentPassword is wrong."
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currentPassword\": \"pwd123#\",\n  \"newPassword\": \"newSecure@99\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/profile/password",
+                  "host": ["{{base_url}}"],
+                  "path": ["profile", "password"]
+                },
+                "description": "Allows any authenticated user (Resident, Technician, SuperAdmin) to change their own password. Requires the correct current password. New password must be at least 6 characters. Returns 400 if currentPassword is wrong."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Password updated successfully.\"\n}"
+            }
+          ]
         }
       ]
     },
@@ -222,8 +431,47 @@
               "host": ["{{base_url}}"],
               "path": ["residents"]
             },
-            "description": "Creates a resident record and a linked login account. The response includes the generated username (name + residentId) and the temporary password (pwd123#). The admin must share these credentials with the resident. New users cannot self-register — all accounts are provisioned by the admin."
-          }
+            "description": "Creates a resident record and a linked login account. The response includes the generated username (name + residentId) and the temporary password (pwd123#). The admin must share these credentials with the resident. New users cannot self-register \u2014 all accounts are provisioned by the admin."
+          },
+          "response": [
+            {
+              "name": "Created (201)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Charles Leclerc\",\n  \"house_block\": \"B\",\n  \"house_floor\": \"16\",\n  \"house_unit\": \"1604\",\n  \"ownership_status\": \"Tenant\",\n  \"contact\": \"9123456780\",\n  \"no_of_members\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/residents",
+                  "host": ["{{base_url}}"],
+                  "path": ["residents"]
+                },
+                "description": "Creates a resident record and a linked login account. The response includes the generated username (name + residentId) and the temporary password (pwd123#). The admin must share these credentials with the resident. New users cannot self-register \u2014 all accounts are provisioned by the admin."
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"password\": \"pwd123#\",\n  \"message\": \"Resident and Login created!\",\n  \"username\": \"test_newman27\"\n}"
+            }
+          ]
         },
         {
           "name": "Get My Dues (Resident only)",
@@ -240,7 +488,37 @@
               "host": ["{{base_url}}"],
               "path": ["residents", "me", "dues"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/residents/me/dues",
+                  "host": ["{{base_url}}"],
+                  "path": ["residents", "me", "dues"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"invoices\": [],\n  \"total_unpaid_invoices\": 0,\n  \"message\": \"Your pending dues retrieved successfully.\"\n}"
+            }
+          ]
         },
         {
           "name": "Get My Bookings (Resident only)",
@@ -257,7 +535,37 @@
               "host": ["{{base_url}}"],
               "path": ["residents", "me", "bookings"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/residents/me/bookings",
+                  "host": ["{{base_url}}"],
+                  "path": ["residents", "me", "bookings"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"amenities\": [],\n  \"technicians\": []\n}"
+            }
+          ]
         },
         {
           "name": "Delete Resident (Admin only)",
@@ -274,7 +582,37 @@
               "host": ["{{base_url}}"],
               "path": ["residents", "27"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/residents/27",
+                  "host": ["{{base_url}}"],
+                  "path": ["residents", "27"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Resident and all associated records deleted successfully.\"\n}"
+            }
+          ]
         }
       ]
     },
@@ -304,8 +642,47 @@
               "host": ["{{base_url}}"],
               "path": ["technicians"]
             },
-            "description": "Creates a technician record and a linked login account. The response includes the generated username (name + techId) and the temporary password (pwd123#). The admin must share these credentials with the technician. New users cannot self-register — all accounts are provisioned by the admin."
-          }
+            "description": "Creates a technician record and a linked login account. The response includes the generated username (name + techId) and the temporary password (pwd123#). The admin must share these credentials with the technician. New users cannot self-register \u2014 all accounts are provisioned by the admin."
+          },
+          "response": [
+            {
+              "name": "Created (201)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tech_id\": 17,\n  \"name\": \"Max Verstappen\",\n  \"contact\": \"9876543210\",\n  \"skill\": \"Plumber\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/technicians",
+                  "host": ["{{base_url}}"],
+                  "path": ["technicians"]
+                },
+                "description": "Creates a technician record and a linked login account. The response includes the generated username (name + techId) and the temporary password (pwd123#). The admin must share these credentials with the technician. New users cannot self-register \u2014 all accounts are provisioned by the admin."
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"password\": \"pwd123#\",\n  \"message\": \"Technician profile configured successfully.\",\n  \"username\": \"new_tech99\"\n}"
+            }
+          ]
         },
         {
           "name": "Get My Tasks (Technician only)",
@@ -322,7 +699,37 @@
               "host": ["{{base_url}}"],
               "path": ["technicians", "me", "tasks"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/technicians/me/tasks",
+                  "host": ["{{base_url}}"],
+                  "path": ["technicians", "me", "tasks"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"assignment_id\": 1,\n    \"house_unit\": \"101\",\n    \"resident_name\": \"Jane Smith\",\n    \"assign_date\": \"2026-04-21\",\n    \"resident_phone\": \"9123456780\",\n    \"house_block\": \"A\",\n    \"slot\": 1,\n    \"status\": \"Assigned\"\n  }\n]"
+            }
+          ]
         },
         {
           "name": "Update Task Status (Technician only)",
@@ -347,7 +754,45 @@
               "host": ["{{base_url}}"],
               "path": ["technicians", "tasks", "1", "status"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"Completed\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/technicians/tasks/1/status",
+                  "host": ["{{base_url}}"],
+                  "path": ["technicians", "tasks", "1", "status"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Task status updated to Completed.\"\n}"
+            }
+          ]
         },
         {
           "name": "Get My Profile (Technician only)",
@@ -364,7 +809,37 @@
               "host": ["{{base_url}}"],
               "path": ["technicians", "me"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/technicians/me",
+                  "host": ["{{base_url}}"],
+                  "path": ["technicians", "me"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"techId\": 1,\n  \"name\": \"Tom Kristensen\",\n  \"skill\": \"Plumber\",\n  \"contact\": \"9000000001\",\n  \"available\": true\n}"
+            }
+          ]
         },
         {
           "name": "Update Availability (Technician only)",
@@ -389,7 +864,45 @@
               "host": ["{{base_url}}"],
               "path": ["technicians", "me", "availability"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"available\": false\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/technicians/me/availability",
+                  "host": ["{{base_url}}"],
+                  "path": ["technicians", "me", "availability"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Availability updated to true\"\n}"
+            }
+          ]
         },
         {
           "name": "Delete Technician (Admin only)",
@@ -406,7 +919,37 @@
               "host": ["{{base_url}}"],
               "path": ["technicians", "17"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/technicians/17",
+                  "host": ["{{base_url}}"],
+                  "path": ["technicians", "17"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Technician removed successfully.\"\n}"
+            }
+          ]
         }
       ]
     },
@@ -428,7 +971,37 @@
               "host": ["{{base_url}}"],
               "path": ["amenities"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/amenities",
+                  "host": ["{{base_url}}"],
+                  "path": ["amenities"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"amenityId\": 1,\n    \"name\": \"Paddock Club Lounge\",\n    \"capacity\": 20\n  },\n  {\n    \"amenityId\": 2,\n    \"name\": \"Monaco Rooftop Pool\",\n    \"capacity\": 15\n  },\n  {\n    \"amenityId\": 3,\n    \"name\": \"Parc Ferm\\u00e9 Gym\",\n    \"capacity\": 10\n  },\n  {\n    \"amenityId\": 4,\n    \"name\": \"Spa & Wellness Center\",\n    \"capacity\": 8\n  },\n  {\n    \"amenityId\": 5,\n    \"name\": \"Community Theater\",\n    \"capacity\": 50\n  }\n]"
+            }
+          ]
         },
         {
           "name": "Add Amenity (Admin only)",
@@ -453,7 +1026,45 @@
               "host": ["{{base_url}}"],
               "path": ["amenities"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "Created (201)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amenity_id\": 6,\n  \"name\": \"Rooftop Garden\",\n  \"capacity\": 30\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/amenities",
+                  "host": ["{{base_url}}"],
+                  "path": ["amenities"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Amenity added successfully!\"\n}"
+            }
+          ]
         },
         {
           "name": "Update Amenity (Admin only)",
@@ -478,7 +1089,45 @@
               "host": ["{{base_url}}"],
               "path": ["amenities", "6"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Rooftop Garden\",\n  \"capacity\": 40\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/amenities/6",
+                  "host": ["{{base_url}}"],
+                  "path": ["amenities", "6"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Amenity updated successfully.\"\n}"
+            }
+          ]
         },
         {
           "name": "Delete Amenity (Admin only)",
@@ -495,7 +1144,37 @@
               "host": ["{{base_url}}"],
               "path": ["amenities", "6"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/amenities/6",
+                  "host": ["{{base_url}}"],
+                  "path": ["amenities", "6"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Amenity deleted successfully.\"\n}"
+            }
+          ]
         }
       ]
     },
@@ -525,7 +1204,45 @@
               "host": ["{{base_url}}"],
               "path": ["bookings", "technician"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "Created (201)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"skill\": \"Plumber\",\n  \"slot\": 1,\n  \"assign_date\": \"2026-06-10\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/bookings/technician",
+                  "host": ["{{base_url}}"],
+                  "path": ["bookings", "technician"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"total_with_gst\": 590.0,\n  \"assignment_id\": 6,\n  \"technician_name\": \"Tom Kristensen\",\n  \"trans_no\": \"TXN-TECH-BBD34B04\"\n}"
+            }
+          ]
         },
         {
           "name": "Book Amenity (Resident)",
@@ -550,7 +1267,45 @@
               "host": ["{{base_url}}"],
               "path": ["bookings", "amenity"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "Created (201)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amenity_id\": 1,\n  \"date\": \"2026-06-15\",\n  \"slot\": 2,\n  \"capacity_booked\": 4\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/bookings/amenity",
+                  "host": ["{{base_url}}"],
+                  "path": ["bookings", "amenity"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"amenity_name\": \"Parc Ferm\\u00e9 Gym\",\n  \"total_with_gst\": 354.0,\n  \"trans_no\": \"TXN-AMEN-AFDD6CCB\",\n  \"booking_id\": 6\n}"
+            }
+          ]
         }
       ]
     },
@@ -572,7 +1327,37 @@
               "host": ["{{base_url}}"],
               "path": ["payments", "TXN-101", "pay"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/payments/TXN-101/pay",
+                  "host": ["{{base_url}}"],
+                  "path": ["payments", "TXN-101", "pay"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Transaction TXN-TECH-BBD34B04 processed successfully!\"\n}"
+            }
+          ]
         }
       ]
     },
@@ -594,7 +1379,37 @@
               "host": ["{{base_url}}"],
               "path": ["admin", "stats"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/stats",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "stats"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"totalResidents\": 26,\n  \"pendingLedger\": 2704.0,\n  \"overdueLedger\": 2600.0,\n  \"pendingTickets\": 9,\n  \"gridUptime\": \"99.8%\"\n}"
+            }
+          ]
         },
         {
           "name": "Search Residents",
@@ -621,7 +1436,47 @@
                 }
               ]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/residents/search?name=John&block=A",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "residents", "search"],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "John"
+                    },
+                    {
+                      "key": "block",
+                      "value": "A"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"residentId\": 3,\n    \"name\": \"Michael Johnson\",\n    \"houseBlock\": \"A\",\n    \"houseFloor\": \"2\",\n    \"houseUnit\": \"202\",\n    \"ownershipStatus\": \"Owner\",\n    \"contact\": \"9123456781\",\n    \"noOfMembers\": 4\n  },\n  {\n    \"residentId\": 1,\n    \"name\": \"John Doe\",\n    \"houseBlock\": \"A\",\n    \"houseFloor\": \"4\",\n    \"houseUnit\": \"44\",\n    \"ownershipStatus\": \"Owner\",\n    \"contact\": \"9444444999\",\n    \"noOfMembers\": 2\n  }\n]"
+            }
+          ]
         },
         {
           "name": "Get All Technicians",
@@ -638,7 +1493,37 @@
               "host": ["{{base_url}}"],
               "path": ["admin", "technicians"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/technicians",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "technicians"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"techId\": 1,\n    \"name\": \"Tom Kristensen\",\n    \"skill\": \"Plumber\",\n    \"contact\": \"9000000001\",\n    \"available\": true\n  },\n  {\n    \"techId\": 2,\n    \"name\": \"Jacky Ickx\",\n    \"skill\": \"Electrician\",\n    \"contact\": \"9000000002\",\n    \"available\": true\n  },\n  {\n    \"techId\": 3,\n    \"name\": \"Derek Bell\",\n    \"skill\": \"Carpenter\",\n    \"contact\": \"9000000003\",\n    \"available\": true\n  },\n  {\n    \"techId\": 4,\n    \"name\": \"Frank Biela\",\n    \"skill\": \"Maintenance\",\n    \"contact\": \"9000000004\",\n    \"available\": true\n  },\n  {\n    \"techId\": 5,\n    \"name\": \"Emanuele Pirro\",\n    \"skill\": \"Plumber\",\n    \"contact\": \"9000000005\",\n    \"available\": true\n  },\n  {\n    \"techId\": 6,\n    \"name\": \"Sebastien Buemi\",\n    \"skill\": \"Electrician\",\n    \"contact\": \"9000000006\",\n    \"available\": true\n  },\n  {\n    \"techId\": 7,\n    \"name\": \"Brendon Hartley\",\n    \"skill\": \"HVAC\",\n    \"contact\": \"9000000007\",\n    \"available\": true\n  },\n  {\n    \"techId\": 8,\n    \"name\": \"Andre Lotterer\",\n    \"skill\": \"Painter\",\n    \"contact\": \"9000000008\",\n    \"available\": true\n  },\n  {\n    \"techId\": 9,\n    \"name\": \"Benoit Treluyer\",\n    \"skill\": \"Mason\",\n    \"contact\": \"9000000009\",\n    \"available\": true\n  },\n  {\n    \"techId\": 10,\n    \"name\": \"Marcel Fassler\",\n    \"skill\": \"Carpenter\",\n    \"contact\": \"9000000010\",\n    \"available\": true\n  },\n  {\n    \"techId\": 11,\n    \"name\": \"Allan McNish\",\n    \"skill\": \"HVAC\",\n    \"contact\": \"9000000011\",\n    \"available\": true\n  },\n  {\n    \"techId\": 12,\n    \"name\": \"Dindo Capello\",\n    \"skill\": \"Pest Control\",\n    \"contact\": \"9000000012\",\n    \"available\": true\n  },\n  {\n    \"techId\": 13,\n    \"name\": \"Loic Duval\",\n    \"skill\": \"Security Expert\",\n    \"contact\": \"9000000013\",\n    \"available\": true\n  },\n  {\n    \"techId\": 14,\n    \"name\": \"Romain Dumas\",\n    \"skill\": \"Landscaper\",\n    \"contact\": \"9000000014\",\n    \"available\": true\n  },\n  {\n    \"techId\": 15,\n    \"name\": \"Marc Gene\",\n    \"skill\": \"Plumber\",\n    \"contact\": \"9000000015\",\n    \"available\": true\n  },\n  {\n    \"techId\": 16,\n    \"name\": \"Alexander Wurz\",\n    \"skill\": \"Electrician\",\n    \"contact\": \"9000000016\",\n    \"available\": true\n  }\n]"
+            }
+          ]
         },
         {
           "name": "Get Transactions",
@@ -670,7 +1555,52 @@
                 }
               ]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/transactions?status=Pending&block=A",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "transactions"],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "Pending"
+                    },
+                    {
+                      "key": "block",
+                      "value": "A"
+                    },
+                    {
+                      "key": "resident_name",
+                      "value": "",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"resident_name\": \"Emily Davis\",\n    \"trans_no\": \"TXN-105\",\n    \"house_unit\": \"105\",\n    \"service_type\": \"Technician\",\n    \"cost\": 400.0,\n    \"house_block\": \"B\",\n    \"status\": \"Paid\"\n  },\n  {\n    \"trans_no\": \"TXN-108\",\n    \"resident_name\": \"Sarah Wilson\",\n    \"house_unit\": \"505\",\n    \"service_type\": \"Technician\",\n    \"cost\": 800.0,\n    \"house_block\": \"B\",\n    \"status\": \"Paid\"\n  },\n  {\n    \"house_unit\": \"44\",\n    \"resident_name\": \"John Doe\",\n    \"trans_no\": \"TXN-TECH-BBD34B04\",\n    \"service_type\": \"Technician\",\n    \"cost\": 590.0,\n    \"house_block\": \"A\",\n    \"status\": \"Paid\"\n  },\n  {\n    \"house_unit\": \"101\",\n    \"trans_no\": \"TXN-102\",\n    \"resident_name\": \"Jane Smith\",\n    \"service_type\": \"Amenity\",\n    \"cost\": 1500.0,\n    \"house_block\": \"A\",\n    \"status\": \"Paid\"\n  },\n  {\n    \"house_unit\": \"204\",\n    \"resident_name\": \"Jessica Taylor\",\n    \"trans_no\": \"TXN-110\",\n    \"service_type\": \"Amenity\",\n    \"cost\": 5000.0,\n    \"house_block\": \"C\",\n    \"status\": \"Paid\"\n  }\n]"
+            }
+          ]
         },
         {
           "name": "Process Overdue Payments",
@@ -687,7 +1617,37 @@
               "host": ["{{base_url}}"],
               "path": ["admin", "process-overdue"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/process-overdue",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "process-overdue"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Successfully ran the cursor. Pending payments are now marked as Overdue.\"\n}"
+            }
+          ]
         },
         {
           "name": "Get Audit Logs",
@@ -704,7 +1664,37 @@
               "host": ["{{base_url}}"],
               "path": ["admin", "audit-logs"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/audit-logs",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "audit-logs"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"record_id\": \"ALL\",\n    \"log_id\": 7,\n    \"action_type\": \"OVERDUE_PROCESS\",\n    \"details\": \"Manual trigger of overdue payment processing.\",\n    \"changed_at\": \"2026-07-21T09:51:19.389+00:00\",\n    \"table_affected\": \"payment\"\n  },\n  {\n    \"record_id\": \"99\",\n    \"log_id\": 6,\n    \"action_type\": \"DELETE\",\n    \"details\": \"Deleted technician: New Tech\",\n    \"changed_at\": \"2026-07-21T09:50:30.899+00:00\",\n    \"table_affected\": \"technician\"\n  },\n  {\n    \"record_id\": \"1\",\n    \"log_id\": 5,\n    \"action_type\": \"UPDATE\",\n    \"changed_at\": \"2026-07-21T09:50:30.354+00:00\",\n    \"details\": \"Updated availability to: true\",\n    \"table_affected\": \"technician\"\n  },\n  {\n    \"record_id\": \"99\",\n    \"log_id\": 4,\n    \"action_type\": \"ADD\",\n    \"details\": \"Added new technician: New Tech\",\n    \"changed_at\": \"2026-07-21T09:50:29.240+00:00\",\n    \"table_affected\": \"technician\"\n  },\n  {\n    \"log_id\": 3,\n    \"record_id\": \"27\",\n    \"action_type\": \"DELETE\",\n    \"details\": \"Deleted resident: Test Newman\",\n    \"changed_at\": \"2026-07-21T09:50:28.093+00:00\",\n    \"table_affected\": \"resident\"\n  },\n  {\n    \"log_id\": 2,\n    \"record_id\": \"27\",\n    \"action_type\": \"ADD\",\n    \"changed_at\": \"2026-07-21T09:50:26.705+00:00\",\n    \"details\": \"Added new resident: Test Newman\",\n    \"table_affected\": \"resident\"\n  },\n  {\n    \"log_id\": 1,\n    \"record_id\": \"1\",\n    \"action_type\": \"UPDATE\",\n    \"changed_at\": \"2026-07-21T09:50:24.864+00:00\",\n    \"details\": \"Updated: contact, \",\n    \"table_affected\": \"resident\"\n  }\n]"
+            }
+          ]
         },
         {
           "name": "Get Open Technician Assignments",
@@ -721,7 +1711,37 @@
               "host": ["{{base_url}}"],
               "path": ["admin", "assignments"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/assignments",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "assignments"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"resident_name\": \"John Doe\",\n    \"assignment_id\": 6,\n    \"trans_no\": \"TXN-TECH-BBD34B04\",\n    \"assign_date\": \"2026-08-01\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Tom Kristensen\",\n    \"slot\": 2,\n    \"status\": \"Assigned\"\n  },\n  {\n    \"trans_no\": \"TXN-108\",\n    \"assignment_id\": 5,\n    \"resident_name\": \"Sarah Wilson\",\n    \"assign_date\": \"2026-04-23\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Emanuele Pirro\",\n    \"slot\": 2,\n    \"status\": \"Completed\"\n  },\n  {\n    \"trans_no\": \"TXN-106\",\n    \"assignment_id\": 4,\n    \"resident_name\": \"Chris Brown\",\n    \"assign_date\": \"2026-04-22\",\n    \"skill\": \"Maintenance\",\n    \"technician\": \"Frank Biela\",\n    \"slot\": 1,\n    \"status\": \"Assigned\"\n  },\n  {\n    \"assignment_id\": 1,\n    \"trans_no\": \"TXN-101\",\n    \"resident_name\": \"Jane Smith\",\n    \"assign_date\": \"2026-04-21\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Tom Kristensen\",\n    \"slot\": 1,\n    \"status\": \"Completed\"\n  },\n  {\n    \"assignment_id\": 2,\n    \"trans_no\": \"TXN-103\",\n    \"resident_name\": \"Michael Johnson\",\n    \"assign_date\": \"2026-04-20\",\n    \"skill\": \"Electrician\",\n    \"technician\": \"Jacky Ickx\",\n    \"slot\": 2,\n    \"status\": \"Assigned\"\n  },\n  {\n    \"resident_name\": \"Emily Davis\",\n    \"assignment_id\": 3,\n    \"trans_no\": \"TXN-105\",\n    \"assign_date\": \"2026-04-19\",\n    \"skill\": \"Carpenter\",\n    \"technician\": \"Derek Bell\",\n    \"slot\": 3,\n    \"status\": \"Completed\"\n  }\n]"
+            }
+          ]
         },
         {
           "name": "Get Amenity Bookings History",
@@ -738,7 +1758,37 @@
               "host": ["{{base_url}}"],
               "path": ["admin", "amenities", "bookings"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/amenities/bookings",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "amenities", "bookings"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"resident_name\": \"John Doe\",\n    \"booking_id\": 6,\n    \"date\": \"2026-08-02\",\n    \"trans_no\": \"TXN-AMEN-AFDD6CCB\",\n    \"amenity\": \"Parc Ferm\\u00e9 Gym\",\n    \"slot\": 1,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 2\n  },\n  {\n    \"booking_id\": 5,\n    \"resident_name\": \"Jessica Taylor\",\n    \"trans_no\": \"TXN-110\",\n    \"date\": \"2026-04-25\",\n    \"amenity\": \"Spa & Wellness Center\",\n    \"slot\": 2,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 4\n  },\n  {\n    \"trans_no\": \"TXN-107\",\n    \"booking_id\": 4,\n    \"date\": \"2026-04-24\",\n    \"resident_name\": \"David Miller\",\n    \"amenity\": \"Monaco Rooftop Pool\",\n    \"slot\": 1,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 3\n  },\n  {\n    \"trans_no\": \"TXN-109\",\n    \"resident_name\": \"Emily Davis\",\n    \"booking_id\": 3,\n    \"date\": \"2026-04-23\",\n    \"amenity\": \"Paddock Club Lounge\",\n    \"slot\": 3,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 5\n  },\n  {\n    \"booking_id\": 2,\n    \"date\": \"2026-04-22\",\n    \"trans_no\": \"TXN-104\",\n    \"resident_name\": \"Michael Johnson\",\n    \"amenity\": \"Parc Ferm\\u00e9 Gym\",\n    \"slot\": 2,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 1\n  },\n  {\n    \"booking_id\": 1,\n    \"date\": \"2026-04-21\",\n    \"trans_no\": \"TXN-102\",\n    \"resident_name\": \"Jane Smith\",\n    \"amenity\": \"Monaco Rooftop Pool\",\n    \"slot\": 1,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 2\n  }\n]"
+            }
+          ]
         },
         {
           "name": "Get Technician Service History",
@@ -755,7 +1805,37 @@
               "host": ["{{base_url}}"],
               "path": ["admin", "technicians", "bookings"]
             }
-          }
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/technicians/bookings",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "technicians", "bookings"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"trans_no\": \"TXN-108\",\n    \"assignment_id\": 5,\n    \"resident_name\": \"Sarah Wilson\",\n    \"assign_date\": \"2026-04-23\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Emanuele Pirro\",\n    \"slot\": 2,\n    \"status\": \"Completed\"\n  },\n  {\n    \"assignment_id\": 1,\n    \"trans_no\": \"TXN-101\",\n    \"resident_name\": \"Jane Smith\",\n    \"assign_date\": \"2026-04-21\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Tom Kristensen\",\n    \"slot\": 1,\n    \"status\": \"Completed\"\n  },\n  {\n    \"resident_name\": \"Emily Davis\",\n    \"assignment_id\": 3,\n    \"trans_no\": \"TXN-105\",\n    \"assign_date\": \"2026-04-19\",\n    \"skill\": \"Carpenter\",\n    \"technician\": \"Derek Bell\",\n    \"slot\": 3,\n    \"status\": \"Completed\"\n  }\n]"
+            }
+          ]
         }
       ]
     }

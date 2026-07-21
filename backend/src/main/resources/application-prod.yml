@@ -1,32 +1,35 @@
 spring:
   datasource:
-    url: jdbc:h2:file:./urbannexus_db;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
+    # Supabase-hosted PostgreSQL. All values come from the environment; the
+    # non-secret connection parts have defaults, but DB_PASSWORD (and the shared
+    # JWT_SECRET in application.yml) MUST be provided as environment variables.
+    url: jdbc:postgresql://${DB_HOST:db.vghgfawwdzsdnwoyisao.supabase.co}:${DB_PORT:5432}/${DB_NAME:postgres}?sslmode=require
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
   jpa:
     open-in-view: false
     show-sql: true
     hibernate:
+      # Reconciles the schema (creates missing tables/columns) but never drops.
       ddl-auto: update
     properties:
       hibernate:
         format_sql: true
   sql:
     init:
-      mode: always
+      # Defaults to "never" so restarts NEVER drop or reseed production data.
+      # For the very first deploy against an empty database, set DB_INIT_MODE=always
+      # once to run schema.sql + data.sql, then remove it (or leave it unset).
+      mode: ${DB_INIT_MODE:never}
       separator: ";"
 
 logging:
   level:
     root: INFO
-    com.urbannexus: DEBUG
-    org.springframework.web: INFO
-    org.springframework.security: INFO
-    org.hibernate.SQL: INFO
+    com.urbannexus: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN

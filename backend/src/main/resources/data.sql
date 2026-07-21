@@ -1,4 +1,4 @@
--- UrbanNexus Seed Data (Universal)
+-- UrbanNexus Seed Data (PostgreSQL)
 
 -- RESIDENTS (25+)
 INSERT INTO resident (resident_id, name, house_block, house_floor, house_unit, ownership_status, contact, no_of_members)
@@ -39,22 +39,22 @@ VALUES (1, 'Paddock Club Lounge', 20),
 
 -- TECHNICIANS (15+)
 INSERT INTO technician (tech_id, name, contact, skill, available)
-VALUES (1, 'Tom Kristensen', '9000000001', 'Plumber', 1),
-       (2, 'Jacky Ickx', '9000000002', 'Electrician', 1),
-       (3, 'Derek Bell', '9000000003', 'Carpenter', 1),
-       (4, 'Frank Biela', '9000000004', 'Maintenance', 1),
-       (5, 'Emanuele Pirro', '9000000005', 'Plumber', 1),
-       (6, 'Sebastien Buemi', '9000000006', 'Electrician', 1),
-       (7, 'Brendon Hartley', '9000000007', 'HVAC', 1),
-       (8, 'Andre Lotterer', '9000000008', 'Painter', 1),
-       (9, 'Benoit Treluyer', '9000000009', 'Mason', 1),
-       (10, 'Marcel Fassler', '9000000010', 'Carpenter', 1),
-       (11, 'Allan McNish', '9000000011', 'HVAC', 1),
-       (12, 'Dindo Capello', '9000000012', 'Pest Control', 1),
-       (13, 'Loic Duval', '9000000013', 'Security Expert', 1),
-       (14, 'Romain Dumas', '9000000014', 'Landscaper', 1),
-       (15, 'Marc Gene', '9000000015', 'Plumber', 1),
-       (16, 'Alexander Wurz', '9000000016', 'Electrician', 1);
+VALUES (1, 'Tom Kristensen', '9000000001', 'Plumber', TRUE),
+       (2, 'Jacky Ickx', '9000000002', 'Electrician', TRUE),
+       (3, 'Derek Bell', '9000000003', 'Carpenter', TRUE),
+       (4, 'Frank Biela', '9000000004', 'Maintenance', TRUE),
+       (5, 'Emanuele Pirro', '9000000005', 'Plumber', TRUE),
+       (6, 'Sebastien Buemi', '9000000006', 'Electrician', TRUE),
+       (7, 'Brendon Hartley', '9000000007', 'HVAC', TRUE),
+       (8, 'Andre Lotterer', '9000000008', 'Painter', TRUE),
+       (9, 'Benoit Treluyer', '9000000009', 'Mason', TRUE),
+       (10, 'Marcel Fassler', '9000000010', 'Carpenter', TRUE),
+       (11, 'Allan McNish', '9000000011', 'HVAC', TRUE),
+       (12, 'Dindo Capello', '9000000012', 'Pest Control', TRUE),
+       (13, 'Loic Duval', '9000000013', 'Security Expert', TRUE),
+       (14, 'Romain Dumas', '9000000014', 'Landscaper', TRUE),
+       (15, 'Marc Gene', '9000000015', 'Plumber', TRUE),
+       (16, 'Alexander Wurz', '9000000016', 'Electrician', TRUE);
 
 -- PRICING
 INSERT INTO pricing (item_name, category, base_price)
@@ -153,3 +153,9 @@ VALUES (2, 2, 'TXN-102', '2026-04-21', 1, 2, 'Confirmed'),
        (4, 1, 'TXN-109', '2026-04-23', 3, 5, 'Confirmed'),
        (7, 2, 'TXN-107', '2026-04-24', 1, 3, 'Confirmed'),
        (8, 4, 'TXN-110', '2026-04-25', 2, 4, 'Confirmed');
+
+-- Advance the resident identity sequence past the explicitly seeded IDs (1-26)
+-- so application-generated inserts (e.g. adding a new resident) do not collide.
+-- ALTER ... RESTART WITH is understood by both PostgreSQL and H2.
+ALTER TABLE resident
+    ALTER COLUMN resident_id RESTART WITH 27;
