@@ -1,11 +1,12 @@
 spring:
   datasource:
-    # Supabase-hosted PostgreSQL. All values come from the environment; the
-    # non-secret connection parts have defaults, but DB_PASSWORD (and the shared
-    # JWT_SECRET in application.yml) MUST be provided as environment variables.
-    url: jdbc:postgresql://${DB_HOST:db.vghgfawwdzsdnwoyisao.supabase.co}:${DB_PORT:5432}/${DB_NAME:postgres}?sslmode=require
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD}
+    # The complete JDBC URL (host, database, credentials, and options) is supplied
+    # by the DB_URL environment variable — nothing environment-specific is stored
+    # in this file. For Supabase, use the Supavisor transaction pooler URL: it is
+    # reachable over IPv4 (the direct db.<ref>.supabase.co host is IPv6-only, which
+    # IPv4-only hosts like Render cannot reach), and it must include
+    # prepareThreshold=0 so the transaction pooler can multiplex connections safely.
+    url: ${DB_URL}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 5

@@ -33,10 +33,10 @@ Production runs on **Supabase PostgreSQL**. Local development runs on an **embed
 `MODE=PostgreSQL`, so a single set of DDL, seed, and native-query SQL executes identically in both environments — with
 no external database to install for local work.
 
-| Profile | Database                                               | Init mode         | Purpose                             |
-|---------|--------------------------------------------------------|-------------------|-------------------------------------|
-| (none)  | Embedded H2, file-based, `MODE=PostgreSQL`             | `always`          | Local development — zero setup      |
-| `prod`  | Supabase PostgreSQL (`db.<ref>.supabase.co:5432`, SSL) | `never` (default) | Deployed container (Docker sets it) |
+| Profile | Database                                             | Init mode         | Purpose                             |
+|---------|------------------------------------------------------|-------------------|-------------------------------------|
+| (none)  | Embedded H2, file-based, `MODE=PostgreSQL`           | `always`          | Local development — zero setup      |
+| `prod`  | Supabase PostgreSQL via the transaction pooler (SSL) | `never` (default) | Deployed container (Docker sets it) |
 
 **One dialect, two engines.** `schema.sql` and `data.sql` are written in portable, PostgreSQL-flavoured SQL that H2's
 PostgreSQL compatibility mode understands verbatim:
@@ -54,8 +54,9 @@ dataset. The H2 console is available at `http://localhost:8080/h2-console` (JDBC
 
 **Production (Supabase)** defaults `spring.sql.init.mode` to `never` (via `DB_INIT_MODE`), so **restarts never drop or
 reseed** — data persists. `ddl-auto: update` still reconciles the schema (adds missing tables/columns, never drops). To
-seed a brand-new database once, deploy a single time with `DB_INIT_MODE=always`, then remove it. All Supabase connection
-details come from environment variables and the connection forces `sslmode=require`.
+seed a brand-new database once, deploy a single time with `DB_INIT_MODE=always`, then remove it. The full connection
+string is supplied by the `DB_URL` environment variable — see [Environment Variables](#environment-variables) for how to
+build it from Supabase's IPv4 transaction pooler.
 
 ---
 
@@ -149,17 +150,25 @@ No database install is needed for local development — the default profile uses
 Secrets are never hard-coded; they are read from the environment. Non-secret connection parameters have sensible
 defaults, but the two secrets below have **no default** and must be set.
 
-| Variable       | Required in  | Default              | Notes                                                                                                                                                                                                              |
-|----------------|--------------|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `JWT_SECRET`   | local + prod | _(none — required)_  | **Base64** string, ≥ 32 bytes decoded (the app Base64-decodes it; 48 bytes → HS384). Generate **once** with `openssl rand -base64 48`, then reuse the same value — a changing secret invalidates all issued tokens |
-| `DB_PASSWORD`  | prod         | _(none — required)_  | Supabase database password                                                                                                                                                                                         |
-| `DB_HOST`      | prod         | _(project-specific)_ | Supabase host, e.g. `db.<project-ref>.supabase.co`                                                                                                                                                                 |
-| `DB_PORT`      | prod         | `5432`               | Supabase port                                                                                                                                                                                                      |
-| `DB_NAME`      | prod         | `postgres`           | Supabase database name                                                                                                                                                                                             |
-| `DB_USER`      | prod         | `postgres`           | Supabase user                                                                                                                                                                                                      |
-| `DB_INIT_MODE` | prod         | `never`              | Set to `always` **once** to seed a brand-new database, then remove                                                                                                                                                 |
+| Variable       | Required in  | Default             | Notes                                                                                                                                                                                                              |
+|----------------|--------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `JWT_SECRET`   | local + prod | _(none — required)_ | **Base64** string, ≥ 32 bytes decoded (the app Base64-decodes it; 48 bytes → HS384). Generate **once** with `openssl rand -base64 48`, then reuse the same value — a changing secret invalidates all issued tokens |
+| `DB_URL`       | prod         | _(none — required)_ | The complete JDBC URL, credentials and options included (see below). Not used locally — the default profile is H2                                                                                                  |
+| `DB_INIT_MODE` | prod         | `never`             | Leave unset in normal operation. Set to `always` **once** to seed a brand-new database, then remove                                                                                                                |
 
-Local development (H2) only needs `JWT_SECRET` — H2 requires no database credentials.
+Local development (H2) only needs `JWT_SECRET`.
+
+**Building `DB_URL` for Supabase.** Use the **Transaction pooler** connection string (Supabase dashboard → Connect),
+convert it to JDBC form, and append two required options:
+
+```
+jdbc:postgresql://aws-0-<region>.pooler.supabase.com:6543/postgres?user=postgres.<project-ref>&password=<URL-ENCODED-PASSWORD>&sslmode=require&prepareThreshold=0
+```
+
+- The pooler host (`*.pooler.supabase.com`) is reachable over **IPv4**; the direct `db.<ref>.supabase.co` host is
+  **IPv6-only** and fails on IPv4-only platforms such as Render.
+- `prepareThreshold=0` is **required** — a transaction-mode pooler cannot share server-side prepared statements.
+- **Percent-encode special characters** in the password (`#` → `%23`, `$` → `%24`, `!` → `%21`, etc.).
 
 ### Backend (local — embedded H2)
 
@@ -180,14 +189,14 @@ empty password).
 ```bash
 cd backend
 export JWT_SECRET="<your base64 secret>"
-export DB_PASSWORD="<your supabase password>"
+export DB_URL="jdbc:postgresql://aws-0-<region>.pooler.supabase.com:6543/postgres?user=postgres.<project-ref>&password=<URL-ENCODED-PASSWORD>&sslmode=require&prepareThreshold=0"
 mvn spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
 The `prod` profile connects to Supabase over SSL. Restarts do **not** drop or reseed data (`DB_INIT_MODE` defaults to
 `never`). For the first-ever run against an empty database, add `export DB_INIT_MODE=always` to create the schema and
 seed it, then unset it. The `Dockerfile` activates this profile automatically (`-Dspring.profiles.active=prod`); supply
-`JWT_SECRET` and `DB_PASSWORD` to the container's environment.
+`JWT_SECRET` and `DB_URL` to the container's environment.
 
 ### Frontend
 
