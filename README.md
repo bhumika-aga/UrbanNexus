@@ -34,7 +34,7 @@ Production runs on **Supabase PostgreSQL**. Local development runs on an **embed
 no external database to install for local work.
 
 | Profile | Database                                             | Init mode         | Purpose                             |
-|---------|------------------------------------------------------|-------------------|-------------------------------------|
+| ------- | ---------------------------------------------------- | ----------------- | ----------------------------------- |
 | (none)  | Embedded H2, file-based, `MODE=PostgreSQL`           | `always`          | Local development — zero setup      |
 | `prod`  | Supabase PostgreSQL via the transaction pooler (SSL) | `never` (default) | Deployed container (Docker sets it) |
 
@@ -85,7 +85,7 @@ while giving users ownership of their credentials after first login.
 ### Roles
 
 | Role         | Capabilities                                                                            |
-|--------------|-----------------------------------------------------------------------------------------|
+| ------------ | --------------------------------------------------------------------------------------- |
 | `SuperAdmin` | Full CRUD on residents/technicians/amenities; admin dashboard; process overdue payments |
 | `Resident`   | View and pay own dues; book technicians and amenities; view booking history             |
 | `Technician` | View own task assignments; update task status; toggle availability                      |
@@ -151,7 +151,7 @@ Secrets are never hard-coded; they are read from the environment. Non-secret con
 defaults, but the two secrets below have **no default** and must be set.
 
 | Variable       | Required in  | Default             | Notes                                                                                                                                                                                                              |
-|----------------|--------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `JWT_SECRET`   | local + prod | _(none — required)_ | **Base64** string, ≥ 32 bytes decoded (the app Base64-decodes it; 48 bytes → HS384). Generate **once** with `openssl rand -base64 48`, then reuse the same value — a changing secret invalidates all issued tokens |
 | `DB_URL`       | prod         | _(none — required)_ | The complete JDBC URL, credentials and options included (see below). Not used locally — the default profile is H2                                                                                                  |
 | `DB_INIT_MODE` | prod         | `never`             | Leave unset in normal operation. Set to `always` **once** to seed a brand-new database, then remove                                                                                                                |
@@ -161,7 +161,7 @@ Local development (H2) only needs `JWT_SECRET`.
 **Building `DB_URL` for Supabase.** Use the **Transaction pooler** connection string (Supabase dashboard → Connect),
 convert it to JDBC form, and append two required options:
 
-```
+```txt
 jdbc:postgresql://aws-0-<region>.pooler.supabase.com:6543/postgres?user=postgres.<project-ref>&password=<URL-ENCODED-PASSWORD>&sslmode=require&prepareThreshold=0
 ```
 
@@ -218,7 +218,7 @@ Import `UrbanNexus_Postman_Collection.json` into Postman. The Login request auto
 ### Credentials
 
 | Role       | Username   | Password       |
-|------------|------------|----------------|
+| ---------- | ---------- | -------------- |
 | SuperAdmin | `admin`    | `Bhumika@1234` |
 | Resident   | `jane_s`   | `pwd123#`      |
 | Technician | `tech_tom` | `pwd123#`      |
@@ -229,7 +229,7 @@ password for auto-provisioned accounts is `pwd123#`.
 ### Endpoints
 
 | Method | Path                                 | Role                   | Description                          |
-|--------|--------------------------------------|------------------------|--------------------------------------|
+| ------ | ------------------------------------ | ---------------------- | ------------------------------------ |
 | POST   | `/api/login`                         | Public                 | Login; returns JWT                   |
 | GET    | `/api/profile/me`                    | Any                    | Get own profile                      |
 | PUT    | `/api/profile/update`                | Any                    | Update own contact info              |
