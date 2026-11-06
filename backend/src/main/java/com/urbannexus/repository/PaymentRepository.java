@@ -35,6 +35,11 @@ import java.util.Map;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, String> {
     
+    // A resident's invoices are linked only through their bookings, which are deleted with the resident.
+    String RESIDENT_TRANS_NOS =
+        "SELECT am.trans_no FROM amenity_mgmt am WHERE am.resident_id = :residentId "
+            + "UNION SELECT tm.trans_no FROM technician_management tm WHERE tm.resident_id = :residentId";
+    
     long countByStatus(String status);
     
     @Modifying
@@ -111,11 +116,6 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
         WHERE trans_no = :transNo AND status = 'Under Review'
         """, nativeQuery = true)
     int rejectPayment(@Param("transNo") String transNo);
-    
-    // A resident's invoices are linked only through their bookings, which are deleted with the resident.
-    String RESIDENT_TRANS_NOS =
-        "SELECT am.trans_no FROM amenity_mgmt am WHERE am.resident_id = :residentId "
-            + "UNION SELECT tm.trans_no FROM technician_management tm WHERE tm.resident_id = :residentId";
     
     @Query(value = "SELECT COUNT(*) FROM payment WHERE status IN ('Pending', 'Overdue', 'Under Review') "
                        + "AND trans_no IN (" + RESIDENT_TRANS_NOS + ")", nativeQuery = true)

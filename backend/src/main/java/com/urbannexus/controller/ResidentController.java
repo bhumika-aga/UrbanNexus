@@ -24,7 +24,7 @@ package com.urbannexus.controller;
 
 import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.ResidentService;
-import com.urbannexus.service.UnpaidInvoicesException;
+import com.urbannexus.exception.UnpaidInvoicesException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;

@@ -31,7 +31,7 @@ import java.time.ZoneId;
 
 @Configuration
 public class TimeConfig {
-
+    
     /**
      * The community's clock. Business dates such as "today" for bookings follow {@code app.timezone}, not the
      * server's zone (UTC on most hosts, which is still "yesterday" in India until 05:30).

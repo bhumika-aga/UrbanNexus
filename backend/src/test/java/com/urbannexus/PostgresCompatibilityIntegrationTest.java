@@ -58,19 +58,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @AutoConfigureMockMvc
 class PostgresCompatibilityIntegrationTest {
-
+    
     @Container
     @ServiceConnection
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
-
+    
     private static String adminToken;
-
+    
     @Autowired
     private MockMvc mvc;
-
+    
     @Autowired
     private ObjectMapper objectMapper;
-
+    
+    private static MockHttpServletRequestBuilder withToken(MockHttpServletRequestBuilder request, String token) {
+        return request.header("Authorization", "Bearer " + token);
+    }
+    
     @Test
     void transactionLedgerWorksWithAndWithoutFilters() throws Exception {
         // The admin Financial Ledger calls this with no filters at all.
@@ -80,7 +84,7 @@ class PostgresCompatibilityIntegrationTest {
         assertThat(transactions("?resident_name=Jane")).isNotEmpty()
             .allSatisfy(tx -> assertThat(tx.get("resident_name").asText()).contains("Jane"));
     }
-
+    
     @Test
     void adminQueriesRunOnPostgres() throws Exception {
         for (String path : new String[]{"/api/admin/stats", "/api/admin/audit-logs", "/api/admin/assignments",
@@ -136,6 +140,8 @@ class PostgresCompatibilityIntegrationTest {
             .andExpect(status().isOk());
     }
     
+    // ---------------------------------------------------------------- helpers
+    
     @Test
     void residentDeletionWithWriteOffRunsOnPostgres() throws Exception {
         // Seed: resident 3 (Michael Johnson) has TXN-103 Overdue and TXN-104 Pending.
@@ -150,18 +156,16 @@ class PostgresCompatibilityIntegrationTest {
         });
     }
     
-    // ---------------------------------------------------------------- helpers
-    
     private String activate(String username) throws Exception {
         String temporary = login(username, "pwd123#").get("token").asText();
         return changePassword(temporary, "pwd123#", username + "-secret");
     }
-
+    
     private JsonNode transactions(String query) throws Exception {
         return body(mvc.perform(withToken(get("/api/admin/transactions" + query), admin()))
                         .andExpect(status().isOk()).andReturn());
     }
-
+    
     private synchronized String admin() throws Exception {
         if (adminToken == null) {
             String temporary = login("admin", "Bhumika@1234").get("token").asText();
@@ -169,7 +173,7 @@ class PostgresCompatibilityIntegrationTest {
         }
         return adminToken;
     }
-
+    
     private JsonNode login(String username, String password) throws Exception {
         return body(mvc.perform(post("/api/login")
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -177,7 +181,7 @@ class PostgresCompatibilityIntegrationTest {
                         .andExpect(status().isOk())
                         .andReturn());
     }
-
+    
     private String changePassword(String token, String current, String next) throws Exception {
         return body(mvc.perform(withToken(put("/api/profile/password"), token)
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -185,16 +189,12 @@ class PostgresCompatibilityIntegrationTest {
                         .andExpect(status().isOk())
                         .andReturn()).get("token").asText();
     }
-
-    private static MockHttpServletRequestBuilder withToken(MockHttpServletRequestBuilder request, String token) {
-        return request.header("Authorization", "Bearer " + token);
-    }
-
+    
     private JsonNode body(MvcResult result) throws Exception {
         String content = result.getResponse().getContentAsString();
         return content.isEmpty() ? objectMapper.nullNode() : objectMapper.readTree(content);
     }
-
+    
     private String json(Object value) throws Exception {
         return objectMapper.writeValueAsString(value);
     }

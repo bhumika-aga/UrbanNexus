@@ -37,6 +37,14 @@ public class AuditService {
     
     private final AuditLogRepository auditLogRepository;
     
+    private static String currentActor() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal principal) {
+            return principal.getUsername();
+        }
+        return "system";
+    }
+    
     /**
      * Records a change as part of the caller's transaction, so the entry is rolled back with the change it describes
      * and never claims something that did not happen. The actor is the signed-in user, or "system" for scheduled jobs.
@@ -50,13 +58,5 @@ public class AuditService {
         log.setDetails(details);
         log.setChangedBy(currentActor());
         auditLogRepository.save(log);
-    }
-    
-    private static String currentActor() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal principal) {
-            return principal.getUsername();
-        }
-        return "system";
     }
 }

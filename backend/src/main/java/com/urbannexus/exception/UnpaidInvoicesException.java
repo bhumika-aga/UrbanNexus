@@ -20,13 +20,25 @@
  * SOFTWARE.
  */
 
-package com.urbannexus.service;
+package com.urbannexus.exception;
+
+import lombok.Getter;
+
+import java.math.BigDecimal;
 
 /**
- * Thrown when a username is temporarily locked out after repeated failed logins.
+ * Thrown when deleting a resident who still owes money and the caller has not agreed to write it off.
  */
-public class LoginLockedException extends RuntimeException {
-    public LoginLockedException(String message) {
-        super(message);
+@Getter
+public class UnpaidInvoicesException extends RuntimeException {
+    
+    private final long invoiceCount;
+    private final BigDecimal total;
+    
+    public UnpaidInvoicesException(long invoiceCount, BigDecimal total) {
+        super("Resident has " + invoiceCount + " unpaid invoice(s) totalling ₹" + total.toPlainString()
+                  + ". Record the payments, or confirm a write-off to delete the resident.");
+        this.invoiceCount = invoiceCount;
+        this.total = total;
     }
 }

@@ -24,6 +24,7 @@ package com.urbannexus.controller;
 
 import com.urbannexus.dto.AuthResponse;
 import com.urbannexus.dto.LoginRequest;
+import com.urbannexus.exception.LoginLockedException;
 import com.urbannexus.model.Resident;
 import com.urbannexus.model.Technician;
 import com.urbannexus.repository.ResidentRepository;

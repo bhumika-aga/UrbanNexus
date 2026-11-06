@@ -137,18 +137,21 @@ VALUES
 INSERT INTO payment (trans_no, status, type, cost, payment_date, paid_at)
 VALUES ('TXN-101', 'Pending', 'Technician', 590.00, CURRENT_TIMESTAMP - INTERVAL '5' DAY, NULL),  -- Plumber 500
        ('TXN-102', 'Paid', 'Amenity', 1770.00, CURRENT_TIMESTAMP - INTERVAL '60' DAY,
-        CURRENT_TIMESTAMP - INTERVAL '55' DAY),                                                    -- Monaco Rooftop Pool 1500
+        CURRENT_TIMESTAMP - INTERVAL '55' DAY),                                                   -- Monaco Rooftop Pool 1500
        ('TXN-103', 'Overdue', 'Technician', 708.00, CURRENT_TIMESTAMP - INTERVAL '45' DAY, NULL), -- Electrician 600
        ('TXN-104', 'Pending', 'Amenity', 354.00, CURRENT_TIMESTAMP - INTERVAL '3' DAY, NULL),     -- Parc Fermé Gym 300
        ('TXN-105', 'Paid', 'Technician', 649.00, CURRENT_TIMESTAMP - INTERVAL '50' DAY,
-        CURRENT_TIMESTAMP - INTERVAL '48' DAY),                                                    -- Carpenter 550
+        CURRENT_TIMESTAMP - INTERVAL '48' DAY),                                                   -- Carpenter 550
        ('TXN-106', 'Pending', 'Technician', 472.00, CURRENT_TIMESTAMP - INTERVAL '2' DAY, NULL),  -- Maintenance 400
-       ('TXN-107', 'Overdue', 'Amenity', 1770.00, CURRENT_TIMESTAMP - INTERVAL '40' DAY, NULL),   -- Monaco Rooftop Pool 1500
+       ('TXN-107', 'Overdue', 'Amenity', 1770.00, CURRENT_TIMESTAMP - INTERVAL '40' DAY,
+        NULL),                                                                                    -- Monaco Rooftop Pool 1500
        ('TXN-108', 'Paid', 'Technician', 590.00, CURRENT_TIMESTAMP - INTERVAL '35' DAY,
-        CURRENT_TIMESTAMP - INTERVAL '30' DAY),                                                    -- Plumber 500
-       ('TXN-109', 'Pending', 'Amenity', 1180.00, CURRENT_TIMESTAMP - INTERVAL '1' DAY, NULL),    -- Paddock Club Lounge 1000
+        CURRENT_TIMESTAMP - INTERVAL '30' DAY),                                                   -- Plumber 500
+       ('TXN-109', 'Pending', 'Amenity', 1180.00, CURRENT_TIMESTAMP - INTERVAL '1' DAY,
+        NULL),                                                                                    -- Paddock Club Lounge 1000
        ('TXN-110', 'Paid', 'Amenity', 2360.00, CURRENT_TIMESTAMP - INTERVAL '20' DAY,
-        CURRENT_TIMESTAMP - INTERVAL '18' DAY);                                                    -- Spa & Wellness Center 2000
+        CURRENT_TIMESTAMP - INTERVAL '18' DAY);
+-- Spa & Wellness Center 2000
 
 -- ASSIGNMENTS / BOOKINGS (Simulated Tickets)
 INSERT INTO technician_management (resident_id, tech_id, trans_no, slot, assign_date, status)

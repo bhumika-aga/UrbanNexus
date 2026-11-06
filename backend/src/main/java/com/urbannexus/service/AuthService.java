@@ -24,6 +24,7 @@ package com.urbannexus.service;
 
 import com.urbannexus.dto.AuthResponse;
 import com.urbannexus.dto.LoginRequest;
+import com.urbannexus.exception.LoginLockedException;
 import com.urbannexus.model.Admin;
 import com.urbannexus.repository.AdminRepository;
 import com.urbannexus.security.JwtTokenProvider;

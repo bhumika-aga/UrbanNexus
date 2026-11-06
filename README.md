@@ -136,7 +136,8 @@ submit, confirm and reject is written to the audit log.
 **Deleting a resident who owes money.** `DELETE /api/residents/{id}` is refused with `409` and
 `{"code": "UNPAID_INVOICES", "unpaid_count", "unpaid_total"}` while the resident has Pending, Overdue or Under Review
 invoices. The admin UI then offers to write the debt off; confirming repeats the call with `?write_off_unpaid=true`,
-which marks those invoices `Written Off` (kept in the ledger, no longer counted as owed) and deletes the resident. All of
+which marks those invoices `Written Off` (kept in the ledger, no longer counted as owed) and deletes the resident. All
+of
 the resident's invoices keep their name (`payment.billed_to`), so the ledger shows them as a former resident instead of
 "UrbanNexus System".
 

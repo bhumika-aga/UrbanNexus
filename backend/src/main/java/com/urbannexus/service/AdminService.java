@@ -52,6 +52,11 @@ public class AdminService {
     private final AuditService auditService;
     private final Clock clock;
     
+    // An empty query parameter (e.g. "?block=") means "no filter", not "match the empty string".
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+    
     public DashboardStatsDTO getDashboardStats() {
         long totalResidents = residentRepository.count();
         BigDecimal pendingLedger = paymentRepository.sumPendingCosts();
@@ -145,10 +150,5 @@ public class AdminService {
                        return normalized;
                    })
                    .collect(Collectors.toList());
-    }
-    
-    // An empty query parameter (e.g. "?block=") means "no filter", not "match the empty string".
-    private static String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
     }
 }

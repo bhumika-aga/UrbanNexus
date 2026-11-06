@@ -65,7 +65,9 @@ public class Payment {
     @Column(name = "billed_to", length = 100)
     private String billedTo;
     
-    /** A base price plus 18% GST, rounded to paise. */
+    /**
+     * A base price plus 18% GST, rounded to paise.
+     */
     public static BigDecimal withGst(BigDecimal basePrice) {
         return basePrice.multiply(new BigDecimal("1.18")).setScale(2, RoundingMode.HALF_UP);
     }

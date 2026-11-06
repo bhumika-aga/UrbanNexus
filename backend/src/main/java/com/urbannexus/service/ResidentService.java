@@ -22,6 +22,7 @@
 
 package com.urbannexus.service;
 
+import com.urbannexus.exception.UnpaidInvoicesException;
 import com.urbannexus.model.Admin;
 import com.urbannexus.model.Resident;
 import com.urbannexus.repository.*;
