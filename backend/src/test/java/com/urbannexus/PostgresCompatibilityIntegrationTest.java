@@ -22,18 +22,18 @@
 
 package com.urbannexus;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -61,7 +61,7 @@ class PostgresCompatibilityIntegrationTest {
     
     @Container
     @ServiceConnection
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
     
     private static String adminToken;
     
@@ -79,10 +79,10 @@ class PostgresCompatibilityIntegrationTest {
     void transactionLedgerWorksWithAndWithoutFilters() throws Exception {
         // The admin Financial Ledger calls this with no filters at all.
         assertThat(transactions("")).hasSizeGreaterThanOrEqualTo(10);
-        assertThat(transactions("?status=Paid")).allSatisfy(tx -> assertThat(tx.get("status").asText()).isEqualTo("Paid"));
-        assertThat(transactions("?block=A")).allSatisfy(tx -> assertThat(tx.get("house_block").asText()).isEqualTo("A"));
+        assertThat(transactions("?status=Paid")).allSatisfy(tx -> assertThat(tx.get("status").asString()).isEqualTo("Paid"));
+        assertThat(transactions("?block=A")).allSatisfy(tx -> assertThat(tx.get("house_block").asString()).isEqualTo("A"));
         assertThat(transactions("?resident_name=Jane")).isNotEmpty()
-            .allSatisfy(tx -> assertThat(tx.get("resident_name").asText()).contains("Jane"));
+            .allSatisfy(tx -> assertThat(tx.get("resident_name").asString()).contains("Jane"));
     }
     
     @Test
@@ -96,7 +96,27 @@ class PostgresCompatibilityIntegrationTest {
         JsonNode residents = body(mvc.perform(withToken(get("/api/admin/residents/search"), admin())
                                                   .param("name", "john").param("block", "a"))
                                       .andExpect(status().isOk()).andReturn());
-        assertThat(residents.findValuesAsText("name")).contains("John Doe", "Michael Johnson");
+        assertThat(residents.findValuesAsString("name")).contains("John Doe", "Michael Johnson");
+    }
+    
+    @Test
+    void residentSearchWorksWithAnyCombinationOfFilters() throws Exception {
+        // Each filter may be absent; on PostgreSQL an absent (null) parameter has no type, so the query must
+        // never apply a function to it. The admin UI sends just a name, or an empty name on first load.
+        // (Michael Johnson may already be deleted by another test in this class.)
+        JsonNode nameOnly = searchResidents(Map.of("name", "JOHN"));
+        assertThat(nameOnly.findValuesAsString("name")).contains("John Doe");
+        assertThat(searchResidents(Map.of("name", ""))).hasSizeGreaterThanOrEqualTo(20);
+        assertThat(searchResidents(Map.of())).hasSizeGreaterThanOrEqualTo(20);
+        assertThat(searchResidents(Map.of("block", "b")).findValuesAsString("houseBlock")).containsOnly("B");
+        assertThat(searchResidents(Map.of("floor", "4", "unit", "44")).findValuesAsString("name"))
+            .containsExactly("John Doe");
+    }
+    
+    private JsonNode searchResidents(Map<String, String> params) throws Exception {
+        MockHttpServletRequestBuilder request = withToken(get("/api/admin/residents/search"), admin());
+        params.forEach(request::param);
+        return body(mvc.perform(request).andExpect(status().isOk()).andReturn());
     }
     
     @Test
@@ -151,13 +171,13 @@ class PostgresCompatibilityIntegrationTest {
         
         JsonNode ledger = transactions("?resident_name=michael");
         assertThat(ledger).hasSize(2).allSatisfy(tx -> {
-            assertThat(tx.get("status").asText()).isEqualTo("Written Off");
-            assertThat(tx.get("resident_name").asText()).isEqualTo("Michael Johnson");
+            assertThat(tx.get("status").asString()).isEqualTo("Written Off");
+            assertThat(tx.get("resident_name").asString()).isEqualTo("Michael Johnson");
         });
     }
     
     private String activate(String username) throws Exception {
-        String temporary = login(username, "pwd123#").get("token").asText();
+        String temporary = login(username, "pwd123#").get("token").asString();
         return changePassword(temporary, "pwd123#", username + "-secret");
     }
     
@@ -168,7 +188,7 @@ class PostgresCompatibilityIntegrationTest {
     
     private synchronized String admin() throws Exception {
         if (adminToken == null) {
-            String temporary = login("admin", "Bhumika@1234").get("token").asText();
+            String temporary = login("admin", "Bhumika@1234").get("token").asString();
             adminToken = changePassword(temporary, "Bhumika@1234", "admin-test-secret");
         }
         return adminToken;
@@ -187,7 +207,7 @@ class PostgresCompatibilityIntegrationTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(json(Map.of("currentPassword", current, "newPassword", next))))
                         .andExpect(status().isOk())
-                        .andReturn()).get("token").asText();
+                        .andReturn()).get("token").asString();
     }
     
     private JsonNode body(MvcResult result) throws Exception {

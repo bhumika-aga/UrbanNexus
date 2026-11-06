@@ -1,6 +1,6 @@
 # UrbanNexus — Residential Operations Platform
 
-UrbanNexus is a full-stack residential complex management system built with Spring Boot 3.5 and React 19. It covers the
+UrbanNexus is a full-stack residential complex management system built with Spring Boot 4.1 and React 19. It covers the
 complete operational lifecycle of a residential community: resident and technician management, amenity and technician
 booking, payment tracking with 18% GST, and an administrative audit trail.
 
@@ -8,9 +8,12 @@ booking, payment tracking with 18% GST, and an administrative audit trail.
 
 ## Architecture
 
-### Backend: Spring Boot 3.5 + Java 17
+### Backend: Spring Boot 4.1 + Java 17
 
-The backend is a RESTful JSON API with JWT-based stateless authentication. Key layers:
+The backend is a RESTful JSON API with JWT-based stateless authentication, on Spring Boot 4.1 (Spring Framework 7,
+Spring Security 7, Hibernate 7, Tomcat 11, Jackson 3). `pom.xml` overrides Logback to 1.6.x because Spring Boot 4.1 still
+manages a 1.5.x version affected by CVE-2026-19880; drop the override once Spring Boot ships Logback 1.6.3 or later.
+Key layers:
 
 - **Controller** — validates role-based access, maps HTTP requests to service calls
 - **Service** — contains all business logic (`@Transactional` boundary guards multi-step operations)
@@ -34,7 +37,7 @@ Production runs on **Supabase PostgreSQL**. Local development runs on an **embed
 no external database to install for local work.
 
 | Profile | Database                                             | Init mode         | Purpose                             |
-|---------|------------------------------------------------------|-------------------|-------------------------------------|
+| ------- | ---------------------------------------------------- | ----------------- | ----------------------------------- |
 | (none)  | Embedded H2, file-based, `MODE=PostgreSQL`           | `always`          | Local development — zero setup      |
 | `prod`  | Supabase PostgreSQL via the transaction pooler (SSL) | `never` (default) | Deployed container (Docker sets it) |
 
@@ -93,7 +96,7 @@ while giving users ownership of their credentials after first login.
 ### Roles
 
 | Role         | Capabilities                                                                            |
-|--------------|-----------------------------------------------------------------------------------------|
+| ------------ | --------------------------------------------------------------------------------------- |
 | `SuperAdmin` | Full CRUD on residents/technicians/amenities; confirm payments; reset user passwords    |
 | `Resident`   | View own dues and report offline payments; book technicians and amenities; view history |
 | `Technician` | View own task assignments; mark own tasks Completed; toggle availability                |
@@ -188,7 +191,7 @@ Secrets are never hard-coded; they are read from the environment. Non-secret con
 defaults, but the two secrets below have **no default** and must be set.
 
 | Variable               | Required in  | Default             | Notes                                                                                                                                                                                                              |
-|------------------------|--------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ---------------------- | ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `JWT_SECRET`           | local + prod | _(none — required)_ | **Base64** string, ≥ 32 bytes decoded (the app Base64-decodes it; 48 bytes → HS384). Generate **once** with `openssl rand -base64 48`, then reuse the same value — a changing secret invalidates all issued tokens |
 | `DB_URL`               | prod         | _(none — required)_ | The complete JDBC URL, credentials and options included (see below). Not used locally — the default profile is H2                                                                                                  |
 | `DB_INIT_MODE`         | prod         | `never`             | Leave unset in normal operation. Set to `always` **once** to seed a brand-new database, then remove                                                                                                                |
@@ -266,7 +269,7 @@ created with `must_change_password = TRUE` and has to choose a new password at f
 production database with `data.sql` and leave these accounts unclaimed.
 
 | Role       | Username   | Seed password  |
-|------------|------------|----------------|
+| ---------- | ---------- | -------------- |
 | SuperAdmin | `admin`    | `Bhumika@1234` |
 | Resident   | `jane_s`   | `pwd123#`      |
 | Technician | `tech_tom` | `pwd123#`      |
@@ -277,7 +280,7 @@ Accounts the admin creates later get a random temporary password instead.
 ### Endpoints
 
 | Method | Path                                   | Role                   | Description                          |
-|--------|----------------------------------------|------------------------|--------------------------------------|
+| ------ | -------------------------------------- | ---------------------- | ------------------------------------ |
 | POST   | `/api/login`                           | Public                 | Login; returns JWT                   |
 | GET    | `/api/profile/me`                      | Any                    | Get own profile                      |
 | PUT    | `/api/profile/update`                  | Any                    | Update own contact info (not skill)  |

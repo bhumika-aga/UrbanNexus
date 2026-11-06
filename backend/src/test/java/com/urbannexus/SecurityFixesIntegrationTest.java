@@ -22,11 +22,11 @@
 
 package com.urbannexus;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -73,7 +73,7 @@ class SecurityFixesIntegrationTest {
     private static String statusOfAssignment(JsonNode assignments, long id) {
         for (JsonNode assignment : assignments) {
             if (assignment.get("assignment_id").asLong() == id) {
-                return assignment.get("status").asText();
+                return assignment.get("status").asString();
             }
         }
         return null;
@@ -87,7 +87,7 @@ class SecurityFixesIntegrationTest {
     void seededAccountCanOnlyChangeItsPasswordUntilItDoes() throws Exception {
         JsonNode login = login("jane_s", SEED_PASSWORD, 200);
         assertThat(login.at("/admin/mustChangePassword").asBoolean()).isTrue();
-        String temporaryToken = login.get("token").asText();
+        String temporaryToken = login.get("token").asString();
         
         mvc.perform(withToken(get("/api/residents/me/dues"), temporaryToken))
             .andExpect(status().isForbidden())
@@ -101,7 +101,7 @@ class SecurityFixesIntegrationTest {
     
     @Test
     void newPasswordMustDifferFromTheTemporaryOne() throws Exception {
-        String token = login("amy_k", SEED_PASSWORD, 200).get("token").asText();
+        String token = login("amy_k", SEED_PASSWORD, 200).get("token").asString();
         mvc.perform(withToken(put("/api/profile/password"), token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(Map.of("currentPassword", SEED_PASSWORD, "newPassword", SEED_PASSWORD))))
@@ -114,13 +114,13 @@ class SecurityFixesIntegrationTest {
             login("michael_j", "wrong-guess-" + i, 401);
         }
         JsonNode locked = login("michael_j", SEED_PASSWORD, 429);
-        assertThat(locked.get("error").asText()).contains("Too many failed login attempts");
+        assertThat(locked.get("error").asString()).contains("Too many failed login attempts");
     }
     
     @Test
     void unknownUsernameIsIndistinguishableFromWrongPassword() throws Exception {
-        String unknown = login("nobody_here", "whatever", 401).get("error").asText();
-        String wrong = login("ryan_a", "whatever", 401).get("error").asText();
+        String unknown = login("nobody_here", "whatever", 401).get("error").asString();
+        String wrong = login("ryan_a", "whatever", 401).get("error").asString();
         assertThat(unknown).isEqualTo(wrong);
     }
     
@@ -129,11 +129,11 @@ class SecurityFixesIntegrationTest {
         Set<String> passwords = new HashSet<>();
         for (int i = 0; i < 3; i++) {
             JsonNode created = createResident("Temp Person " + i);
-            String password = created.get("password").asText();
+            String password = created.get("password").asString();
             assertThat(password).isNotEqualTo(SEED_PASSWORD).hasSize(12);
             passwords.add(password);
             
-            JsonNode login = login(created.get("username").asText(), password, 200);
+            JsonNode login = login(created.get("username").asString(), password, 200);
             assertThat(login.at("/admin/mustChangePassword").asBoolean()).isTrue();
         }
         assertThat(passwords).hasSize(3);
@@ -144,9 +144,9 @@ class SecurityFixesIntegrationTest {
     @Test
     void adminResetIssuesNewTemporaryPasswordAndRevokesSessions() throws Exception {
         JsonNode created = createResident("Reset Subject");
-        String username = created.get("username").asText();
-        String token = changePassword(login(username, created.get("password").asText(), 200).get("token").asText(),
-            created.get("password").asText(), "chosen-by-resident");
+        String username = created.get("username").asString();
+        String token = changePassword(login(username, created.get("password").asString(), 200).get("token").asString(),
+            created.get("password").asString(), "chosen-by-resident");
         mvc.perform(withToken(get("/api/residents/me/dues"), token)).andExpect(status().isOk());
         
         long residentId = residentIdOf("Reset Subject");
@@ -155,7 +155,7 @@ class SecurityFixesIntegrationTest {
         
         mvc.perform(withToken(get("/api/residents/me/dues"), token)).andExpect(status().isUnauthorized());
         login(username, "chosen-by-resident", 401);
-        assertThat(login(username, reset.get("password").asText(), 200).at("/admin/mustChangePassword").asBoolean())
+        assertThat(login(username, reset.get("password").asString(), 200).at("/admin/mustChangePassword").asBoolean())
             .isTrue();
     }
     
@@ -209,8 +209,8 @@ class SecurityFixesIntegrationTest {
         submit(emily, "TXN-109", "UPI-REF-123").andExpect(status().isBadRequest());
         
         JsonNode invoice = dueInvoice(emily, "TXN-109");
-        assertThat(invoice.get("status").asText()).isEqualTo("Under Review");
-        assertThat(invoice.get("payment_reference").asText()).isEqualTo("UPI-REF-123");
+        assertThat(invoice.get("status").asString()).isEqualTo("Under Review");
+        assertThat(invoice.get("payment_reference").asString()).isEqualTo("UPI-REF-123");
         
         mvc.perform(withToken(post("/api/payments/TXN-109/confirm"), emily)).andExpect(status().isForbidden());
         mvc.perform(withToken(post("/api/payments/TXN-109/pay"), emily))
@@ -230,7 +230,7 @@ class SecurityFixesIntegrationTest {
         mvc.perform(withToken(post("/api/payments/TXN-106/reject"), admin())).andExpect(status().isOk());
         
         JsonNode invoice = dueInvoice(chris, "TXN-106");
-        assertThat(invoice.get("status").asText()).isEqualTo("Pending");
+        assertThat(invoice.get("status").asString()).isEqualTo("Pending");
         assertThat(invoice.get("payment_reference").isNull()).isTrue();
         mvc.perform(withToken(post("/api/payments/TXN-106/reject"), admin())).andExpect(status().isBadRequest());
     }
@@ -238,7 +238,7 @@ class SecurityFixesIntegrationTest {
     @Test
     void passwordChangeRevokesEarlierTokens() throws Exception {
         String first = activate("david_m");
-        String second = login("david_m", "david_m-secret", 200).get("token").asText();
+        String second = login("david_m", "david_m-secret", 200).get("token").asString();
         
         String latest = changePassword(second, "david_m-secret", "david_m-rotated");
         mvc.perform(withToken(get("/api/residents/me/bookings"), first)).andExpect(status().isUnauthorized());
@@ -251,9 +251,9 @@ class SecurityFixesIntegrationTest {
     @Test
     void deletingAnAccountRevokesItsTokens() throws Exception {
         JsonNode created = createResident("Soon Gone");
-        String username = created.get("username").asText();
-        String token = changePassword(login(username, created.get("password").asText(), 200).get("token").asText(),
-            created.get("password").asText(), "soon-gone-secret");
+        String username = created.get("username").asString();
+        String token = changePassword(login(username, created.get("password").asString(), 200).get("token").asString(),
+            created.get("password").asString(), "soon-gone-secret");
         mvc.perform(withToken(get("/api/profile/me"), token)).andExpect(status().isOk());
         
         mvc.perform(withToken(delete("/api/residents/" + residentIdOf("Soon Gone")), admin())).andExpect(status().isOk());
@@ -269,7 +269,7 @@ class SecurityFixesIntegrationTest {
     
     private synchronized String admin() throws Exception {
         if (adminToken == null) {
-            String temporary = login("admin", "Bhumika@1234", 200).get("token").asText();
+            String temporary = login("admin", "Bhumika@1234", 200).get("token").asString();
             adminToken = changePassword(temporary, "Bhumika@1234", "admin-test-secret");
         }
         return adminToken;
@@ -279,7 +279,7 @@ class SecurityFixesIntegrationTest {
      * Logs a seeded account in and completes its forced password change; returns a usable token.
      */
     private String activate(String username) throws Exception {
-        String temporary = login(username, SEED_PASSWORD, 200).get("token").asText();
+        String temporary = login(username, SEED_PASSWORD, 200).get("token").asString();
         return changePassword(temporary, SEED_PASSWORD, username + "-secret");
     }
     
@@ -300,7 +300,7 @@ class SecurityFixesIntegrationTest {
                                .andReturn();
         JsonNode response = body(result);
         assertThat(response.at("/admin/mustChangePassword").asBoolean()).isFalse();
-        return response.get("token").asText();
+        return response.get("token").asString();
     }
     
     private JsonNode createResident(String name) throws Exception {
@@ -342,7 +342,7 @@ class SecurityFixesIntegrationTest {
         JsonNode dues = body(mvc.perform(withToken(get("/api/residents/me/dues"), token))
                                  .andExpect(status().isOk()).andReturn());
         for (JsonNode invoice : dues.get("invoices")) {
-            if (transNo.equals(invoice.get("trans_no").asText())) {
+            if (transNo.equals(invoice.get("trans_no").asString())) {
                 return invoice;
             }
         }

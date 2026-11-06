@@ -22,11 +22,11 @@
 
 package com.urbannexus;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -92,7 +92,7 @@ class ApiHardeningIntegrationTest {
                                                   .content(json(Map.of("amenity_id", "abc", "date", "2031-01-01",
                                                       "slot", 1, "capacity_booked", 1))))
                                       .andExpect(status().isBadRequest()).andReturn());
-        assertThat(badNumber.get("error").asText()).isEqualTo("Invalid booking request.");
+        assertThat(badNumber.get("error").asString()).isEqualTo("Invalid booking request.");
         
         mvc.perform(withToken(delete("/api/technicians/9999"), admin()))
             .andExpect(status().isNotFound())
@@ -184,7 +184,7 @@ class ApiHardeningIntegrationTest {
         JsonNode open = body(mvc.perform(withToken(get("/api/admin/assignments"), admin()))
                                  .andExpect(status().isOk()).andReturn());
         assertThat(open).isNotEmpty();
-        assertThat(open.findValuesAsText("status")).doesNotContain("Completed");
+        assertThat(open.findValuesAsString("status")).doesNotContain("Completed");
     }
     
     // ---------------------------------------------------------------- 23. seed data
@@ -201,7 +201,7 @@ class ApiHardeningIntegrationTest {
             assertThat(tx.get("paid_at").isNull()).as("paid_at of %s", tx.get("trans_no")).isFalse();
             assertThat(tx.get("issued_at").isNull()).isFalse();
         });
-        assertThat(ledger.findValuesAsText("trans_no")).contains("TXN-109");
+        assertThat(ledger.findValuesAsString("trans_no")).contains("TXN-109");
     }
     
     // ---------------------------------------------------------------- 25. bookable skills, task dates
@@ -237,9 +237,9 @@ class ApiHardeningIntegrationTest {
         JsonNode skills = body(mvc.perform(withToken(get("/api/bookings/technician-skills"), token))
                                    .andExpect(status().isOk()).andReturn());
         
-        assertThat(skills.findValuesAsText("skill")).contains("Plumber", "Landscaper").doesNotContain("Spa & Wellness Center");
+        assertThat(skills.findValuesAsString("skill")).contains("Plumber", "Landscaper").doesNotContain("Spa & Wellness Center");
         for (JsonNode skill : skills) {
-            if ("Plumber".equals(skill.get("skill").asText())) {
+            if ("Plumber".equals(skill.get("skill").asString())) {
                 assertThat(skill.get("price_with_gst").decimalValue()).isEqualByComparingTo(new BigDecimal("590.00"));
             }
         }
@@ -256,12 +256,12 @@ class ApiHardeningIntegrationTest {
         JsonNode tasks = body(mvc.perform(withToken(get("/api/technicians/me/tasks"), activate("tech_frank")))
                                   .andExpect(status().isOk()).andReturn());
         assertThat(tasks).isNotEmpty();
-        assertThat(tasks.findValuesAsText("assign_date")).allMatch(date -> date.matches("\\d{4}-\\d{2}-\\d{2}"));
+        assertThat(tasks.findValuesAsString("assign_date")).allMatch(date -> date.matches("\\d{4}-\\d{2}-\\d{2}"));
     }
     
     private synchronized String admin() throws Exception {
         if (adminToken == null) {
-            String temporary = login("admin", "Bhumika@1234").get("token").asText();
+            String temporary = login("admin", "Bhumika@1234").get("token").asString();
             adminToken = changePassword(temporary, "Bhumika@1234", "admin-test-secret");
         }
         return adminToken;
@@ -271,7 +271,7 @@ class ApiHardeningIntegrationTest {
      * Logs a seeded account in and completes its forced password change; returns a usable token.
      */
     private String activate(String username) throws Exception {
-        String temporary = login(username, SEED_PASSWORD).get("token").asText();
+        String temporary = login(username, SEED_PASSWORD).get("token").asString();
         return changePassword(temporary, SEED_PASSWORD, username + "-secret");
     }
     
@@ -288,7 +288,7 @@ class ApiHardeningIntegrationTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(json(Map.of("currentPassword", current, "newPassword", next))))
                         .andExpect(status().isOk())
-                        .andReturn()).get("token").asText();
+                        .andReturn()).get("token").asString();
     }
     
     private ResultActions updateProfile(String token, Map<String, Object> updates) throws Exception {

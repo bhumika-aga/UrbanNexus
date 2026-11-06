@@ -22,13 +22,13 @@
 
 package com.urbannexus;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.urbannexus.service.AdminService;
 import com.urbannexus.service.AuditService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -168,7 +168,7 @@ class ProfileAuditAndDeletionIntegrationTest {
         
         JsonNode refused = body(mvc.perform(withToken(delete("/api/residents/2"), admin()))
                                     .andExpect(status().isConflict()).andReturn());
-        assertThat(refused.get("code").asText()).isEqualTo("UNPAID_INVOICES");
+        assertThat(refused.get("code").asString()).isEqualTo("UNPAID_INVOICES");
         assertThat(refused.get("unpaid_count").asLong()).isEqualTo(1);
         assertThat(refused.get("unpaid_total").decimalValue()).isEqualByComparingTo("590.00");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM resident WHERE resident_id = 2", Long.class)).isOne();
@@ -186,7 +186,7 @@ class ProfileAuditAndDeletionIntegrationTest {
                                                .param("resident_name", "jane smith"))
                                    .andExpect(status().isOk()).andReturn());
         assertThat(ledger).hasSize(2).allSatisfy(tx -> {
-            assertThat(tx.get("resident_name").asText()).isEqualTo("Jane Smith");
+            assertThat(tx.get("resident_name").asString()).isEqualTo("Jane Smith");
             assertThat(tx.get("house_block").isNull()).isTrue();
         });
         
@@ -210,10 +210,10 @@ class ProfileAuditAndDeletionIntegrationTest {
     @Test
     void residentSearchIgnoresCase() throws Exception {
         JsonNode byName = searchResidents(Map.of("name", "john"));
-        assertThat(byName.findValuesAsText("name")).contains("John Doe", "Michael Johnson");
+        assertThat(byName.findValuesAsString("name")).contains("John Doe", "Michael Johnson");
         
         JsonNode byBlock = searchResidents(Map.of("name", "JOHN", "block", "a"));
-        assertThat(byBlock.findValuesAsText("name")).contains("John Doe", "Michael Johnson");
+        assertThat(byBlock.findValuesAsString("name")).contains("John Doe", "Michael Johnson");
         
         // An empty filter means "no filter", not "block equals ''".
         assertThat(searchResidents(Map.of("name", "john", "block", ""))).hasSize(byName.size());
@@ -231,7 +231,7 @@ class ProfileAuditAndDeletionIntegrationTest {
                                              .content(json(Map.of("amenity_id", 5, "date", today.minusDays(1).toString(),
                                                  "slot", 1, "capacity_booked", 1))))
                                  .andExpect(status().isBadRequest()).andReturn());
-        assertThat(past.get("error").asText()).contains("cannot be in the past");
+        assertThat(past.get("error").asString()).contains("cannot be in the past");
         
         mvc.perform(withToken(post("/api/bookings/technician"), token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -247,7 +247,7 @@ class ProfileAuditAndDeletionIntegrationTest {
     
     private synchronized String admin() throws Exception {
         if (adminToken == null) {
-            String temporary = login("admin", "Bhumika@1234").get("token").asText();
+            String temporary = login("admin", "Bhumika@1234").get("token").asString();
             adminToken = changePassword(temporary, "Bhumika@1234", "admin-test-secret");
         }
         return adminToken;
@@ -257,7 +257,7 @@ class ProfileAuditAndDeletionIntegrationTest {
      * Logs a seeded account in and completes its forced password change; returns a usable token.
      */
     private String activate(String username) throws Exception {
-        String temporary = login(username, SEED_PASSWORD).get("token").asText();
+        String temporary = login(username, SEED_PASSWORD).get("token").asString();
         return changePassword(temporary, SEED_PASSWORD, username + "-secret");
     }
     
@@ -274,7 +274,7 @@ class ProfileAuditAndDeletionIntegrationTest {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(json(Map.of("currentPassword", current, "newPassword", next))))
                         .andExpect(status().isOk())
-                        .andReturn()).get("token").asText();
+                        .andReturn()).get("token").asString();
     }
     
     private ResultActions updateProfile(String token, Map<String, Object> updates) throws Exception {

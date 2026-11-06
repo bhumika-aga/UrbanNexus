@@ -33,13 +33,15 @@ import java.util.List;
 @Repository
 public interface ResidentRepository extends JpaRepository<Resident, Long> {
     
-    // Case-insensitive: "john" finds "John Doe", block "a" finds block "A".
+    // Case-insensitive: the caller passes namePattern already lower-cased with wildcards ("%john%")
+    // and block upper-cased. Functions are applied to the columns only, never to a parameter: a null
+    // parameter has no type on PostgreSQL, so e.g. UPPER(:block) fails with "upper(bytea) does not exist".
     @Query("SELECT r FROM Resident r WHERE " +
-               "(:name IS NULL OR LOWER(r.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
-               "(:block IS NULL OR UPPER(r.houseBlock) = UPPER(:block)) AND " +
+               "(:namePattern IS NULL OR LOWER(r.name) LIKE :namePattern) AND " +
+               "(:block IS NULL OR UPPER(r.houseBlock) = :block) AND " +
                "(:floor IS NULL OR r.houseFloor = :floor) AND " +
                "(:unit IS NULL OR r.houseUnit = :unit)")
-    List<Resident> searchResidents(@Param("name") String name,
+    List<Resident> searchResidents(@Param("namePattern") String namePattern,
                                    @Param("block") String block,
                                    @Param("floor") String floor,
                                    @Param("unit") String unit);

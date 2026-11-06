@@ -22,12 +22,12 @@
 
 package com.urbannexus;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.urbannexus.service.BookingService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -157,12 +157,12 @@ class BookingAndProvisioningIntegrationTest {
         bookAmenity(token, amenityBooking(3, "2031-01-10", 1, 6)).andExpect(status().isCreated());
         JsonNode tooMany = body(bookAmenity(token, amenityBooking(3, "2031-01-10", 1, 5))
                                     .andExpect(status().isConflict()).andReturn());
-        assertThat(tooMany.get("error").asText()).contains("Only 4 place(s) left");
+        assertThat(tooMany.get("error").asString()).contains("Only 4 place(s) left");
         
         bookAmenity(token, amenityBooking(3, "2031-01-10", 1, 4)).andExpect(status().isCreated());
         JsonNode full = body(bookAmenity(token, amenityBooking(3, "2031-01-10", 1, 1))
                                  .andExpect(status().isConflict()).andReturn());
-        assertThat(full.get("error").asText()).contains("fully booked");
+        assertThat(full.get("error").asString()).contains("fully booked");
         
         // Other slots and dates have their own capacity.
         bookAmenity(token, amenityBooking(3, "2031-01-10", 2, 10)).andExpect(status().isCreated());
@@ -305,10 +305,10 @@ class BookingAndProvisioningIntegrationTest {
         JsonNode technician = body(addTechnician(Map.of("tech_id", residentId, "name", "Max Power",
             "contact", "9000000001", "skill", "Carpenter")).andExpect(status().isCreated()).andReturn());
         
-        assertThat(resident.get("username").asText()).isEqualTo("max_power" + residentId);
-        assertThat(technician.get("username").asText()).isEqualTo("max_power" + residentId + "_2");
-        login(resident.get("username").asText(), resident.get("password").asText(), 200);
-        login(technician.get("username").asText(), technician.get("password").asText(), 200);
+        assertThat(resident.get("username").asString()).isEqualTo("max_power" + residentId);
+        assertThat(technician.get("username").asString()).isEqualTo("max_power" + residentId + "_2");
+        login(resident.get("username").asString(), resident.get("password").asString(), 200);
+        login(technician.get("username").asString(), technician.get("password").asString(), 200);
     }
     
     @Test
@@ -318,20 +318,20 @@ class BookingAndProvisioningIntegrationTest {
         JsonNode second = body(addTechnician(Map.of("tech_id", 56, "name", "Ann34", "contact", "9000000056",
             "skill", "Painter")).andExpect(status().isCreated()).andReturn());
         
-        assertThat(first.get("username").asText()).isEqualTo("ann3456");
-        assertThat(second.get("username").asText()).isEqualTo("ann34_56");
+        assertThat(first.get("username").asString()).isEqualTo("ann3456");
+        assertThat(second.get("username").asString()).isEqualTo("ann34_56");
     }
     
     @Test
     void usernamesAreSanitisedAndFitTheColumn() throws Exception {
         JsonNode accented = body(addResident(residentPayload("  Zoë Ångström-Smith ")).andExpect(status().isCreated())
                                      .andReturn());
-        assertThat(accented.get("username").asText()).matches("zoe_angstrom_smith\\d+");
+        assertThat(accented.get("username").asString()).matches("zoe_angstrom_smith\\d+");
         
         String longName = "a".repeat(100);
         JsonNode longest = body(addResident(residentPayload(longName)).andExpect(status().isCreated()).andReturn());
-        assertThat(longest.get("username").asText()).hasSizeLessThanOrEqualTo(50).startsWith("aaaa");
-        login(longest.get("username").asText(), longest.get("password").asText(), 200);
+        assertThat(longest.get("username").asString()).hasSizeLessThanOrEqualTo(50).startsWith("aaaa");
+        login(longest.get("username").asString(), longest.get("password").asString(), 200);
         
         addResident(residentPayload("a".repeat(101))).andExpect(status().isBadRequest());
         addResident(residentPayload("")).andExpect(status().isBadRequest());
@@ -347,7 +347,7 @@ class BookingAndProvisioningIntegrationTest {
     
     private synchronized String admin() throws Exception {
         if (adminToken == null) {
-            String temporary = login("admin", "Bhumika@1234", 200).get("token").asText();
+            String temporary = login("admin", "Bhumika@1234", 200).get("token").asString();
             adminToken = changePassword(temporary, "Bhumika@1234", "admin-test-secret");
         }
         return adminToken;
@@ -357,7 +357,7 @@ class BookingAndProvisioningIntegrationTest {
      * Logs a seeded account in and completes its forced password change; returns a usable token.
      */
     private String activate(String username) throws Exception {
-        String temporary = login(username, SEED_PASSWORD, 200).get("token").asText();
+        String temporary = login(username, SEED_PASSWORD, 200).get("token").asString();
         return changePassword(temporary, SEED_PASSWORD, username + "-secret");
     }
     
@@ -376,7 +376,7 @@ class BookingAndProvisioningIntegrationTest {
                                                      "newPassword", next))))
                                      .andExpect(status().isOk())
                                      .andReturn());
-        return response.get("token").asText();
+        return response.get("token").asString();
     }
     
     private ResultActions bookAmenity(String token, Map<String, Object> request) throws Exception {

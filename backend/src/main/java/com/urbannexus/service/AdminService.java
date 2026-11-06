@@ -36,6 +36,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -77,7 +78,12 @@ public class AdminService {
     }
     
     public List<Resident> searchResidents(String name, String block, String floor, String unit) {
-        return residentRepository.searchResidents(blankToNull(name), blankToNull(block), blankToNull(floor),
+        String trimmedName = blankToNull(name);
+        String trimmedBlock = blankToNull(block);
+        return residentRepository.searchResidents(
+            trimmedName == null ? null : "%" + trimmedName.toLowerCase(Locale.ROOT) + "%",
+            trimmedBlock == null ? null : trimmedBlock.toUpperCase(Locale.ROOT),
+            blankToNull(floor),
             blankToNull(unit));
     }
     
