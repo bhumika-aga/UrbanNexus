@@ -16,5 +16,6 @@ public class DashboardStatsDTO {
     private BigDecimal pendingLedger;
     private BigDecimal overdueLedger;
     private long pendingTickets;
-    private String gridUptime;
+    // Residents' reported payments waiting for the admin to confirm or reject.
+    private long paymentsToReview;
 }

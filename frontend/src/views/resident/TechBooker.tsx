@@ -42,7 +42,7 @@ import {
   faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { localToday } from "../../utils/date";
 
@@ -50,21 +50,24 @@ interface Props {
   onBack: () => void;
 }
 
-const techSkills = [
-  "Plumber",
-  "Electrician",
-  "Carpenter",
-  "Maintenance",
-  "HVAC",
-  "Painter",
-  "Mason",
-  "Pest Control",
-  "Security Expert",
-  "Landscaper",
-];
+interface SkillOption {
+  skill: string;
+  price_with_gst: number;
+}
 
 const TechBooker: React.FC<Props> = ({ onBack }) => {
   const [submitting, setSubmitting] = useState(false);
+  // Bookable skills come from the price list, so new skills appear without a frontend change.
+  const [skills, setSkills] = useState<SkillOption[]>([]);
+  const [skillsLoading, setSkillsLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<SkillOption[]>("/bookings/technician-skills")
+      .then((res) => setSkills(res.data))
+      .catch(() => console.error("Failed to fetch technician skills"))
+      .finally(() => setSkillsLoading(false));
+  }, []);
   const [formData, setFormData] = useState({
     skill: "",
     assign_date: localToday(),
@@ -103,7 +106,19 @@ const TechBooker: React.FC<Props> = ({ onBack }) => {
       <Grid container spacing={4}>
         <Grid size={{ xs: 12, md: 7 }}>
           <Grid container spacing={2}>
-            {techSkills.map((skill) => (
+            {skillsLoading && (
+              <Grid size={12}>
+                <CircularProgress size={24} />
+              </Grid>
+            )}
+            {!skillsLoading && skills.length === 0 && (
+              <Grid size={12}>
+                <Typography color="text.secondary">
+                  No technician services are available right now.
+                </Typography>
+              </Grid>
+            )}
+            {skills.map(({ skill, price_with_gst }) => (
               <Grid size={{ xs: 12, sm: 6 }} key={skill}>
                 <Card
                   sx={{
@@ -148,6 +163,13 @@ const TechBooker: React.FC<Props> = ({ onBack }) => {
                       }}
                     >
                       {skill}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ ml: "auto", fontWeight: 600 }}
+                    >
+                      ₹{price_with_gst}
                     </Typography>
                   </CardContent>
                 </Card>

@@ -64,8 +64,10 @@ const FinanceManager: React.FC = () => {
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
     try {
-      const queryParam = search ? `resident_name=${search}` : "";
-      const res = await api.get(`/admin/transactions?${queryParam}`);
+      // params are URL-encoded, so names with "&", "#" or "+" search correctly.
+      const res = await api.get("/admin/transactions", {
+        params: search ? { resident_name: search } : {},
+      });
       setTransactions(res.data || []);
     } catch {
       console.error("Ledger sync failed");
@@ -310,6 +312,15 @@ const FinanceManager: React.FC = () => {
                         sx={{ display: "block", mt: 0.5 }}
                       >
                         Ref: {tx.payment_reference}
+                      </Typography>
+                    )}
+                    {tx.status === "Paid" && tx.paid_at && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: "block", mt: 0.5 }}
+                      >
+                        on {new Date(tx.paid_at).toLocaleDateString()}
                       </Typography>
                     )}
                   </TableCell>

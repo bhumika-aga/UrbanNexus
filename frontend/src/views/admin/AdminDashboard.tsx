@@ -52,7 +52,7 @@ interface DashboardStats {
   pendingLedger: number;
   overdueLedger: number;
   pendingTickets: number;
-  gridUptime: string;
+  paymentsToReview: number;
 }
 
 interface TabPanelProps {
@@ -156,20 +156,24 @@ const AdminDashboard: React.FC = () => {
                 />
                 <Typography
                   variant="caption"
-                  sx={{ fontWeight: 700, color: "success.main" }}
+                  sx={{ fontWeight: 700, color: "#1d4ed8" }}
                 >
-                  SYSTEM
+                  REVIEW
                 </Typography>
               </Box>
               <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                {loading ? <CircularProgress size={24} /> : stats?.gridUptime}
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  stats?.paymentsToReview
+                )}
               </Typography>
               <Typography
                 variant="caption"
                 color="text.secondary"
                 sx={{ fontWeight: 600, textTransform: "uppercase" }}
               >
-                Infrastructure Health
+                Payments to Review
               </Typography>
             </CardContent>
           </Card>

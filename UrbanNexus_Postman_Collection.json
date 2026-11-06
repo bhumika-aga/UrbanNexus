@@ -94,7 +94,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhZG1pbiIsImlkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6IlN1cGVyQWRtaW4iLCJpYXQiOjE3ODQ2Mjc0MjMsImV4cCI6MTc4NDcxMzgyM30.aAGsGbyqrHZimJKV-Pq4EdCNRuabcW6tN1TVTUOTA2jtl_TZ2zn7iY_Z7wRsrHl5\",\n  \"admin\": {\n    \"username\": \"admin\",\n    \"role\": \"SuperAdmin\",\n    \"mustChangePassword\": true\n  }\n}"
+              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"<JWT>\",\n  \"admin\": {\n    \"username\": \"admin\",\n    \"role\": \"SuperAdmin\",\n    \"mustChangePassword\": true\n  }\n}"
             }
           ]
         },
@@ -171,7 +171,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJqb2huX2RvZSIsImlkIjoyLCJ1c2VybmFtZSI6ImpvaG5fZG9lIiwicm9sZSI6IlJlc2lkZW50IiwicmVzaWRlbnRfaWQiOjEsImlhdCI6MTc4NDYyNzQyMywiZXhwIjoxNzg0NzEzODIzfQ.3PeVL1qqvHMJyZyijSXhpxn_MNDZiaDYy4xk2i9yORshQJMvgZnWeTsTtZeKEzHT\",\n  \"admin\": {\n    \"username\": \"john_doe\",\n    \"role\": \"Resident\",\n    \"mustChangePassword\": true\n  }\n}"
+              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"<JWT>\",\n  \"admin\": {\n    \"username\": \"john_doe\",\n    \"role\": \"Resident\",\n    \"mustChangePassword\": true\n  }\n}"
             }
           ]
         },
@@ -248,7 +248,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZWNoX3RvbSIsImlkIjoyOCwidXNlcm5hbWUiOiJ0ZWNoX3RvbSIsInJvbGUiOiJUZWNobmljaWFuIiwidGVjaF9pZCI6MSwiaWF0IjoxNzg0NjI3NDI0LCJleHAiOjE3ODQ3MTM4MjR9.bz2_2hLgcvThCmojT8ngDE7OE0yFOODcDH_5OFYK3YCdA6fr2JdFBerdhxsiNDMH\",\n  \"admin\": {\n    \"username\": \"tech_tom\",\n    \"role\": \"Technician\",\n    \"mustChangePassword\": true\n  }\n}"
+              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"<JWT>\",\n  \"admin\": {\n    \"username\": \"tech_tom\",\n    \"role\": \"Technician\",\n    \"mustChangePassword\": true\n  }\n}"
             }
           ]
         },
@@ -1519,6 +1519,64 @@
       "name": "5. Bookings",
       "item": [
         {
+          "name": "Get Bookable Technician Skills (Resident)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/bookings/technician-skills",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "bookings",
+                "technician-skills"
+              ]
+            },
+            "description": "Skills a resident can book (the technician price list), each with the GST-inclusive price of a visit. Residents and the SuperAdmin only."
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/bookings/technician-skills",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "bookings",
+                    "technician-skills"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"skill\": \"Carpenter\",\n    \"price_with_gst\": 649.0\n  },\n  {\n    \"skill\": \"Electrician\",\n    \"price_with_gst\": 708.0\n  },\n  {\n    \"skill\": \"Plumber\",\n    \"price_with_gst\": 590.0\n  }\n]"
+            }
+          ]
+        },
+        {
           "name": "Book Technician (Resident)",
           "request": {
             "method": "POST",
@@ -1891,7 +1949,8 @@
                 "admin",
                 "stats"
               ]
-            }
+            },
+            "description": "pendingTickets counts technician jobs not yet completed plus amenity bookings from today on; paymentsToReview counts residents' reported payments awaiting confirmation; pendingLedger/overdueLedger are the GST-inclusive amounts owed."
           },
           "response": [
             {
@@ -1925,7 +1984,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"totalResidents\": 26,\n  \"pendingLedger\": 2704.0,\n  \"overdueLedger\": 2600.0,\n  \"pendingTickets\": 9,\n  \"gridUptime\": \"99.8%\"\n}"
+              "body": "{\n  \"totalResidents\": 26,\n  \"pendingLedger\": 2704.0,\n  \"overdueLedger\": 2600.0,\n  \"pendingTickets\": 9,\n  \"paymentsToReview\": 1\n}"
             }
           ]
         },
@@ -2285,7 +2344,8 @@
                 "admin",
                 "assignments"
               ]
-            }
+            },
+            "description": "Technician assignments that are not yet Completed. Completed ones are under Get Technician Service History."
           },
           "response": [
             {

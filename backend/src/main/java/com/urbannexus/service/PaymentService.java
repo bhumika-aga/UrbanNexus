@@ -51,14 +51,14 @@ public class PaymentService {
     public void submitForReview(String transNo, Long residentId, String reference) {
         String trimmed = reference == null ? "" : reference.trim();
         if (trimmed.isEmpty()) {
-            throw new RuntimeException("A payment reference (UPI ID, cheque number, etc.) is required.");
+            throw Inputs.badRequest("A payment reference (UPI ID, cheque number, etc.) is required.");
         }
         if (trimmed.length() > MAX_REFERENCE_LENGTH) {
-            throw new RuntimeException("Payment reference must be at most " + MAX_REFERENCE_LENGTH + " characters.");
+            throw Inputs.badRequest("Payment reference must be at most " + MAX_REFERENCE_LENGTH + " characters.");
         }
         
         if (paymentRepository.submitForReview(transNo, residentId, trimmed) == 0) {
-            throw new RuntimeException("Invoice not found, not yours, or not awaiting payment.");
+            throw Inputs.badRequest("Invoice not found, not yours, or not awaiting payment.");
         }
         auditService.log("payment", transNo, "UPDATE", "Resident submitted payment for review. Reference: " + trimmed);
     }
@@ -66,7 +66,7 @@ public class PaymentService {
     @Transactional
     public void confirmPayment(String transNo) {
         if (paymentRepository.confirmPayment(transNo) == 0) {
-            throw new RuntimeException("Invoice not found or already paid.");
+            throw Inputs.badRequest("Invoice not found or already paid.");
         }
         auditService.log("payment", transNo, "UPDATE", "Payment confirmed as received.");
     }
@@ -74,7 +74,7 @@ public class PaymentService {
     @Transactional
     public void rejectPayment(String transNo) {
         if (paymentRepository.rejectPayment(transNo) == 0) {
-            throw new RuntimeException("Invoice not found or not under review.");
+            throw Inputs.badRequest("Invoice not found or not under review.");
         }
         auditService.log("payment", transNo, "UPDATE", "Submitted payment rejected.");
     }

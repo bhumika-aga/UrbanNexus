@@ -106,7 +106,7 @@ public class TechnicianService {
     @Transactional
     public Map<String, Object> resetCredentials(Long techId) {
         Admin admin = adminRepository.findByTechnician_TechId(techId)
-                          .orElseThrow(() -> new RuntimeException("Technician not found."));
+                          .orElseThrow(() -> Inputs.notFound("Technician not found."));
         String temporaryPassword = authService.issueTemporaryPassword(admin);
         auditService.log("technician", techId.toString(), "UPDATE", "Reset login password for: " + admin.getUsername());
         
@@ -168,14 +168,14 @@ public class TechnicianService {
     @Transactional
     public void deleteTechnician(Long techId) {
         Technician tech = technicianRepository.findById(techId)
-                              .orElseThrow(() -> new RuntimeException("Technician not found."));
+                              .orElseThrow(() -> Inputs.notFound("Technician not found."));
         auditService.log("technician", techId.toString(), "DELETE", "Deleted technician: " + tech.getName());
         technicianRepository.delete(tech);
     }
     
     public Technician getTechnician(Long techId) {
         return technicianRepository.findById(techId)
-                   .orElseThrow(() -> new RuntimeException("Technician not found."));
+                   .orElseThrow(() -> Inputs.notFound("Technician not found."));
     }
     
     @Transactional
@@ -190,7 +190,7 @@ public class TechnicianService {
     @Transactional
     public void updateTechnicianProfile(Long techId, Map<String, Object> updates) {
         Technician tech = technicianRepository.findById(techId)
-                              .orElseThrow(() -> new RuntimeException("Technician not found."));
+                              .orElseThrow(() -> Inputs.notFound("Technician not found."));
         
         StringBuilder details = new StringBuilder("Updated: ");
         if (updates.containsKey("name")) {

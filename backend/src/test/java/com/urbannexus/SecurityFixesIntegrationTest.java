@@ -179,10 +179,14 @@ class SecurityFixesIntegrationTest {
         updateTask(tom, 99999, "Completed").andExpect(status().isNotFound());
         updateTask(tom, 1, "Completed").andExpect(status().isOk());
         
-        JsonNode assignments = body(mvc.perform(withToken(get("/api/admin/assignments"), admin()))
-                                        .andExpect(status().isOk()).andReturn());
-        assertThat(statusOfAssignment(assignments, 1)).isEqualTo("Completed");
-        assertThat(statusOfAssignment(assignments, 2)).isEqualTo("Assigned");
+        // Open assignments list only unfinished jobs; completed ones move to the service history.
+        JsonNode open = body(mvc.perform(withToken(get("/api/admin/assignments"), admin()))
+                                 .andExpect(status().isOk()).andReturn());
+        JsonNode history = body(mvc.perform(withToken(get("/api/admin/technicians/bookings"), admin()))
+                                    .andExpect(status().isOk()).andReturn());
+        assertThat(statusOfAssignment(open, 1)).isNull();
+        assertThat(statusOfAssignment(history, 1)).isEqualTo("Completed");
+        assertThat(statusOfAssignment(open, 2)).isEqualTo("Assigned");
     }
     
     @Test

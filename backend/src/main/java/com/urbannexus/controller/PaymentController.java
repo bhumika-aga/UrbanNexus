@@ -25,16 +25,19 @@ package com.urbannexus.controller;
 import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentController {
     
     private final PaymentService paymentService;
@@ -52,8 +55,11 @@ public class PaymentController {
             paymentService.submitForReview(transNo, currentUser.getResidentId(), reference);
             return ResponseEntity.ok(Map.of("message",
                 "Payment for " + transNo + " submitted. It will show as Paid once the admin confirms it."));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            log.error("Payment update failed for {}", transNo, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Payment update failed."));
         }
     }
     
@@ -67,8 +73,11 @@ public class PaymentController {
         try {
             paymentService.confirmPayment(transNo);
             return ResponseEntity.ok(Map.of("message", "Transaction " + transNo + " marked as Paid."));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            log.error("Payment update failed for {}", transNo, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Payment update failed."));
         }
     }
     
@@ -82,8 +91,11 @@ public class PaymentController {
         try {
             paymentService.rejectPayment(transNo);
             return ResponseEntity.ok(Map.of("message", "Payment for " + transNo + " rejected; invoice is unpaid again."));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            log.error("Payment update failed for {}", transNo, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Payment update failed."));
         }
     }
 }

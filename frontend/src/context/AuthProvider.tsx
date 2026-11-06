@@ -21,6 +21,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     (token: string) => {
       try {
         const decoded = jwtDecode<DecodedToken>(token);
+        // A stored token may have expired since it was saved; don't show a signed-in UI for it.
+        if (decoded.exp !== undefined && decoded.exp * 1000 <= Date.now()) {
+          logout();
+          return;
+        }
         const user: User = {
           id: (decoded.id || decoded.userId || decoded.adminId) as number,
           username: (decoded.username || decoded.sub) as string,
@@ -46,6 +51,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setState({ user: null, token: null, isLoading: false });
     }
   }, [decodeTokenAndSetUser]);
+
+  // Sign out when the token expires, rather than on the next failing request.
+  useEffect(() => {
+    if (!state.token) return;
+    const { exp } = jwtDecode<DecodedToken>(state.token);
+    if (exp === undefined) return;
+    const timer = setTimeout(logout, Math.max(0, exp * 1000 - Date.now()));
+    return () => clearTimeout(timer);
+  }, [state.token, logout]);
 
   const login = useCallback(
     (token: string) => {

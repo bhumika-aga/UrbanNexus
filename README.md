@@ -140,6 +140,10 @@ which marks those invoices `Written Off` (kept in the ledger, no longer counted 
 the resident's invoices keep their name (`payment.billed_to`), so the ledger shows them as a former resident instead of
 "UrbanNexus System".
 
+**Invoice dates.** `payment.payment_date` is when the invoice was **issued** (the booking was made) — the 30-day overdue
+rule counts from it. `payment.paid_at` records when the admin confirmed the payment, and the ledger shows it as "Paid
+on".
+
 ### GST via @PrePersist
 
 The `Payment` entity applies an 18% GST multiplier before every insert:
@@ -182,12 +186,13 @@ No database install is needed for local development — the default profile uses
 Secrets are never hard-coded; they are read from the environment. Non-secret connection parameters have sensible
 defaults, but the two secrets below have **no default** and must be set.
 
-| Variable       | Required in  | Default             | Notes                                                                                                                                                                                                              |
-|----------------|--------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `JWT_SECRET`   | local + prod | _(none — required)_ | **Base64** string, ≥ 32 bytes decoded (the app Base64-decodes it; 48 bytes → HS384). Generate **once** with `openssl rand -base64 48`, then reuse the same value — a changing secret invalidates all issued tokens |
-| `DB_URL`       | prod         | _(none — required)_ | The complete JDBC URL, credentials and options included (see below). Not used locally — the default profile is H2                                                                                                  |
-| `DB_INIT_MODE` | prod         | `never`             | Leave unset in normal operation. Set to `always` **once** to seed a brand-new database, then remove                                                                                                                |
-| `APP_TIMEZONE` | local + prod | `Asia/Kolkata`      | Time zone that decides "today" for booking dates (the server itself usually runs in UTC)                                                                                                                           |
+| Variable               | Required in  | Default             | Notes                                                                                                                                                                                                              |
+|------------------------|--------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `JWT_SECRET`           | local + prod | _(none — required)_ | **Base64** string, ≥ 32 bytes decoded (the app Base64-decodes it; 48 bytes → HS384). Generate **once** with `openssl rand -base64 48`, then reuse the same value — a changing secret invalidates all issued tokens |
+| `DB_URL`               | prod         | _(none — required)_ | The complete JDBC URL, credentials and options included (see below). Not used locally — the default profile is H2                                                                                                  |
+| `DB_INIT_MODE`         | prod         | `never`             | Leave unset in normal operation. Set to `always` **once** to seed a brand-new database, then remove                                                                                                                |
+| `APP_TIMEZONE`         | local + prod | `Asia/Kolkata`      | Time zone that decides "today" for booking dates (the server itself usually runs in UTC)                                                                                                                           |
+| `CORS_ALLOWED_ORIGINS` | prod         | _(none — required)_ | Comma-separated origin(s) of the deployed frontend, e.g. `https://urbannexus.onrender.com`. Unset → browsers are refused all API calls. Locally defaults to `http://localhost:*`                                   |
 
 Local development (H2) only needs `JWT_SECRET`.
 
@@ -233,7 +238,8 @@ mvn spring-boot:run -Dspring-boot.run.profiles=prod
 The `prod` profile connects to Supabase over SSL. Restarts do **not** drop or reseed data (`DB_INIT_MODE` defaults to
 `never`). For the first-ever run against an empty database, add `export DB_INIT_MODE=always` to create the schema and
 seed it, then unset it. The `Dockerfile` activates this profile automatically (`-Dspring.profiles.active=prod`); supply
-`JWT_SECRET` and `DB_URL` to the container's environment.
+`JWT_SECRET`, `DB_URL` and `CORS_ALLOWED_ORIGINS` (the frontend's URL) to the container's environment. In this profile
+the H2 console is disabled and SQL statements are not logged.
 
 ### Frontend
 
@@ -291,6 +297,7 @@ Accounts the admin creates later get a random temporary password instead.
 | POST   | `/api/amenities`                       | SuperAdmin             | Add amenity                          |
 | PUT    | `/api/amenities/{id}`                  | SuperAdmin             | Update amenity                       |
 | DELETE | `/api/amenities/{id}`                  | SuperAdmin             | Delete amenity                       |
+| GET    | `/api/bookings/technician-skills`      | Resident, SuperAdmin   | Bookable skills with GST price       |
 | POST   | `/api/bookings/technician`             | Resident, SuperAdmin   | Book a technician                    |
 | POST   | `/api/bookings/amenity`                | Resident, SuperAdmin   | Book an amenity                      |
 | POST   | `/api/payments/{trans_no}/submit`      | Resident               | Report offline payment for review    |
@@ -302,9 +309,12 @@ Accounts the admin creates later get a random temporary password instead.
 | GET    | `/api/admin/transactions`              | SuperAdmin             | Transaction ledger with filters      |
 | POST   | `/api/admin/process-overdue`           | SuperAdmin             | Mark 30-day-old payments as Overdue  |
 | GET    | `/api/admin/audit-logs`                | SuperAdmin             | System audit trail                   |
-| GET    | `/api/admin/assignments`               | SuperAdmin             | All technician assignments           |
+| GET    | `/api/admin/assignments`               | SuperAdmin             | Open (not completed) assignments     |
 | GET    | `/api/admin/amenities/bookings`        | SuperAdmin             | All amenity bookings                 |
 | GET    | `/api/admin/technicians/bookings`      | SuperAdmin             | Completed technician service history |
+
+Errors are returned as `{ "error": "<message>" }`. Messages are written for the user (e.g. `"Resident not found."`);
+internal details such as SQL errors or exception text are only logged on the server, never returned.
 
 ### Request Bodies
 

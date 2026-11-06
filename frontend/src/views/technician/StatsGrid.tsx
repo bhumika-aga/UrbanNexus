@@ -21,16 +21,17 @@
  */
 
 import {
-  faBolt,
+  faCalendarDay,
   faCheckCircle,
+  faClock,
   faListCheck,
-  faStar,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Card, Grid, Typography } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import React from "react";
 import { Booking } from "../../types";
+import { localToday } from "../../utils/date";
 
 interface StatsGridProps {
   tasks: Booking[];
@@ -38,7 +39,10 @@ interface StatsGridProps {
 
 const StatsGrid: React.FC<StatsGridProps> = ({ tasks }) => {
   const resolvedCount = tasks.filter((t) => t.status === "Completed").length;
-  const activeCount = tasks.filter((t) => t.status !== "Completed").length;
+  const openTasks = tasks.filter((t) => t.status !== "Completed");
+  // Dates arrive as YYYY-MM-DD, which compares correctly as a string.
+  const today = localToday();
+  const taskDate = (t: Booking) => (t.assign_date ?? "").slice(0, 10);
 
   const stats = [
     {
@@ -49,20 +53,20 @@ const StatsGrid: React.FC<StatsGridProps> = ({ tasks }) => {
     },
     {
       label: "Active",
-      value: activeCount,
+      value: openTasks.length,
       icon: <FontAwesomeIcon icon={faListCheck} style={{ fontSize: 20 }} />,
       color: "#6366f1",
     },
     {
-      label: "Efficiency",
-      value: resolvedCount > 0 ? "94%" : "--",
-      icon: <FontAwesomeIcon icon={faBolt} style={{ fontSize: 20 }} />,
+      label: "Today",
+      value: openTasks.filter((t) => taskDate(t) === today).length,
+      icon: <FontAwesomeIcon icon={faCalendarDay} style={{ fontSize: 20 }} />,
       color: "#a855f7",
     },
     {
-      label: "Rating",
-      value: "4.9",
-      icon: <FontAwesomeIcon icon={faStar} style={{ fontSize: 20 }} />,
+      label: "Past Due",
+      value: openTasks.filter((t) => taskDate(t) < today).length,
+      icon: <FontAwesomeIcon icon={faClock} style={{ fontSize: 20 }} />,
       color: "#f59e0b",
     },
   ];

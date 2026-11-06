@@ -25,6 +25,7 @@ package com.urbannexus.controller;
 import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.AmenityService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,6 +34,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/amenities")
 @RequiredArgsConstructor
@@ -61,9 +63,11 @@ public class AmenityController {
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Amenity added successfully!"));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", String.valueOf(e.getMessage())));
+        } catch (NumberFormatException | ClassCastException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                       .body(Map.of("error", "amenity_id and capacity must be numbers and name must be text."));
         } catch (Exception e) {
+            log.error("Failed to add amenity", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to add amenity"));
         }

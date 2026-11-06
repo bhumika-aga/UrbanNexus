@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -177,6 +178,17 @@ public class BookingService {
             "amenity_name", amenity.getName(),
             "trans_no", transNo,
             "total_with_gst", payment.getCost());
+    }
+    
+    /**
+     * The technician skills residents can book (those on the price list), with the GST-inclusive price of a visit.
+     */
+    public List<Map<String, Object>> getTechnicianSkills() {
+        return pricingRepository.findByCategoryOrderByItemNameAsc(PricingCategory.Technician).stream()
+                   .<Map<String, Object>>map(p -> Map.of(
+                       "skill", p.getItemName(),
+                       "price_with_gst", Payment.withGst(p.getBasePrice())))
+                   .toList();
     }
     
     private Resident requireResident(Long residentId) {

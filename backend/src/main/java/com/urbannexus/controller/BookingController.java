@@ -30,6 +30,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,6 +46,15 @@ import java.util.Map;
 public class BookingController {
     
     private final BookingService bookingService;
+    
+    @GetMapping("/technician-skills")
+    public ResponseEntity<?> getTechnicianSkills(@AuthenticationPrincipal UserPrincipal currentUser) {
+        if (!"Resident".equals(currentUser.getRole()) && !"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                       .body(Map.of("error", "Only Residents or Admins can create bookings."));
+        }
+        return ResponseEntity.ok(bookingService.getTechnicianSkills());
+    }
     
     @PostMapping("/technician")
     public ResponseEntity<?> bookTechnician(@AuthenticationPrincipal UserPrincipal currentUser,
@@ -74,9 +84,10 @@ public class BookingController {
             log.warn("Technician booking collided with a concurrent booking", e);
             return ResponseEntity.status(HttpStatus.CONFLICT)
                        .body(Map.of("error", "That slot was just taken. Please try again."));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", String.valueOf(e.getMessage())));
+        } catch (NumberFormatException | ClassCastException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid booking request."));
         } catch (Exception e) {
+            log.error("Technician booking failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Booking failed"));
         }
@@ -111,9 +122,10 @@ public class BookingController {
                            capacityBooked));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", String.valueOf(e.getMessage())));
+        } catch (NumberFormatException | ClassCastException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid booking request."));
         } catch (Exception e) {
+            log.error("Amenity booking failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to book amenity."));
         }
     }

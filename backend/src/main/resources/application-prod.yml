@@ -10,15 +10,20 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 5
+  # The H2 console is a local-development tool; never expose it in production.
+  h2:
+    console:
+      enabled: false
   jpa:
     open-in-view: false
-    show-sql: true
+    # Don't print every SQL statement to the production logs.
+    show-sql: false
     hibernate:
       # Reconciles the schema (creates missing tables/columns) but never drops.
       ddl-auto: update
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
   sql:
     init:
       # Defaults to "never" so restarts NEVER drop or reseed production data.
@@ -26,6 +31,12 @@ spring:
       # once to run schema.sql + data.sql, then remove it (or leave it unset).
       mode: ${DB_INIT_MODE:never}
       separator: ";"
+
+app:
+  cors:
+    # Required: the deployed frontend's origin(s), comma-separated, e.g. https://urbannexus.onrender.com.
+    # With no value set, browsers are refused all cross-origin API calls.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
 
 logging:
   level:

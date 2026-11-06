@@ -48,9 +48,11 @@ CREATE TABLE payment
     status            VARCHAR(50)    NOT NULL,
     type              VARCHAR(50)    NOT NULL,
     cost              DECIMAL(10, 2) NOT NULL,
+    -- When the invoice was issued (not when it was paid; see paid_at).
     payment_date      TIMESTAMP           DEFAULT CURRENT_TIMESTAMP,
     payment_reference VARCHAR(100)   NULL DEFAULT NULL,
     billed_to         VARCHAR(100)   NULL DEFAULT NULL,
+    paid_at           TIMESTAMP      NULL DEFAULT NULL,
     PRIMARY KEY (trans_no)
 );
 

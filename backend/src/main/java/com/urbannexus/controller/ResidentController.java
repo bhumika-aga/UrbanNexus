@@ -124,10 +124,9 @@ public class ResidentController {
         try {
             log.info("SuperAdmin {} is resetting the password of resident {}", currentUser.getUsername(), id);
             return ResponseEntity.ok(residentService.resetCredentials(id));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (RuntimeException e) {
-            if ("Resident not found.".equals(e.getMessage())) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-            }
             log.error("Password reset failed for resident {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to reset password."));
@@ -152,10 +151,9 @@ public class ResidentController {
                 "code", "UNPAID_INVOICES",
                 "unpaid_count", e.getInvoiceCount(),
                 "unpaid_total", e.getTotal()));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (RuntimeException e) {
-            if ("Resident not found.".equals(e.getMessage())) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-            }
             log.error("Failed to delete resident {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Deletion failed."));
         }

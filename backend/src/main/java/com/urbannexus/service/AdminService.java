@@ -32,6 +32,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,20 +50,24 @@ public class AdminService {
     private final TechnicianManagementRepository technicianManagementRepository;
     private final AmenityMgmtRepository amenityMgmtRepository;
     private final AuditService auditService;
+    private final Clock clock;
     
     public DashboardStatsDTO getDashboardStats() {
         long totalResidents = residentRepository.count();
         BigDecimal pendingLedger = paymentRepository.sumPendingCosts();
         BigDecimal overdueLedger = paymentRepository.sumOverdueCosts();
+        // Open work: technician jobs not yet completed (even if their date has passed), plus amenity
+        // bookings still to come. Past amenity bookings are over, not pending.
         long pendingAssignments = technicianManagementRepository.countByStatus("Assigned");
-        long pendingAmenities = amenityMgmtRepository.countByStatus("Confirmed");
+        long upcomingAmenities = amenityMgmtRepository.countByStatusAndDateGreaterThanEqual("Confirmed",
+            LocalDate.now(clock));
         
         return DashboardStatsDTO.builder()
                    .totalResidents(totalResidents)
                    .pendingLedger(pendingLedger)
                    .overdueLedger(overdueLedger)
-                   .pendingTickets(pendingAssignments + pendingAmenities)
-                   .gridUptime("99.8%")
+                   .pendingTickets(pendingAssignments + upcomingAmenities)
+                   .paymentsToReview(paymentRepository.countByStatus("Under Review"))
                    .build();
     }
     
@@ -87,17 +93,29 @@ public class AdminService {
     public String getUsername(Long adminId) {
         return adminRepository.findById(adminId)
                    .map(Admin::getUsername)
-                   .orElseThrow(() -> new RuntimeException("Admin not found."));
+                   .orElseThrow(() -> Inputs.notFound("Admin not found."));
     }
     
     @Transactional
     public void updateAdminProfile(Long adminId, Map<String, Object> updates) {
         Admin admin = adminRepository.findById(adminId)
-                          .orElseThrow(() -> new RuntimeException("Admin not found."));
+                          .orElseThrow(() -> Inputs.notFound("Admin not found."));
         
         if (updates.containsKey("username")) {
-            admin.setUsername((String) updates.get("username"));
-            auditService.log("admin", adminId.toString(), "UPDATE", "Updated username to: " + admin.getUsername());
+            String username = Inputs.requireText(Inputs.asText(updates.get("username"), "username"), "username", 50);
+            if (!username.matches("[A-Za-z0-9._-]{3,50}")) {
+                throw Inputs.badRequest("username must be 3-50 characters: letters, digits, '.', '_' or '-'.");
+            }
+            if (!username.equals(admin.getUsername())) {
+                // Usernames are shared by every account (admin, residents, technicians).
+                if (adminRepository.existsByUsername(username)) {
+                    throw Inputs.conflict("That username is already taken.");
+                }
+                String previous = admin.getUsername();
+                admin.setUsername(username);
+                auditService.log("admin", adminId.toString(), "UPDATE",
+                    "Changed username from " + previous + " to " + username);
+            }
         }
         adminRepository.save(admin);
     }
@@ -107,7 +125,7 @@ public class AdminService {
     }
     
     public List<Map<String, Object>> getAllAssignments() {
-        return normalizeMaps(technicianManagementRepository.findAllAssignmentsDetailed());
+        return normalizeMaps(technicianManagementRepository.findOpenAssignmentsDetailed());
     }
     
     public List<Map<String, Object>> getAllAmenityBookings() {

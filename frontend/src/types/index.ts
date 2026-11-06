@@ -93,10 +93,15 @@ export interface Transaction {
   cost: number;
   service_type: string;
   payment_reference?: string | null;
+  // When the invoice was issued (resident dues use the payment_date name for the same value).
   payment_date?: string;
+  issued_at?: string;
+  // When the admin confirmed the payment; null unless Paid.
+  paid_at?: string | null;
 }
 
-export type PaymentStatus = "Pending" | "Overdue" | "Under Review" | "Paid";
+export type PaymentStatus =
+  "Pending" | "Overdue" | "Under Review" | "Paid" | "Written Off";
 
 export interface Booking {
   booking_id?: number;

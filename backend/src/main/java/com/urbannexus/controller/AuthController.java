@@ -63,9 +63,12 @@ public class AuthController {
         } catch (LoginLockedException e) {
             log.warn("Login blocked for locked-out user: {}", loginRequest.getUsername());
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("error", e.getMessage()));
+        } catch (ResponseStatusException e) {
+            log.warn("Login failed for user: {}. Reason: {}", loginRequest.getUsername(), e.getReason());
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (RuntimeException e) {
-            log.warn("Login failed for user: {}. Reason: {}", loginRequest.getUsername(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+            log.error("Login failed unexpectedly for user: {}", loginRequest.getUsername(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Login failed."));
         }
     }
     
@@ -106,7 +109,7 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Internal error fetching profile for user '{}'", currentUser.getUsername(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                       .body(Map.of("error", "Failed to fetch profile info: " + e.getMessage()));
+                       .body(Map.of("error", "Failed to fetch profile info."));
         }
     }
     
@@ -126,8 +129,8 @@ public class AuthController {
             // The change revokes every earlier token, including the one on this request, so the
             // response carries a replacement for the client to keep using.
             return ResponseEntity.ok(authService.changePassword(currentUser.getId(), currentPassword, newPassword));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (Exception e) {
             log.error("Password change failed for user '{}'", currentUser.getUsername(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -155,7 +158,7 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Update profile failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                       .body(Map.of("error", "Failed to update profile: " + e.getMessage()));
+                       .body(Map.of("error", "Failed to update profile."));
         }
     }
 }

@@ -35,6 +35,8 @@ import java.util.Map;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, String> {
     
+    long countByStatus(String status);
+    
     @Modifying
     @Query(value = "UPDATE payment SET status = 'Overdue' WHERE status = 'Pending' AND payment_date < NOW() - INTERVAL '30' DAY", nativeQuery = true)
     void processOverduePayments();
@@ -58,6 +60,7 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     @Query(value = """
         SELECT
             p.trans_no, p.status, p.type as service_type, p.cost, p.payment_reference,
+            p.payment_date AS issued_at, p.paid_at,
             COALESCE(r_am.name, r_tm.name, p.billed_to, 'UrbanNexus System') AS resident_name,
             -- NULL block/unit with a name means a former (deleted) resident; 'SYS' means a system charge.
             COALESCE(r_am.house_block, r_tm.house_block, CASE WHEN p.billed_to IS NULL THEN 'SYS' END) AS house_block,
@@ -95,7 +98,7 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     
     // Admin side: record the money as received, whether or not the resident submitted a claim.
     @Modifying
-    @Query(value = "UPDATE payment SET status = 'Paid' WHERE trans_no = :transNo AND status IN ('Pending', 'Overdue', 'Under Review')", nativeQuery = true)
+    @Query(value = "UPDATE payment SET status = 'Paid', paid_at = CURRENT_TIMESTAMP WHERE trans_no = :transNo AND status IN ('Pending', 'Overdue', 'Under Review')", nativeQuery = true)
     int confirmPayment(@Param("transNo") String transNo);
     
     // Admin side: the claimed payment was not received. Return the invoice to whichever unpaid

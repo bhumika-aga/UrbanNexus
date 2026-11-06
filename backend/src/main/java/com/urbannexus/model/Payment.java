@@ -47,8 +47,14 @@ public class Payment {
     @Column(nullable = false)
     private BigDecimal cost;
     
+    // When the invoice was issued (the booking was made). Despite the column name this is not when it was
+    // paid; the 30-day overdue rule counts from here.
     @Column(name = "payment_date")
-    private LocalDateTime paymentDate;
+    private LocalDateTime issuedAt;
+    
+    // When the admin confirmed the money as received; null until the invoice is Paid.
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
     
     // The resident's proof of an offline payment (UPI ref, cheque no., ...), set when they submit
     // the invoice for review and cleared if the admin rejects it.
@@ -59,15 +65,18 @@ public class Payment {
     @Column(name = "billed_to", length = 100)
     private String billedTo;
     
+    /** A base price plus 18% GST, rounded to paise. */
+    public static BigDecimal withGst(BigDecimal basePrice) {
+        return basePrice.multiply(new BigDecimal("1.18")).setScale(2, RoundingMode.HALF_UP);
+    }
+    
     @PrePersist
     public void calculateGST() {
         if (this.cost != null) {
-            // Apply 18% GST
-            this.cost = this.cost.multiply(new java.math.BigDecimal("1.18"))
-                            .setScale(2, RoundingMode.HALF_UP);
+            this.cost = withGst(this.cost);
         }
-        if (this.paymentDate == null) {
-            this.paymentDate = LocalDateTime.now();
+        if (this.issuedAt == null) {
+            this.issuedAt = LocalDateTime.now();
         }
     }
 }

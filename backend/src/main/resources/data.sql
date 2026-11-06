@@ -130,17 +130,25 @@ VALUES
 ('tech_alex', '$2b$10$qzIQR37Qo.GBQvgaXFSMeerZukbS7G1WTAHwRROGlB5IHjf9j3mR6', 'Technician', NULL, 16);
 
 -- PAYMENTS (Realistic Ledger)
-INSERT INTO payment (trans_no, status, type, cost)
-VALUES ('TXN-101', 'Pending', 'Technician', 500.00),
-       ('TXN-102', 'Paid', 'Amenity', 1500.00),
-       ('TXN-103', 'Overdue', 'Technician', 600.00),
-       ('TXN-104', 'Pending', 'Amenity', 300.00),
-       ('TXN-105', 'Paid', 'Technician', 400.00),
-       ('TXN-106', 'Pending', 'Technician', 550.00),
-       ('TXN-107', 'Overdue', 'Amenity', 2000.00),
-       ('TXN-108', 'Paid', 'Technician', 800.00),
-       ('TXN-109', 'Pending', 'Amenity', 1000.00),
-       ('TXN-110', 'Paid', 'Amenity', 5000.00);
+-- Each cost is the booking's price-list base price plus 18% GST, matching what BookingService
+-- charges (it applies GST in Payment's @PrePersist; these rows are inserted directly, so the GST is
+-- already included here). payment_date is when the invoice was issued: Overdue invoices are dated
+-- more than 30 days back to agree with the overdue rule, and Paid ones record when they were paid.
+INSERT INTO payment (trans_no, status, type, cost, payment_date, paid_at)
+VALUES ('TXN-101', 'Pending', 'Technician', 590.00, CURRENT_TIMESTAMP - INTERVAL '5' DAY, NULL),  -- Plumber 500
+       ('TXN-102', 'Paid', 'Amenity', 1770.00, CURRENT_TIMESTAMP - INTERVAL '60' DAY,
+        CURRENT_TIMESTAMP - INTERVAL '55' DAY),                                                    -- Monaco Rooftop Pool 1500
+       ('TXN-103', 'Overdue', 'Technician', 708.00, CURRENT_TIMESTAMP - INTERVAL '45' DAY, NULL), -- Electrician 600
+       ('TXN-104', 'Pending', 'Amenity', 354.00, CURRENT_TIMESTAMP - INTERVAL '3' DAY, NULL),     -- Parc Fermé Gym 300
+       ('TXN-105', 'Paid', 'Technician', 649.00, CURRENT_TIMESTAMP - INTERVAL '50' DAY,
+        CURRENT_TIMESTAMP - INTERVAL '48' DAY),                                                    -- Carpenter 550
+       ('TXN-106', 'Pending', 'Technician', 472.00, CURRENT_TIMESTAMP - INTERVAL '2' DAY, NULL),  -- Maintenance 400
+       ('TXN-107', 'Overdue', 'Amenity', 1770.00, CURRENT_TIMESTAMP - INTERVAL '40' DAY, NULL),   -- Monaco Rooftop Pool 1500
+       ('TXN-108', 'Paid', 'Technician', 590.00, CURRENT_TIMESTAMP - INTERVAL '35' DAY,
+        CURRENT_TIMESTAMP - INTERVAL '30' DAY),                                                    -- Plumber 500
+       ('TXN-109', 'Pending', 'Amenity', 1180.00, CURRENT_TIMESTAMP - INTERVAL '1' DAY, NULL),    -- Paddock Club Lounge 1000
+       ('TXN-110', 'Paid', 'Amenity', 2360.00, CURRENT_TIMESTAMP - INTERVAL '20' DAY,
+        CURRENT_TIMESTAMP - INTERVAL '18' DAY);                                                    -- Spa & Wellness Center 2000
 
 -- ASSIGNMENTS / BOOKINGS (Simulated Tickets)
 INSERT INTO technician_management (resident_id, tech_id, trans_no, slot, assign_date, status)

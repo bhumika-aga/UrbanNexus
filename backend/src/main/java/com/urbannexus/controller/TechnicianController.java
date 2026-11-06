@@ -152,10 +152,9 @@ public class TechnicianController {
         try {
             log.info("SuperAdmin {} is resetting the password of technician {}", currentUser.getUsername(), id);
             return ResponseEntity.ok(technicianService.resetCredentials(id));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (RuntimeException e) {
-            if ("Technician not found.".equals(e.getMessage())) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-            }
             log.error("Password reset failed for technician {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to reset password."));
@@ -173,10 +172,10 @@ public class TechnicianController {
         try {
             technicianService.deleteTechnician(id);
             return ResponseEntity.ok(Map.of("message", "Technician removed successfully."));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (RuntimeException e) {
-            if (e.getMessage().equals("Technician not found.")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-            }
+            log.error("Failed to delete technician {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to delete technician."));
         }

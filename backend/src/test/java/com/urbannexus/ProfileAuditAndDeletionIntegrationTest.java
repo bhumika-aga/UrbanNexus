@@ -159,14 +159,14 @@ class ProfileAuditAndDeletionIntegrationTest {
 
     @Test
     void deletingAResidentWithUnpaidInvoicesNeedsAnExplicitWriteOff() throws Exception {
-        // Seed: resident 2 (Jane Smith) has TXN-101 Pending (500.00) and TXN-102 Paid.
+        // Seed: resident 2 (Jane Smith) has TXN-101 Pending (590.00 incl. GST) and TXN-102 Paid.
         BigDecimal pendingBefore = pendingLedger();
 
         JsonNode refused = body(mvc.perform(withToken(delete("/api/residents/2"), admin()))
                                     .andExpect(status().isConflict()).andReturn());
         assertThat(refused.get("code").asText()).isEqualTo("UNPAID_INVOICES");
         assertThat(refused.get("unpaid_count").asLong()).isEqualTo(1);
-        assertThat(refused.get("unpaid_total").decimalValue()).isEqualByComparingTo("500.00");
+        assertThat(refused.get("unpaid_total").decimalValue()).isEqualByComparingTo("590.00");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM resident WHERE resident_id = 2", Long.class)).isOne();
 
         mvc.perform(withToken(delete("/api/residents/2"), admin()).param("write_off_unpaid", "true"))
@@ -175,7 +175,7 @@ class ProfileAuditAndDeletionIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM resident WHERE resident_id = 2", Long.class)).isZero();
         assertThat(paymentStatus("TXN-101")).isEqualTo("Written Off");
         assertThat(paymentStatus("TXN-102")).isEqualTo("Paid");
-        assertThat(pendingLedger()).isEqualByComparingTo(pendingBefore.subtract(new BigDecimal("500.00")));
+        assertThat(pendingLedger()).isEqualByComparingTo(pendingBefore.subtract(new BigDecimal("590.00")));
 
         // The ledger still shows who was billed, marked as a former resident (no unit).
         JsonNode ledger = body(mvc.perform(withToken(get("/api/admin/transactions"), admin())

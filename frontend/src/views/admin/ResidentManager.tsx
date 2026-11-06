@@ -85,7 +85,10 @@ const ResidentManager: React.FC = () => {
   const fetchResidents = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/admin/residents/search?name=${searchTerm}`);
+      // params are URL-encoded, so names with "&", "#" or "+" search correctly.
+      const res = await api.get("/admin/residents/search", {
+        params: { name: searchTerm },
+      });
       setResidents(res.data || []);
     } catch {
       console.error("Resident lookup failed");

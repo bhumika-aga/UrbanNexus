@@ -46,9 +46,10 @@ public interface TechnicianManagementRepository extends JpaRepository<Technician
         FROM technician_management tm
         JOIN resident r ON tm.resident_id = r.resident_id
         JOIN technician t ON tm.tech_id = t.tech_id
+        WHERE tm.status <> 'Completed'
         ORDER BY tm.assign_date DESC
         """, nativeQuery = true)
-    List<Map<String, Object>> findAllAssignmentsDetailed();
+    List<Map<String, Object>> findOpenAssignmentsDetailed();
     
     boolean existsByTechnician_TechIdAndAssignDateAndSlot(Long techId, LocalDate assignDate, Integer slot);
     

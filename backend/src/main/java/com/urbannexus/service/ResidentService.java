@@ -96,7 +96,7 @@ public class ResidentService {
     @Transactional
     public Map<String, Object> resetCredentials(Long residentId) {
         Admin admin = adminRepository.findByResident_ResidentId(residentId)
-                          .orElseThrow(() -> new RuntimeException("Resident not found."));
+                          .orElseThrow(() -> Inputs.notFound("Resident not found."));
         String temporaryPassword = authService.issueTemporaryPassword(admin);
         auditService.log("resident", residentId.toString(), "UPDATE", "Reset login password for: " + admin.getUsername());
         
@@ -146,7 +146,7 @@ public class ResidentService {
     public void deleteResident(Long residentId, boolean writeOffUnpaid) {
         Optional<Resident> resident = residentRepository.findById(residentId);
         if (resident.isEmpty()) {
-            throw new RuntimeException("Resident not found.");
+            throw Inputs.notFound("Resident not found.");
         }
         Resident r = resident.get();
         
@@ -171,7 +171,7 @@ public class ResidentService {
     @Transactional
     public void updateResidentProfile(Long residentId, Map<String, Object> updates) {
         Resident resident = residentRepository.findById(residentId)
-                                .orElseThrow(() -> new RuntimeException("Resident not found."));
+                                .orElseThrow(() -> Inputs.notFound("Resident not found."));
         
         StringBuilder details = new StringBuilder("Updated: ");
         if (updates.containsKey("name")) {

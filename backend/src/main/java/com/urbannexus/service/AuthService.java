@@ -32,10 +32,12 @@ import com.urbannexus.security.TemporaryPasswordGenerator;
 import com.urbannexus.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -74,7 +76,7 @@ public class AuthService {
         }
         
         if (!StringUtils.hasText(username) || request.getPassword() == null) {
-            throw new RuntimeException(INVALID_CREDENTIALS);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_CREDENTIALS);
         }
         
         Optional<Admin> adminOpt = adminRepository.findByUsername(username);
@@ -82,7 +84,7 @@ public class AuthService {
         boolean passwordMatches = passwordEncoder.matches(request.getPassword(), hash);
         if (adminOpt.isEmpty() || !passwordMatches) {
             loginAttemptService.recordFailure(username);
-            throw new RuntimeException(INVALID_CREDENTIALS);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, INVALID_CREDENTIALS);
         }
         loginAttemptService.recordSuccess(username);
         
@@ -100,12 +102,12 @@ public class AuthService {
     @Transactional
     public AuthResponse changePassword(Long adminId, String currentPassword, String newPassword) {
         Admin admin = adminRepository.findById(adminId)
-                          .orElseThrow(() -> new RuntimeException("Account not found."));
+                          .orElseThrow(() -> Inputs.notFound("Account not found."));
         if (!passwordEncoder.matches(currentPassword, admin.getPasswordHash())) {
-            throw new RuntimeException("Current password is incorrect.");
+            throw Inputs.badRequest("Current password is incorrect.");
         }
         if (passwordEncoder.matches(newPassword, admin.getPasswordHash())) {
-            throw new RuntimeException("New password must be different from the current password.");
+            throw Inputs.badRequest("New password must be different from the current password.");
         }
         admin.setPasswordHash(passwordEncoder.encode(newPassword));
         admin.setMustChangePassword(false);
