@@ -30,11 +30,13 @@ import org.springframework.web.server.ResponseStatusException;
  * failing later as a NullPointerException or a column-length error (500).
  */
 final class Inputs {
-
+    
     private Inputs() {
     }
-
-    /** Returns the trimmed value, which must be non-blank and fit the column. */
+    
+    /**
+     * Returns the trimmed value, which must be non-blank and fit the column.
+     */
     static String requireText(String value, String field, int maxLength) {
         if (value == null || value.isBlank()) {
             throw badRequest(field + " is required.");
@@ -45,22 +47,22 @@ final class Inputs {
         }
         return trimmed;
     }
-
+    
     static long requirePositiveId(Long value, String field) {
         if (value == null || value < 1) {
             throw badRequest(field + " must be a positive number.");
         }
         return value;
     }
-
+    
     static ResponseStatusException badRequest(String reason) {
         return new ResponseStatusException(HttpStatus.BAD_REQUEST, reason);
     }
-
+    
     static ResponseStatusException notFound(String reason) {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, reason);
     }
-
+    
     static ResponseStatusException conflict(String reason) {
         return new ResponseStatusException(HttpStatus.CONFLICT, reason);
     }

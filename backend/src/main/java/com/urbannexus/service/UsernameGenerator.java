@@ -38,13 +38,32 @@ import java.util.Locale;
 @Component
 @RequiredArgsConstructor
 public class UsernameGenerator {
-
+    
     // admin.username is VARCHAR(50).
     static final int MAX_LENGTH = 50;
     private static final int MAX_ATTEMPTS = 1000;
-
+    
     private final AdminRepository adminRepository;
-
+    
+    /**
+     * Lower-case ASCII letters and digits joined by single underscores; accented letters lose the accent (é → e).
+     */
+    static String slug(String name) {
+        String ascii = Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        String slug = ascii.toLowerCase(Locale.ROOT)
+                          .replaceAll("[^a-z0-9]+", "_")
+                          .replaceAll("^_+|_+$", "");
+        return slug.isEmpty() ? "user" : slug;
+    }
+    
+    private static String join(String base, String suffix) {
+        int room = MAX_LENGTH - suffix.length() - 1; // keep room for a separator
+        String trimmed = base.length() > room ? base.substring(0, room).replaceAll("_+$", "") : base;
+        // A name ending in a digit gets a separator, so "Ann1" #2 (ann1_2) can't equal "Ann" #12 (ann12).
+        boolean needsSeparator = !trimmed.isEmpty() && Character.isDigit(trimmed.charAt(trimmed.length() - 1));
+        return trimmed + (needsSeparator ? "_" : "") + suffix;
+    }
+    
     public String generate(String name, long id) {
         String base = slug(name);
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -55,22 +74,5 @@ public class UsernameGenerator {
             }
         }
         throw new IllegalStateException("Could not find a free username for id " + id);
-    }
-
-    /** Lower-case ASCII letters and digits joined by single underscores; accented letters lose the accent (é → e). */
-    static String slug(String name) {
-        String ascii = Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
-        String slug = ascii.toLowerCase(Locale.ROOT)
-                          .replaceAll("[^a-z0-9]+", "_")
-                          .replaceAll("^_+|_+$", "");
-        return slug.isEmpty() ? "user" : slug;
-    }
-
-    private static String join(String base, String suffix) {
-        int room = MAX_LENGTH - suffix.length() - 1; // keep room for a separator
-        String trimmed = base.length() > room ? base.substring(0, room).replaceAll("_+$", "") : base;
-        // A name ending in a digit gets a separator, so "Ann1" #2 (ann1_2) can't equal "Ann" #12 (ann12).
-        boolean needsSeparator = !trimmed.isEmpty() && Character.isDigit(trimmed.charAt(trimmed.length() - 1));
-        return trimmed + (needsSeparator ? "_" : "") + suffix;
     }
 }

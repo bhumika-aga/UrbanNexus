@@ -54,7 +54,7 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
         AND p.status IN ('Pending', 'Overdue', 'Under Review')
         """, nativeQuery = true)
     List<Map<String, Object>> findPendingDuesByResidentId(@Param("residentId") Long residentId);
-
+    
     @Query(value = """
         SELECT
             p.trans_no, p.status, p.type as service_type, p.cost, p.payment_reference,
@@ -90,12 +90,12 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
         """, nativeQuery = true)
     int submitForReview(@Param("transNo") String transNo, @Param("residentId") Long residentId,
                         @Param("reference") String reference);
-
+    
     // Admin side: record the money as received, whether or not the resident submitted a claim.
     @Modifying
     @Query(value = "UPDATE payment SET status = 'Paid' WHERE trans_no = :transNo AND status IN ('Pending', 'Overdue', 'Under Review')", nativeQuery = true)
     int confirmPayment(@Param("transNo") String transNo);
-
+    
     // Admin side: the claimed payment was not received. Return the invoice to whichever unpaid
     // status it would have now (same 30-day rule as processOverduePayments).
     @Modifying
@@ -106,7 +106,7 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
         WHERE trans_no = :transNo AND status = 'Under Review'
         """, nativeQuery = true)
     int rejectPayment(@Param("transNo") String transNo);
-
+    
     // Money not yet received: includes claims still awaiting the admin's confirmation.
     @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status IN ('Pending', 'Under Review')", nativeQuery = true)
     java.math.BigDecimal sumPendingCosts();
