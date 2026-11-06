@@ -45,18 +45,19 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
             p.status,
             p.type as service_type,
             p.cost,
-            p.payment_date
+            p.payment_date,
+            p.payment_reference
         FROM payment p
         LEFT JOIN amenity_mgmt am ON p.trans_no = am.trans_no
         LEFT JOIN technician_management tm ON p.trans_no = tm.trans_no
         WHERE (am.resident_id = :residentId OR tm.resident_id = :residentId)
-        AND p.status IN ('Pending', 'Overdue')
+        AND p.status IN ('Pending', 'Overdue', 'Under Review')
         """, nativeQuery = true)
     List<Map<String, Object>> findPendingDuesByResidentId(@Param("residentId") Long residentId);
-    
+
     @Query(value = """
         SELECT
-            p.trans_no, p.status, p.type as service_type, p.cost,
+            p.trans_no, p.status, p.type as service_type, p.cost, p.payment_reference,
             COALESCE(r_am.name, r_tm.name, 'UrbanNexus System') AS resident_name,
             COALESCE(r_am.house_block, r_tm.house_block, 'SYS') AS house_block,
             COALESCE(r_am.house_unit, r_tm.house_unit, 'ADMIN') AS house_unit
@@ -74,24 +75,40 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
                                                  @Param("block") String block,
                                                  @Param("residentName") String residentName);
     
+    // Resident side: claim an unpaid invoice of their own as paid offline. It stays unpaid
+    // until the admin confirms it.
     @Modifying
     @Query(value = """
-        UPDATE payment p SET status = 'Paid'
+        UPDATE payment p SET status = 'Under Review', payment_reference = :reference
         WHERE p.trans_no = :transNo
-        AND p.status != 'Paid'
+        AND p.status IN ('Pending', 'Overdue')
         AND (
             EXISTS (SELECT 1 FROM amenity_mgmt am WHERE am.trans_no = p.trans_no AND am.resident_id = :residentId)
             OR
             EXISTS (SELECT 1 FROM technician_management tm WHERE tm.trans_no = p.trans_no AND tm.resident_id = :residentId)
         )
         """, nativeQuery = true)
-    int payTransactionForResident(@Param("transNo") String transNo, @Param("residentId") Long residentId);
-    
+    int submitForReview(@Param("transNo") String transNo, @Param("residentId") Long residentId,
+                        @Param("reference") String reference);
+
+    // Admin side: record the money as received, whether or not the resident submitted a claim.
     @Modifying
-    @Query(value = "UPDATE payment SET status = 'Paid' WHERE trans_no = :transNo AND status != 'Paid'", nativeQuery = true)
-    int payTransaction(@Param("transNo") String transNo);
-    
-    @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status = 'Pending'", nativeQuery = true)
+    @Query(value = "UPDATE payment SET status = 'Paid' WHERE trans_no = :transNo AND status IN ('Pending', 'Overdue', 'Under Review')", nativeQuery = true)
+    int confirmPayment(@Param("transNo") String transNo);
+
+    // Admin side: the claimed payment was not received. Return the invoice to whichever unpaid
+    // status it would have now (same 30-day rule as processOverduePayments).
+    @Modifying
+    @Query(value = """
+        UPDATE payment SET
+            status = CASE WHEN payment_date < NOW() - INTERVAL '30' DAY THEN 'Overdue' ELSE 'Pending' END,
+            payment_reference = NULL
+        WHERE trans_no = :transNo AND status = 'Under Review'
+        """, nativeQuery = true)
+    int rejectPayment(@Param("transNo") String transNo);
+
+    // Money not yet received: includes claims still awaiting the admin's confirmation.
+    @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status IN ('Pending', 'Under Review')", nativeQuery = true)
     java.math.BigDecimal sumPendingCosts();
     
     @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status = 'Overdue'", nativeQuery = true)

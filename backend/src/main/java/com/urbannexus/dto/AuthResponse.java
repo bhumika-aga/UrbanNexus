@@ -37,5 +37,6 @@ public class AuthResponse {
     public static class AdminInfo {
         private String username;
         private String role;
+        private boolean mustChangePassword;
     }
 }

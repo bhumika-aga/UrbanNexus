@@ -43,11 +43,13 @@ api.interceptors.request.use(
   },
 );
 
-// Response interceptor to handle unauthenticated errors
+// Response interceptor to handle unauthenticated errors. Only 401 means the session is
+// gone (expired, revoked by a password change/reset, or the account was deleted); a 403 is
+// a refusal of one action and must not sign the user out.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    if (error.response?.status === 401) {
       localStorage.removeItem("token");
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";

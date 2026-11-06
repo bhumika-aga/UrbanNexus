@@ -29,10 +29,7 @@ import com.urbannexus.model.Technician;
 import com.urbannexus.repository.ResidentRepository;
 import com.urbannexus.repository.TechnicianRepository;
 import com.urbannexus.security.UserPrincipal;
-import com.urbannexus.service.AdminService;
-import com.urbannexus.service.AuthService;
-import com.urbannexus.service.ResidentService;
-import com.urbannexus.service.TechnicianService;
+import com.urbannexus.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -62,6 +59,9 @@ public class AuthController {
             AuthResponse response = authService.login(loginRequest);
             log.info("Login successful for user: {}", loginRequest.getUsername());
             return ResponseEntity.ok(response);
+        } catch (LoginLockedException e) {
+            log.warn("Login blocked for locked-out user: {}", loginRequest.getUsername());
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("error", e.getMessage()));
         } catch (RuntimeException e) {
             log.warn("Login failed for user: {}. Reason: {}", loginRequest.getUsername(), e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
@@ -121,8 +121,9 @@ public class AuthController {
                        .body(Map.of("error", "New password must be at least 6 characters."));
         }
         try {
-            authService.changePassword(currentUser.getId(), currentPassword, newPassword);
-            return ResponseEntity.ok(Map.of("message", "Password updated successfully."));
+            // The change revokes every earlier token, including the one on this request, so the
+            // response carries a replacement for the client to keep using.
+            return ResponseEntity.ok(authService.changePassword(currentUser.getId(), currentPassword, newPassword));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {

@@ -44,6 +44,17 @@ public class Admin {
     @Column(nullable = false)
     private String role;
     
+    // Set on every admin-issued (temporary) password; the account can do nothing but
+    // change its password until this is cleared. The column default also flags rows
+    // that existed before this column was added, so seeded accounts must rotate too.
+    @Column(name = "must_change_password", nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private Boolean mustChangePassword = true;
+    
+    // Embedded in every JWT; bumping it (password change or reset) revokes all
+    // previously issued tokens for the account.
+    @Column(name = "token_version", nullable = false, columnDefinition = "INTEGER DEFAULT 0")
+    private Integer tokenVersion = 0;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resident_id")
     private Resident resident;

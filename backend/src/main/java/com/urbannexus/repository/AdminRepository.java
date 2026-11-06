@@ -23,8 +23,10 @@
 package com.urbannexus.repository;
 
 import com.urbannexus.model.Admin;
+import com.urbannexus.security.AccountState;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -35,6 +37,14 @@ import java.util.Optional;
 public interface AdminRepository extends JpaRepository<Admin, Long> {
     
     Optional<Admin> findByUsername(String username);
+    
+    Optional<Admin> findByResident_ResidentId(Long residentId);
+    
+    Optional<Admin> findByTechnician_TechId(Long techId);
+    
+    @Query("SELECT new com.urbannexus.security.AccountState(a.tokenVersion, a.mustChangePassword) " +
+               "FROM Admin a WHERE a.adminId = :adminId")
+    Optional<AccountState> findAccountState(@Param("adminId") Long adminId);
     
     @Query(value = "SELECT log_id, table_affected, action_type, record_id, details, changed_at FROM audit_log ORDER BY changed_at DESC", nativeQuery = true)
     List<Map<String, Object>> getAuditLogs();

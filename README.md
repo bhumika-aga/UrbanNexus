@@ -34,7 +34,7 @@ Production runs on **Supabase PostgreSQL**. Local development runs on an **embed
 no external database to install for local work.
 
 | Profile | Database                                             | Init mode         | Purpose                             |
-| ------- | ---------------------------------------------------- | ----------------- | ----------------------------------- |
+|---------|------------------------------------------------------|-------------------|-------------------------------------|
 | (none)  | Embedded H2, file-based, `MODE=PostgreSQL`           | `always`          | Local development — zero setup      |
 | `prod`  | Supabase PostgreSQL via the transaction pooler (SSL) | `never` (default) | Deployed container (Docker sets it) |
 
@@ -69,15 +69,20 @@ UrbanNexus has no public self-registration. All accounts are provisioned by the 
 1. **Admin creates resident or technician** via the admin dashboard (or `POST /api/residents` /
    `POST /api/technicians`).
 2. **Backend auto-generates credentials** — username is derived as `<lowercase_name><id>` (e.g., `jane_smith42`), and a
-   default password of `pwd123#` is bcrypt-hashed and stored in the `admin` table alongside a role and a FK link to the
-   resident or technician record.
-3. **Credentials dialog** — the API response returns `{ username, password }` in plaintext (only on creation). The admin
-   dashboard shows this in a one-time modal with copy buttons. The admin must share the credentials with the new user;
-   they will not be surfaced again.
+   random 12-character **temporary password** (unique per account, from `SecureRandom`) is bcrypt-hashed and stored in
+   the `admin` table alongside a role and a FK link to the resident or technician record.
+3. **Credentials dialog** — the API response returns `{ username, password }` in plaintext (only on creation or reset).
+   The admin dashboard shows this in a one-time modal with copy buttons. The admin must share the credentials with the
+   new user; they will not be surfaced again.
 4. **User logs in** with the provided credentials. The Login page explicitly states that accounts can only be obtained
-   from the administrator.
-5. **User changes password** from the Profile page using `PUT /api/profile/password`. The endpoint verifies the current
-   password (bcrypt match), then re-hashes and saves the new one. New password must be at least 6 characters.
+   from the administrator. After 5 consecutive failed attempts a username is locked out of login for 15 minutes (`429`).
+5. **User must replace the temporary password** before doing anything else. While `must_change_password` is set, every
+   endpoint except `GET /api/profile/me` and `PUT /api/profile/password` answers `403` with
+   `"code": "PASSWORD_CHANGE_REQUIRED"`, and the UI shows only the change-password screen. The endpoint verifies the
+   current password (bcrypt match), rejects reusing it, and requires at least 6 characters.
+6. **Lost passwords** — the admin uses the key icon in the Resident Directory / Technical Crew tab
+   (`POST /api/residents/{id}/reset-password`, `POST /api/technicians/{id}/reset-password`) to issue a new temporary
+   password, which signs the user out everywhere and puts them back at step 5.
 
 This design keeps account provisioning entirely inside a trust boundary (only authenticated admins can create accounts)
 while giving users ownership of their credentials after first login.
@@ -85,10 +90,10 @@ while giving users ownership of their credentials after first login.
 ### Roles
 
 | Role         | Capabilities                                                                            |
-| ------------ | --------------------------------------------------------------------------------------- |
-| `SuperAdmin` | Full CRUD on residents/technicians/amenities; admin dashboard; process overdue payments |
-| `Resident`   | View and pay own dues; book technicians and amenities; view booking history             |
-| `Technician` | View own task assignments; update task status; toggle availability                      |
+|--------------|-----------------------------------------------------------------------------------------|
+| `SuperAdmin` | Full CRUD on residents/technicians/amenities; confirm payments; reset user passwords    |
+| `Resident`   | View own dues and report offline payments; book technicians and amenities; view history |
+| `Technician` | View own task assignments; mark own tasks Completed; toggle availability                |
 
 ### Booking Flow
 
@@ -103,12 +108,19 @@ Amenity booking follows the same pattern: capacity validation → payment with G
 
 ### Payment Lifecycle
 
+There is no payment gateway, so the app never treats money as received on the resident's word alone:
+
 ```txt
-Pending → Paid       (resident pays via /api/payments/{trans_no}/pay)
-Pending → Overdue    (admin triggers /api/admin/process-overdue — marks payments >30 days old)
+Pending ──30 days──▶ Overdue          (nightly at 02:00, or admin's "Run Overdue Scan")
+Pending / Overdue ──▶ Under Review    (resident: POST /api/payments/{trans_no}/submit  {"reference": "UPI-…"})
+Under Review ──────▶ Paid             (admin: POST /api/payments/{trans_no}/confirm)
+Under Review ──────▶ Pending/Overdue  (admin: POST /api/payments/{trans_no}/reject — back to whichever applies by age)
+Pending / Overdue ──▶ Paid            (admin records an offline payment directly with /confirm)
 ```
 
-Paying an already-paid invoice returns a 400 error. A resident can only pay their own invoices; the admin can pay any.
+A resident can only submit their own unpaid invoices, and must give a payment reference (UPI ID, cheque number, …) that
+the admin sees in the Financial Ledger. Invoices under review still count as outstanding on the admin dashboard. Every
+submit, confirm and reject is written to the audit log.
 
 ### GST via @PrePersist
 
@@ -151,7 +163,7 @@ Secrets are never hard-coded; they are read from the environment. Non-secret con
 defaults, but the two secrets below have **no default** and must be set.
 
 | Variable       | Required in  | Default             | Notes                                                                                                                                                                                                              |
-| -------------- | ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|----------------|--------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `JWT_SECRET`   | local + prod | _(none — required)_ | **Base64** string, ≥ 32 bytes decoded (the app Base64-decodes it; 48 bytes → HS384). Generate **once** with `openssl rand -base64 48`, then reuse the same value — a changing secret invalidates all issued tokens |
 | `DB_URL`       | prod         | _(none — required)_ | The complete JDBC URL, credentials and options included (see below). Not used locally — the default profile is H2                                                                                                  |
 | `DB_INIT_MODE` | prod         | `never`             | Leave unset in normal operation. Set to `always` **once** to seed a brand-new database, then remove                                                                                                                |
@@ -217,49 +229,57 @@ Import `UrbanNexus_Postman_Collection.json` into Postman. The Login request auto
 
 ### Credentials
 
-| Role       | Username   | Password       |
-| ---------- | ---------- | -------------- |
+These are the **local demo seed** accounts from `data.sql`. The passwords are public, so every seeded account is
+created with `must_change_password = TRUE` and has to choose a new password at first login. Never seed a shared or
+production database with `data.sql` and leave these accounts unclaimed.
+
+| Role       | Username   | Seed password  |
+|------------|------------|----------------|
 | SuperAdmin | `admin`    | `Bhumika@1234` |
 | Resident   | `jane_s`   | `pwd123#`      |
 | Technician | `tech_tom` | `pwd123#`      |
 
-All resident accounts follow `<firstname>_<initial>` pattern; technician accounts follow `tech_<firstname>`. Default
-password for auto-provisioned accounts is `pwd123#`.
+Seeded resident accounts follow the `<firstname>_<initial>` pattern; technician accounts follow `tech_<firstname>`.
+Accounts the admin creates later get a random temporary password instead.
 
 ### Endpoints
 
-| Method | Path                                 | Role                   | Description                          |
-| ------ | ------------------------------------ | ---------------------- | ------------------------------------ |
-| POST   | `/api/login`                         | Public                 | Login; returns JWT                   |
-| GET    | `/api/profile/me`                    | Any                    | Get own profile                      |
-| PUT    | `/api/profile/update`                | Any                    | Update own contact info              |
-| PUT    | `/api/profile/password`              | Any                    | Change own password                  |
-| POST   | `/api/residents`                     | SuperAdmin             | Add resident + login account         |
-| GET    | `/api/residents/me/dues`             | Resident               | View pending/overdue invoices        |
-| GET    | `/api/residents/me/bookings`         | Resident               | View own bookings                    |
-| DELETE | `/api/residents/{id}`                | SuperAdmin             | Delete resident + cascade            |
-| POST   | `/api/technicians`                   | SuperAdmin             | Add technician + login account       |
-| GET    | `/api/technicians/me`                | Technician             | Get own profile                      |
-| GET    | `/api/technicians/me/tasks`          | Technician             | Get assigned tasks                   |
-| PUT    | `/api/technicians/tasks/{id}/status` | Technician, SuperAdmin | Update task status                   |
-| PUT    | `/api/technicians/me/availability`   | Technician             | Toggle availability                  |
-| DELETE | `/api/technicians/{id}`              | SuperAdmin             | Remove technician                    |
-| GET    | `/api/amenities`                     | Any                    | List all amenities                   |
-| POST   | `/api/amenities`                     | SuperAdmin             | Add amenity                          |
-| PUT    | `/api/amenities/{id}`                | SuperAdmin             | Update amenity                       |
-| DELETE | `/api/amenities/{id}`                | SuperAdmin             | Delete amenity                       |
-| POST   | `/api/bookings/technician`           | Resident, SuperAdmin   | Book a technician                    |
-| POST   | `/api/bookings/amenity`              | Resident, SuperAdmin   | Book an amenity                      |
-| POST   | `/api/payments/{trans_no}/pay`       | Resident, SuperAdmin   | Mark payment as Paid                 |
-| GET    | `/api/admin/stats`                   | SuperAdmin             | Dashboard stats                      |
-| GET    | `/api/admin/residents/search`        | SuperAdmin             | Search residents by name/block       |
-| GET    | `/api/admin/technicians`             | SuperAdmin             | List all technicians                 |
-| GET    | `/api/admin/transactions`            | SuperAdmin             | Transaction ledger with filters      |
-| POST   | `/api/admin/process-overdue`         | SuperAdmin             | Mark 30-day-old payments as Overdue  |
-| GET    | `/api/admin/audit-logs`              | SuperAdmin             | System audit trail                   |
-| GET    | `/api/admin/assignments`             | SuperAdmin             | All technician assignments           |
-| GET    | `/api/admin/amenities/bookings`      | SuperAdmin             | All amenity bookings                 |
-| GET    | `/api/admin/technicians/bookings`    | SuperAdmin             | Completed technician service history |
+| Method | Path                                   | Role                   | Description                          |
+|--------|----------------------------------------|------------------------|--------------------------------------|
+| POST   | `/api/login`                           | Public                 | Login; returns JWT                   |
+| GET    | `/api/profile/me`                      | Any                    | Get own profile                      |
+| PUT    | `/api/profile/update`                  | Any                    | Update own contact info              |
+| PUT    | `/api/profile/password`                | Any                    | Change own password                  |
+| POST   | `/api/residents`                       | SuperAdmin             | Add resident + login account         |
+| GET    | `/api/residents/me/dues`               | Resident               | View unpaid / under-review invoices  |
+| GET    | `/api/residents/me/bookings`           | Resident               | View own bookings                    |
+| POST   | `/api/residents/{id}/reset-password`   | SuperAdmin             | Issue new temporary password         |
+| DELETE | `/api/residents/{id}`                  | SuperAdmin             | Delete resident + cascade            |
+| POST   | `/api/technicians`                     | SuperAdmin             | Add technician + login account       |
+| GET    | `/api/technicians/me`                  | Technician             | Get own profile                      |
+| GET    | `/api/technicians/me/tasks`            | Technician             | Get assigned tasks                   |
+| PUT    | `/api/technicians/tasks/{id}/status`   | Technician, SuperAdmin | Update status (technician: own only) |
+| PUT    | `/api/technicians/me/availability`     | Technician             | Toggle availability                  |
+| POST   | `/api/technicians/{id}/reset-password` | SuperAdmin             | Issue new temporary password         |
+| DELETE | `/api/technicians/{id}`                | SuperAdmin             | Remove technician                    |
+| GET    | `/api/amenities`                       | Any                    | List all amenities                   |
+| POST   | `/api/amenities`                       | SuperAdmin             | Add amenity                          |
+| PUT    | `/api/amenities/{id}`                  | SuperAdmin             | Update amenity                       |
+| DELETE | `/api/amenities/{id}`                  | SuperAdmin             | Delete amenity                       |
+| POST   | `/api/bookings/technician`             | Resident, SuperAdmin   | Book a technician                    |
+| POST   | `/api/bookings/amenity`                | Resident, SuperAdmin   | Book an amenity                      |
+| POST   | `/api/payments/{trans_no}/submit`      | Resident               | Report offline payment for review    |
+| POST   | `/api/payments/{trans_no}/confirm`     | SuperAdmin             | Mark payment as Paid                 |
+| POST   | `/api/payments/{trans_no}/reject`      | SuperAdmin             | Reject a reported payment            |
+| GET    | `/api/admin/stats`                     | SuperAdmin             | Dashboard stats                      |
+| GET    | `/api/admin/residents/search`          | SuperAdmin             | Search residents by name/block       |
+| GET    | `/api/admin/technicians`               | SuperAdmin             | List all technicians                 |
+| GET    | `/api/admin/transactions`              | SuperAdmin             | Transaction ledger with filters      |
+| POST   | `/api/admin/process-overdue`           | SuperAdmin             | Mark 30-day-old payments as Overdue  |
+| GET    | `/api/admin/audit-logs`                | SuperAdmin             | System audit trail                   |
+| GET    | `/api/admin/assignments`               | SuperAdmin             | All technician assignments           |
+| GET    | `/api/admin/amenities/bookings`        | SuperAdmin             | All amenity bookings                 |
+| GET    | `/api/admin/technicians/bookings`      | SuperAdmin             | Completed technician service history |
 
 ### Request Bodies
 
@@ -272,7 +292,9 @@ password for auto-provisioned accounts is `pwd123#`.
 }
 ```
 
-Response: `{ "message": "Password updated successfully." }` — `400` if current password is wrong or new password < 6
+Response: `{ "message", "token", "admin": { "username", "role", "mustChangePassword": false } }` — the change revokes
+every token issued before it (including the one used for this request), so clients must switch to the returned `token`.
+`400` if the current password is wrong, the new password is unchanged, or it is shorter than 6
 chars.
 
 **Add Resident** (`POST /api/residents`):
@@ -290,6 +312,7 @@ chars.
 ```
 
 Response includes `{ "message", "username", "password" }` — the generated login credentials to hand to the resident.
+The password is a random one-time password that must be changed at first login.
 
 **Add Technician** (`POST /api/technicians`):
 
@@ -303,6 +326,7 @@ Response includes `{ "message", "username", "password" }` — the generated logi
 ```
 
 Response includes `{ "message", "username", "password" }` — the generated login credentials to hand to the technician.
+The password is a random one-time password that must be changed at first login.
 
 Note: `tech_id` is admin-assigned (no auto-increment on the technician table).
 
@@ -381,8 +405,8 @@ UrbanNexus/
 **Admin-provisioned accounts, no self-registration** — There is no public sign-up endpoint. `POST /api/residents` and
 `POST /api/technicians` are `SuperAdmin`-only and atomically create both the domain record and a linked login entry in
 the `admin` table. The plaintext temporary password is returned once in the API response (and surfaced in the admin UI
-as a one-time credentials dialog), after which only the bcrypt hash remains in the database. Users change their password
-via `PUT /api/profile/password`, which bcrypt-verifies the current password before updating.
+as a one-time credentials dialog), after which only the bcrypt hash remains in the database. Each temporary password is
+random and flagged `must_change_password`, so the account is unusable until its owner sets a password only they know.
 
 **Booking logic in the service layer, not the database** — All booking, pricing, and payment logic lives in
 `BookingService.java` inside a `@Transactional` boundary rather than in stored procedures. This keeps the behaviour
@@ -398,11 +422,15 @@ once before every insert. This eliminates double-GST bugs and keeps pricing logi
 compatibility mode accepts verbatim (identity columns, `BOOLEAN`, `INTERVAL '30' DAY`, `ALTER … RESTART WITH`). This
 keeps local iteration friction-free without introducing a dev/prod dialect gap.
 
-**JWT in query layer** — `UserPrincipal` carries `residentId` and `techId` extracted from the JWT, so controllers never
-need to query the admin table again to determine who is making a request.
+**Revocable JWTs** — Every token carries the account's `token_version`. `JwtAuthenticationFilter` looks the account up
+on each request (one indexed primary-key read) and rejects the token if the account was deleted or the version has moved
+on — which happens on every password change and admin reset. `UserPrincipal` still carries `residentId` and `techId`
+from
+the token, so controllers don't need to load the account themselves.
 
-**Idempotent payments** — The `payTransaction` and `payTransactionForResident` queries include `AND status != 'Paid'`
-in the WHERE clause, so duplicate payment calls return a 400 error rather than silently re-confirming.
+**Guarded payment transitions** — Each payment query names the statuses it may move from (e.g. submit only from
+`Pending`/`Overdue`, reject only from `Under Review`), so repeated or out-of-order calls change nothing and return
+`400`.
 
 **Manual IDs for amenities and technicians** — Both tables use non-auto-increment primary keys. IDs are admin-assigned,
 which keeps the catalog stable and predictable (e.g., amenity 1 is always the Paddock Club Lounge).

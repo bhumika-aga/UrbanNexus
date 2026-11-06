@@ -39,6 +39,8 @@ public class UserPrincipal implements UserDetails {
     private String role;
     private Long residentId;
     private Long techId;
+    private Integer tokenVersion;
+    private boolean mustChangePassword;
     
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -41,6 +41,7 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import AdminDashboard from "./admin/AdminDashboard";
+import ChangePasswordCard from "./ChangePasswordCard";
 import ProfileView from "./ProfileView";
 import ResidentDashboard from "./resident/ResidentDashboard";
 import TechnicianDashboard from "./technician/TechnicianDashboard";
@@ -109,37 +110,41 @@ const Dashboard: React.FC = () => {
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-              <Button
-                size="small"
-                onClick={() => setIsProfileView(false)}
-                startIcon={
-                  <FontAwesomeIcon
-                    icon={faGaugeHigh}
-                    style={{ fontSize: 16 }}
-                  />
-                }
-                sx={{
-                  color: !isProfileView ? "primary.main" : "#666",
-                  fontWeight: 700,
-                  fontSize: "0.8rem",
-                }}
-              >
-                Dashboard
-              </Button>
-              <Button
-                size="small"
-                onClick={() => setIsProfileView(true)}
-                startIcon={
-                  <FontAwesomeIcon icon={faUser} style={{ fontSize: 16 }} />
-                }
-                sx={{
-                  color: isProfileView ? "primary.main" : "#666",
-                  fontWeight: 700,
-                  fontSize: "0.8rem",
-                }}
-              >
-                Profile
-              </Button>
+              {!user.mustChangePassword && (
+                <>
+                  <Button
+                    size="small"
+                    onClick={() => setIsProfileView(false)}
+                    startIcon={
+                      <FontAwesomeIcon
+                        icon={faGaugeHigh}
+                        style={{ fontSize: 16 }}
+                      />
+                    }
+                    sx={{
+                      color: !isProfileView ? "primary.main" : "#666",
+                      fontWeight: 700,
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    Dashboard
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => setIsProfileView(true)}
+                    startIcon={
+                      <FontAwesomeIcon icon={faUser} style={{ fontSize: 16 }} />
+                    }
+                    sx={{
+                      color: isProfileView ? "primary.main" : "#666",
+                      fontWeight: 700,
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    Profile
+                  </Button>
+                </>
+              )}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Chip
                   label={user.role}
@@ -195,7 +200,26 @@ const Dashboard: React.FC = () => {
       </AppBar>
 
       <Container maxWidth="lg" sx={{ py: 6 }}>
-        {isProfileView ? <ProfileView /> : renderDashboard()}
+        {user.mustChangePassword ? (
+          // The backend refuses every other call until the temporary password is replaced.
+          <Box sx={{ maxWidth: 900, mx: "auto" }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+              Set your own password
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+              You signed in with a temporary password issued by the
+              administrator. Choose a new password to continue.
+            </Typography>
+            <ChangePasswordCard
+              title="Replace temporary password"
+              description="Enter the temporary password you were given as your current password."
+            />
+          </Box>
+        ) : isProfileView ? (
+          <ProfileView />
+        ) : (
+          renderDashboard()
+        )}
       </Container>
     </Box>
   );

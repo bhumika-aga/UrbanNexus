@@ -28,11 +28,18 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Invoices are settled offline (there is no payment gateway): a resident submits an invoice with a payment
+ * reference, which moves it to "Under Review", and only the SuperAdmin can mark it Paid or send it back.
+ */
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
     
+    static final int MAX_REFERENCE_LENGTH = 100;
+    
     private final PaymentRepository paymentRepository;
+    private final AuditService auditService;
     
     @Scheduled(cron = "0 0 2 * * *")
     @Transactional
@@ -41,16 +48,34 @@ public class PaymentService {
     }
     
     @Transactional
-    public void payInvoice(String transNo, Long residentId) {
-        int updated;
-        if (residentId != null) {
-            updated = paymentRepository.payTransactionForResident(transNo, residentId);
-        } else {
-            updated = paymentRepository.payTransaction(transNo);
+    public void submitForReview(String transNo, Long residentId, String reference) {
+        String trimmed = reference == null ? "" : reference.trim();
+        if (trimmed.isEmpty()) {
+            throw new RuntimeException("A payment reference (UPI ID, cheque number, etc.) is required.");
+        }
+        if (trimmed.length() > MAX_REFERENCE_LENGTH) {
+            throw new RuntimeException("Payment reference must be at most " + MAX_REFERENCE_LENGTH + " characters.");
         }
         
-        if (updated == 0) {
+        if (paymentRepository.submitForReview(transNo, residentId, trimmed) == 0) {
+            throw new RuntimeException("Invoice not found, not yours, or not awaiting payment.");
+        }
+        auditService.log("payment", transNo, "UPDATE", "Resident submitted payment for review. Reference: " + trimmed);
+    }
+    
+    @Transactional
+    public void confirmPayment(String transNo, String adminUsername) {
+        if (paymentRepository.confirmPayment(transNo) == 0) {
             throw new RuntimeException("Invoice not found or already paid.");
         }
+        auditService.log("payment", transNo, "UPDATE", "Payment confirmed as received by " + adminUsername);
+    }
+    
+    @Transactional
+    public void rejectPayment(String transNo, String adminUsername) {
+        if (paymentRepository.rejectPayment(transNo) == 0) {
+            throw new RuntimeException("Invoice not found or not under review.");
+        }
+        auditService.log("payment", transNo, "UPDATE", "Submitted payment rejected by " + adminUsername);
     }
 }

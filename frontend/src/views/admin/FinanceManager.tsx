@@ -21,9 +21,10 @@
  */
 
 import {
-  faArrowUpRightFromSquare,
+  faCheck,
   faSearch,
   faSyncAlt,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -46,6 +47,13 @@ import React, { useCallback, useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { Transaction } from "../../types";
 
+const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
+  Paid: { bg: "#f0fdf4", fg: "#166534" },
+  "Under Review": { bg: "#eff6ff", fg: "#1d4ed8" },
+  Pending: { bg: "#fff7ed", fg: "#c2410c" },
+  Overdue: { bg: "#fef2f2", fg: "#991b1b" },
+};
+
 const FinanceManager: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [search, setSearch] = useState("");
@@ -65,9 +73,21 @@ const FinanceManager: React.FC = () => {
     }
   }, [search]);
 
-  const processPayment = async (transNo: string) => {
+  // "confirm" marks the invoice Paid (after checking the resident's reference, or when recording
+  // an offline payment directly); "reject" sends a resident's submission back to unpaid.
+  const reviewPayment = async (
+    tx: Transaction,
+    action: "confirm" | "reject",
+  ) => {
+    const prompt =
+      action === "reject"
+        ? `Reject the payment reported for ${tx.trans_no} (ref: ${tx.payment_reference})? The invoice becomes unpaid again.`
+        : tx.status === "Under Review"
+          ? `Confirm that ₹${tx.cost} for ${tx.trans_no} (ref: ${tx.payment_reference}) has been received?`
+          : `Record ₹${tx.cost} for ${tx.trans_no} as received? Only do this once the money has arrived.`;
+    if (!window.confirm(prompt)) return;
     try {
-      await api.post(`/payments/${transNo}/pay`);
+      await api.post(`/payments/${encodeURIComponent(tx.trans_no)}/${action}`);
       fetchTransactions();
     } catch (err) {
       const errorMsg = axios.isAxiosError(err)
@@ -267,9 +287,12 @@ const FinanceManager: React.FC = () => {
                         px: 1,
                         py: 0.5,
                         borderRadius: 1,
-                        backgroundColor:
-                          tx.status === "Paid" ? "#f0fdf4" : "#fef2f2",
-                        color: tx.status === "Paid" ? "#166534" : "#991b1b",
+                        backgroundColor: (
+                          STATUS_COLORS[tx.status] ?? STATUS_COLORS.Overdue
+                        ).bg,
+                        color: (
+                          STATUS_COLORS[tx.status] ?? STATUS_COLORS.Overdue
+                        ).fg,
                         fontWeight: 700,
                         fontSize: "0.6rem",
                         textTransform: "uppercase",
@@ -277,23 +300,65 @@ const FinanceManager: React.FC = () => {
                     >
                       {tx.status}
                     </Box>
+                    {tx.status === "Under Review" && tx.payment_reference && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: "block", mt: 0.5 }}
+                      >
+                        Ref: {tx.payment_reference}
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell align="right">
-                    {tx.status !== "Paid" && (
-                      <Button
-                        size="small"
-                        variant="text"
-                        endIcon={
-                          <FontAwesomeIcon
-                            icon={faArrowUpRightFromSquare}
-                            style={{ fontSize: 14 }}
-                          />
-                        }
-                        onClick={() => processPayment(tx.trans_no)}
-                        sx={{ fontWeight: 700, color: "#1e40af" }}
-                      >
-                        Process Pay
-                      </Button>
+                    {tx.status === "Under Review" ? (
+                      <>
+                        <Button
+                          size="small"
+                          variant="text"
+                          startIcon={
+                            <FontAwesomeIcon
+                              icon={faCheck}
+                              style={{ fontSize: 14 }}
+                            />
+                          }
+                          onClick={() => reviewPayment(tx, "confirm")}
+                          sx={{ fontWeight: 700, color: "#166534" }}
+                        >
+                          Confirm
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="text"
+                          startIcon={
+                            <FontAwesomeIcon
+                              icon={faXmark}
+                              style={{ fontSize: 14 }}
+                            />
+                          }
+                          onClick={() => reviewPayment(tx, "reject")}
+                          sx={{ fontWeight: 700, color: "#991b1b" }}
+                        >
+                          Reject
+                        </Button>
+                      </>
+                    ) : (
+                      tx.status !== "Paid" && (
+                        <Button
+                          size="small"
+                          variant="text"
+                          startIcon={
+                            <FontAwesomeIcon
+                              icon={faCheck}
+                              style={{ fontSize: 14 }}
+                            />
+                          }
+                          onClick={() => reviewPayment(tx, "confirm")}
+                          sx={{ fontWeight: 700, color: "#1e40af" }}
+                        >
+                          Record Payment
+                        </Button>
+                      )
                     )}
                   </TableCell>
                 </TableRow>

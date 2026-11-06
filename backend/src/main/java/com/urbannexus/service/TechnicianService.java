@@ -24,14 +24,17 @@ package com.urbannexus.service;
 
 import com.urbannexus.model.Admin;
 import com.urbannexus.model.Technician;
+import com.urbannexus.model.TechnicianManagement;
 import com.urbannexus.repository.AdminRepository;
 import com.urbannexus.repository.TechnicianManagementRepository;
 import com.urbannexus.repository.TechnicianRepository;
+import com.urbannexus.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -43,10 +46,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TechnicianService {
     
+    private static final List<String> TASK_STATUSES = List.of("Assigned", "Completed");
+    
     private final TechnicianRepository technicianRepository;
     private final TechnicianManagementRepository technicianManagementRepository;
     private final AdminRepository adminRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
     private final AuditService auditService;
     
     @Transactional
@@ -59,24 +64,37 @@ public class TechnicianService {
         
         tech = technicianRepository.save(tech);
         
-        String defaultPassword = "pwd123#";
-        String hashedPassword = passwordEncoder.encode(defaultPassword);
         String username = name.toLowerCase().replaceAll("\\s+", "_") + techId;
         
         Admin admin = new Admin();
         admin.setUsername(username);
-        admin.setPasswordHash(hashedPassword);
         admin.setRole("Technician");
         admin.setTechnician(tech);
-        
-        adminRepository.save(admin);
+        String temporaryPassword = authService.issueTemporaryPassword(admin);
         
         auditService.log("technician", techId.toString(), "ADD", "Added new technician: " + name);
         
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Technician profile configured successfully.");
         response.put("username", username);
-        response.put("password", defaultPassword);
+        response.put("password", temporaryPassword);
+        return response;
+    }
+    
+    /**
+     * Replaces the technician's password with a new one-time password and signs them out everywhere.
+     */
+    @Transactional
+    public Map<String, Object> resetCredentials(Long techId) {
+        Admin admin = adminRepository.findByTechnician_TechId(techId)
+                          .orElseThrow(() -> new RuntimeException("Technician not found."));
+        String temporaryPassword = authService.issueTemporaryPassword(admin);
+        auditService.log("technician", techId.toString(), "UPDATE", "Reset login password for: " + admin.getUsername());
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Password reset. Share the new temporary password with the technician.");
+        response.put("username", admin.getUsername());
+        response.put("password", temporaryPassword);
         return response;
     }
     
@@ -86,17 +104,46 @@ public class TechnicianService {
     
     private List<Map<String, Object>> normalizeMaps(List<Map<String, Object>> rows) {
         return rows.stream()
-                   .map(row -> row.entrySet().stream()
-                                   .collect(Collectors.toMap(
-                                       e -> e.getKey().toLowerCase(),
-                                       Map.Entry::getValue
-                                   )))
+                   .map(row -> {
+                       // Not Collectors.toMap: it throws on null values, and nullable columns are common here.
+                       Map<String, Object> normalized = new HashMap<>();
+                       row.forEach((key, value) -> normalized.put(key.toLowerCase(), value));
+                       return normalized;
+                   })
                    .collect(Collectors.toList());
     }
     
+    /**
+     * Updates an assignment's status. A technician may only mark their own assignments Completed; the SuperAdmin may
+     * set any assignment to any valid status.
+     */
     @Transactional
-    public Map<String, Object> updateTaskStatus(Long assignmentId, String status) {
-        technicianManagementRepository.updateTaskStatus(assignmentId, status);
+    public Map<String, Object> updateTaskStatus(UserPrincipal actor, Long assignmentId, String status) {
+        if (status == null || !TASK_STATUSES.contains(status)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Status must be one of: " + String.join(", ", TASK_STATUSES) + ".");
+        }
+        
+        TechnicianManagement assignment = technicianManagementRepository.findById(assignmentId)
+                                              .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                                  "Assignment not found."));
+        
+        if ("Technician".equals(actor.getRole())) {
+            if (actor.getTechId() == null || !actor.getTechId().equals(assignment.getTechnician().getTechId())) {
+                log.warn("Technician '{}' attempted to update assignment {} assigned to someone else",
+                    actor.getUsername(), assignmentId);
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This assignment is not assigned to you.");
+            }
+            if (!"Completed".equals(status)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Technicians can only mark their assignments as Completed.");
+            }
+        }
+        
+        assignment.setStatus(status);
+        technicianManagementRepository.save(assignment);
+        auditService.log("technician_management", assignmentId.toString(), "UPDATE",
+            "Status set to " + status + " by " + actor.getUsername());
         return Map.of("message", "Task status updated to " + status + ".");
     }
     

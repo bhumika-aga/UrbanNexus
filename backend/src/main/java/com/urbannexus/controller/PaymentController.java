@@ -25,36 +25,63 @@ package com.urbannexus.controller;
 import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.PaymentService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
-@Slf4j
 public class PaymentController {
     
     private final PaymentService paymentService;
     
-    @PostMapping("/{trans_no}/pay")
-    public ResponseEntity<?> payBill(@AuthenticationPrincipal UserPrincipal currentUser,
-                                     @PathVariable("trans_no") String transNo) {
-        String role = currentUser.getRole();
-        if (!"Resident".equals(role) && !"SuperAdmin".equals(role)) {
+    @PostMapping("/{trans_no}/submit")
+    public ResponseEntity<?> submitPayment(@AuthenticationPrincipal UserPrincipal currentUser,
+                                           @PathVariable("trans_no") String transNo,
+                                           @RequestBody(required = false) Map<String, String> payload) {
+        if (!"Resident".equals(currentUser.getRole()) || currentUser.getResidentId() == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                       .body(Map.of("error", "Only Residents and Admins can process payments."));
+                       .body(Map.of("error", "Only Residents can submit their invoices for payment review."));
         }
         try {
-            paymentService.payInvoice(transNo, currentUser.getResidentId());
-            return ResponseEntity.ok(Map.of("message", "Transaction " + transNo + " processed successfully!"));
+            String reference = payload == null ? null : payload.get("reference");
+            paymentService.submitForReview(transNo, currentUser.getResidentId(), reference);
+            return ResponseEntity.ok(Map.of("message",
+                "Payment for " + transNo + " submitted. It will show as Paid once the admin confirms it."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/{trans_no}/confirm")
+    public ResponseEntity<?> confirmPayment(@AuthenticationPrincipal UserPrincipal currentUser,
+                                            @PathVariable("trans_no") String transNo) {
+        if (!"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                       .body(Map.of("error", "Only the Admin can confirm payments."));
+        }
+        try {
+            paymentService.confirmPayment(transNo, currentUser.getUsername());
+            return ResponseEntity.ok(Map.of("message", "Transaction " + transNo + " marked as Paid."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/{trans_no}/reject")
+    public ResponseEntity<?> rejectPayment(@AuthenticationPrincipal UserPrincipal currentUser,
+                                           @PathVariable("trans_no") String transNo) {
+        if (!"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                       .body(Map.of("error", "Only the Admin can reject payments."));
+        }
+        try {
+            paymentService.rejectPayment(transNo, currentUser.getUsername());
+            return ResponseEntity.ok(Map.of("message", "Payment for " + transNo + " rejected; invoice is unpaid again."));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }

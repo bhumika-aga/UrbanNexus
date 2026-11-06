@@ -28,6 +28,7 @@ export interface User {
   role: Role;
   residentId?: number;
   techId?: number;
+  mustChangePassword: boolean;
 }
 
 export interface AuthState {
@@ -42,6 +43,7 @@ export interface LoginResponse {
   admin: {
     username: string;
     role: Role;
+    mustChangePassword: boolean;
   };
 }
 
@@ -87,7 +89,11 @@ export interface Transaction {
   status: string;
   cost: number;
   service_type: string;
+  payment_reference?: string | null;
+  payment_date?: string;
 }
+
+export type PaymentStatus = "Pending" | "Overdue" | "Under Review" | "Paid";
 
 export interface Booking {
   booking_id?: number;
@@ -113,8 +119,10 @@ export interface DecodedToken {
   sub?: string;
   username?: string;
   role: Role;
-  residentId?: number;
-  techId?: number;
+  resident_id?: number;
+  tech_id?: number;
+  // True while the account still has an admin-issued temporary password.
+  pwd_change?: boolean;
   iat?: number;
   exp?: number;
 }

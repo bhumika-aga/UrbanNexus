@@ -100,6 +100,26 @@ public class ResidentController {
         }
     }
     
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<?> resetPassword(@AuthenticationPrincipal UserPrincipal currentUser, @PathVariable Long id) {
+        if (!"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                       .body(Map.of("error", "Only SuperAdmin can reset resident passwords."));
+        }
+        
+        try {
+            log.info("SuperAdmin {} is resetting the password of resident {}", currentUser.getUsername(), id);
+            return ResponseEntity.ok(residentService.resetCredentials(id));
+        } catch (RuntimeException e) {
+            if ("Resident not found.".equals(e.getMessage())) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            }
+            log.error("Password reset failed for resident {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                       .body(Map.of("error", "Failed to reset password."));
+        }
+    }
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteResident(@AuthenticationPrincipal UserPrincipal currentUser, @PathVariable Long id) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {

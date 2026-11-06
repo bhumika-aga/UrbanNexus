@@ -27,7 +27,6 @@ import com.urbannexus.model.Resident;
 import com.urbannexus.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +43,7 @@ public class ResidentService {
     
     private final ResidentRepository residentRepository;
     private final AdminRepository adminRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
     private final PaymentRepository paymentRepository;
     private final AmenityMgmtRepository amenityMgmtRepository;
     private final TechnicianManagementRepository technicianManagementRepository;
@@ -66,17 +65,13 @@ public class ResidentService {
         resident = residentRepository.save(resident);
         Long newResidentId = resident.getResidentId();
         
-        String defaultPassword = "pwd123#";
-        String hashedPassword = passwordEncoder.encode(defaultPassword);
         String username = name.toLowerCase().replaceAll("\\s+", "_") + newResidentId;
         
         Admin admin = new Admin();
         admin.setUsername(username);
-        admin.setPasswordHash(hashedPassword);
         admin.setRole("Resident");
         admin.setResident(resident);
-        
-        adminRepository.save(admin);
+        String temporaryPassword = authService.issueTemporaryPassword(admin);
         log.info("Resident created successfully inside database with generated username: {}", username);
         
         auditService.log("resident", newResidentId.toString(), "ADD", "Added new resident: " + name);
@@ -84,7 +79,24 @@ public class ResidentService {
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Resident and Login created!");
         response.put("username", username);
-        response.put("password", defaultPassword);
+        response.put("password", temporaryPassword);
+        return response;
+    }
+    
+    /**
+     * Replaces the resident's password with a new one-time password and signs them out everywhere.
+     */
+    @Transactional
+    public Map<String, Object> resetCredentials(Long residentId) {
+        Admin admin = adminRepository.findByResident_ResidentId(residentId)
+                          .orElseThrow(() -> new RuntimeException("Resident not found."));
+        String temporaryPassword = authService.issueTemporaryPassword(admin);
+        auditService.log("resident", residentId.toString(), "UPDATE", "Reset login password for: " + admin.getUsername());
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Password reset. Share the new temporary password with the resident.");
+        response.put("username", admin.getUsername());
+        response.put("password", temporaryPassword);
         return response;
     }
     
@@ -109,11 +121,12 @@ public class ResidentService {
     
     private List<Map<String, Object>> normalizeMaps(List<Map<String, Object>> rows) {
         return rows.stream()
-                   .map(row -> row.entrySet().stream()
-                                   .collect(Collectors.toMap(
-                                       e -> e.getKey().toLowerCase(),
-                                       Map.Entry::getValue
-                                   )))
+                   .map(row -> {
+                       // Not Collectors.toMap: it throws on null values, and nullable columns are common here.
+                       Map<String, Object> normalized = new HashMap<>();
+                       row.forEach((key, value) -> normalized.put(key.toLowerCase(), value));
+                       return normalized;
+                   })
                    .collect(Collectors.toList());
     }
     

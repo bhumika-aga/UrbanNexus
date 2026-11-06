@@ -74,7 +74,10 @@ VALUES ('Plumber', 'Technician', 500.00),
        ('Spa & Wellness Center', 'Amenity', 2000.00),
        ('Community Theater', 'Amenity', 5000.00);
 
--- ADMIN ACCOUNTS (Credentials: admin → Bhumika@1234, all others → pwd123#)
+-- ADMIN ACCOUNTS — LOCAL DEMO ONLY (admin → Bhumika@1234, all others → pwd123#).
+-- These passwords are public. Every seeded account starts with must_change_password = TRUE
+-- (the column default), so each one has to set a new password at first login. Never seed a
+-- shared or production database with this file and leave the accounts unclaimed.
 INSERT INTO admin (username, password_hash, role, resident_id, tech_id)
 VALUES
 -- SuperAdmin (password: Bhumika@1234)

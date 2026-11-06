@@ -31,6 +31,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -93,8 +94,11 @@ public class TechnicianController {
         }
         try {
             String status = payload.get("status");
-            return ResponseEntity.ok(technicianService.updateTaskStatus(id, status));
+            return ResponseEntity.ok(technicianService.updateTaskStatus(currentUser, id, status));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (Exception e) {
+            log.error("Failed to update status of assignment {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to update status"));
         }
@@ -125,6 +129,26 @@ public class TechnicianController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to update availability."));
+        }
+    }
+    
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<?> resetPassword(@AuthenticationPrincipal UserPrincipal currentUser, @PathVariable Long id) {
+        if (!"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                       .body(Map.of("error", "Only Admin can reset technician passwords."));
+        }
+        
+        try {
+            log.info("SuperAdmin {} is resetting the password of technician {}", currentUser.getUsername(), id);
+            return ResponseEntity.ok(technicianService.resetCredentials(id));
+        } catch (RuntimeException e) {
+            if ("Technician not found.".equals(e.getMessage())) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            }
+            log.error("Password reset failed for technician {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                       .body(Map.of("error", "Failed to reset password."));
         }
     }
     

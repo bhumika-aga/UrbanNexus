@@ -59,6 +59,8 @@ public class JwtTokenProvider {
                    .claim("role", userPrincipal.getRole())
                    .claim("resident_id", userPrincipal.getResidentId())
                    .claim("tech_id", userPrincipal.getTechId())
+                   .claim("ver", userPrincipal.getTokenVersion())
+                   .claim("pwd_change", userPrincipal.isMustChangePassword())
                    .issuedAt(new Date())
                    .expiration(expiryDate)
                    .signWith(key)

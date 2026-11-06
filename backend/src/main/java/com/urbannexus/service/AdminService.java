@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -112,11 +113,12 @@ public class AdminService {
     
     private List<Map<String, Object>> normalizeMaps(List<Map<String, Object>> rows) {
         return rows.stream()
-                   .map(row -> row.entrySet().stream()
-                                   .collect(Collectors.toMap(
-                                       e -> e.getKey().toLowerCase(),
-                                       Map.Entry::getValue
-                                   )))
+                   .map(row -> {
+                       // Not Collectors.toMap: it throws on null values, and nullable columns are common here.
+                       Map<String, Object> normalized = new HashMap<>();
+                       row.forEach((key, value) -> normalized.put(key.toLowerCase(), value));
+                       return normalized;
+                   })
                    .collect(Collectors.toList());
     }
 }

@@ -25,8 +25,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           id: (decoded.id || decoded.userId || decoded.adminId) as number,
           username: (decoded.username || decoded.sub) as string,
           role: decoded.role as Role,
-          residentId: decoded.residentId,
-          techId: decoded.techId,
+          residentId: decoded.resident_id,
+          techId: decoded.tech_id,
+          mustChangePassword: decoded.pwd_change === true,
         };
         setState({ user, token, isLoading: false });
       } catch (error) {

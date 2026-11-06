@@ -50,6 +50,11 @@ public class Payment {
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
     
+    // The resident's proof of an offline payment (UPI ref, cheque no., ...), set when they submit
+    // the invoice for review and cleared if the admin rejects it.
+    @Column(name = "payment_reference", length = 100)
+    private String paymentReference;
+    
     @PrePersist
     public void calculateGST() {
         if (this.cost != null) {

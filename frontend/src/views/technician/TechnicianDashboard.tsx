@@ -39,6 +39,7 @@ import {
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { Booking } from "../../types";
@@ -88,8 +89,9 @@ const TechnicianDashboard: React.FC = () => {
     try {
       await api.put(`/technicians/tasks/${id}/status`, { status });
       fetchTasks();
-    } catch {
-      alert("Status update failed");
+    } catch (err) {
+      const msg = axios.isAxiosError(err) ? err.response?.data?.error : null;
+      alert(msg || "Status update failed");
     }
   };
 

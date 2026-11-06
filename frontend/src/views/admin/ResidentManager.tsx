@@ -56,6 +56,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import axios from "axios";
 import React, { useCallback, useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { Resident } from "../../types";
@@ -121,6 +122,30 @@ const ResidentManager: React.FC = () => {
       fetchResidents();
     } catch {
       alert("Failed to add resident");
+    }
+  };
+
+  // Issues a new one-time password (the old one and all sessions stop working) and shows it
+  // in the credentials dialog, e.g. when someone forgot their password or lost the original.
+  const handleResetPassword = async (id: number, name: string) => {
+    if (
+      !window.confirm(
+        `Reset ${name}'s password? They will be signed out and must log in with the new temporary password.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await api.post(`/residents/${id}/reset-password`);
+      setCredentials({
+        username: res.data.username,
+        password: res.data.password,
+      });
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? err.response?.data?.error
+        : null;
+      alert(errorMsg || "Password reset failed");
     }
   };
 
@@ -291,6 +316,19 @@ const ResidentManager: React.FC = () => {
                     {res.contact}
                   </TableCell>
                   <TableCell align="right">
+                    <Tooltip title="Reset password">
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          handleResetPassword(res.residentId, res.name)
+                        }
+                      >
+                        <FontAwesomeIcon
+                          icon={faKey}
+                          style={{ fontSize: 16 }}
+                        />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Delete resident">
                       <IconButton
                         size="small"
@@ -482,7 +520,8 @@ const ResidentManager: React.FC = () => {
             sx={{ mb: 3, borderRadius: 2, fontSize: "0.8rem" }}
           >
             Share these credentials with the resident now. This dialog will not
-            appear again.
+            appear again. The password is temporary: they must choose a new one
+            when they first sign in.
           </Alert>
           {credentials && (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>

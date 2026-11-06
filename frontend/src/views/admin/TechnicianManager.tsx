@@ -115,6 +115,30 @@ const TechnicianManager: React.FC = () => {
     }
   };
 
+  // Issues a new one-time password (the old one and all sessions stop working) and shows it
+  // in the credentials dialog, e.g. when someone forgot their password or lost the original.
+  const handleResetPassword = async (id: number, name: string) => {
+    if (
+      !window.confirm(
+        `Reset ${name}'s password? They will be signed out and must log in with the new temporary password.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await api.post(`/technicians/${id}/reset-password`);
+      setCredentials({
+        username: res.data.username,
+        password: res.data.password,
+      });
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? err.response?.data?.error
+        : null;
+      alert(errorMsg || "Password reset failed");
+    }
+  };
+
   useEffect(() => {
     fetchTechs();
   }, []);
@@ -243,9 +267,19 @@ const TechnicianManager: React.FC = () => {
                     {tech.contact}
                   </TableCell>
                   <TableCell align="right">
-                    <Typography variant="caption" color="text.secondary">
-                      Ready for assignment
-                    </Typography>
+                    <Tooltip title="Reset password">
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          handleResetPassword(tech.techId, tech.name)
+                        }
+                      >
+                        <FontAwesomeIcon
+                          icon={faKey}
+                          style={{ fontSize: 16 }}
+                        />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))
@@ -388,7 +422,8 @@ const TechnicianManager: React.FC = () => {
             sx={{ mb: 3, borderRadius: 2, fontSize: "0.8rem" }}
           >
             Share these credentials with the technician now. This dialog will
-            not appear again.
+            not appear again. The password is temporary: they must choose a new
+            one when they first sign in.
           </Alert>
           {credentials && (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>

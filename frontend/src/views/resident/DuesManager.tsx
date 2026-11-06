@@ -25,7 +25,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   Box,
   Button,
+  Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
   Paper,
   Table,
@@ -34,8 +39,10 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { Transaction } from "../../types";
@@ -44,9 +51,19 @@ interface Props {
   onBack: () => void;
 }
 
+const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
+  Pending: { bg: "#fff7ed", fg: "#c2410c" },
+  Overdue: { bg: "#fef2f2", fg: "#991b1b" },
+  "Under Review": { bg: "#eff6ff", fg: "#1d4ed8" },
+};
+
 const DuesManager: React.FC<Props> = ({ onBack }) => {
   const [invoices, setInvoices] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
+  // The invoice being reported as paid, and the reference the resident enters for it.
+  const [payingInvoice, setPayingInvoice] = useState<Transaction | null>(null);
+  const [reference, setReference] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchDues = async () => {
     setLoading(true);
@@ -60,13 +77,30 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
     }
   };
 
-  const handlePay = async (transNo: string) => {
+  const openSubmitDialog = (invoice: Transaction) => {
+    setReference("");
+    setPayingInvoice(invoice);
+  };
+
+  // There is no payment gateway: the resident reports an offline payment, and the invoice
+  // stays unpaid ("Under Review") until the administrator confirms the money arrived.
+  const handleSubmitPayment = async () => {
+    if (!payingInvoice) return;
+    setSubmitting(true);
     try {
-      await api.post(`/payments/${transNo}/pay`);
-      alert("Payment confirmed! Ledger updated.");
+      await api.post(`/payments/${payingInvoice.trans_no}/submit`, {
+        reference: reference.trim(),
+      });
+      setPayingInvoice(null);
+      alert(
+        "Payment submitted for review. It will show as paid once the administrator confirms it.",
+      );
       fetchDues();
-    } catch {
-      alert("Payment failed");
+    } catch (err) {
+      const msg = axios.isAxiosError(err) ? err.response?.data?.error : null;
+      alert(msg || "Could not submit the payment.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -117,6 +151,15 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
                 Amount
               </TableCell>
               <TableCell
+                sx={{
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  fontSize: "0.65rem",
+                }}
+              >
+                Status
+              </TableCell>
+              <TableCell
                 align="right"
                 sx={{
                   fontWeight: 700,
@@ -131,14 +174,14 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                   <CircularProgress size={24} />
                 </TableCell>
               </TableRow>
             ) : invoices.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={5}
                   align="center"
                   sx={{ py: 10, color: "#999", fontStyle: "italic" }}
                 >
@@ -157,22 +200,45 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
                   <TableCell sx={{ fontWeight: 800, color: "#166534" }}>
                     ₹{inv.cost}
                   </TableCell>
-                  <TableCell align="right">
-                    <Button
-                      variant="contained"
+                  <TableCell>
+                    <Chip
+                      label={inv.status}
                       size="small"
-                      color="success"
-                      startIcon={
-                        <FontAwesomeIcon
-                          icon={faCreditCard}
-                          style={{ fontSize: 14 }}
-                        />
-                      }
-                      onClick={() => handlePay(inv.trans_no)}
-                      sx={{ fontWeight: 700 }}
-                    >
-                      Pay Now
-                    </Button>
+                      sx={{
+                        fontWeight: 700,
+                        backgroundColor: STATUS_COLORS[inv.status]?.bg,
+                        color: STATUS_COLORS[inv.status]?.fg,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    {inv.status === "Under Review" ? (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontWeight: 600 }}
+                      >
+                        Awaiting admin confirmation
+                        <br />
+                        Ref: {inv.payment_reference}
+                      </Typography>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        size="small"
+                        color="success"
+                        startIcon={
+                          <FontAwesomeIcon
+                            icon={faCreditCard}
+                            style={{ fontSize: 14 }}
+                          />
+                        }
+                        onClick={() => openSubmitDialog(inv)}
+                        sx={{ fontWeight: 700 }}
+                      >
+                        I've Paid
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -180,6 +246,44 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Dialog
+        open={payingInvoice !== null}
+        onClose={() => !submitting && setPayingInvoice(null)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>Report a payment</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Pay ₹{payingInvoice?.cost} for {payingInvoice?.trans_no} by UPI,
+            bank transfer or cheque, then enter the transaction reference. The
+            administrator will verify it and mark the invoice paid.
+          </Typography>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Payment reference"
+            placeholder="e.g. UPI ref no. or cheque no."
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            slotProps={{ htmlInput: { maxLength: 100 } }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setPayingInvoice(null)} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmitPayment}
+            disabled={submitting || !reference.trim()}
+            sx={{ fontWeight: 700 }}
+          >
+            Submit for review
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
