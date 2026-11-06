@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
@@ -49,6 +50,7 @@ public class BookingService {
     private final PaymentRepository paymentRepository;
     private final AmenityRepository amenityRepository;
     private final AmenityMgmtRepository amenityMgmtRepository;
+    private final Clock clock;
     
     private static int requireSlot(Integer slot) {
         if (slot == null || slot < FIRST_SLOT || slot > LAST_SLOT) {
@@ -57,15 +59,20 @@ public class BookingService {
         return slot;
     }
     
-    private static LocalDate requireDate(String value, String field) {
+    private LocalDate requireDate(String value, String field) {
         if (value == null || value.isBlank()) {
             throw Inputs.badRequest(field + " is required.");
         }
+        LocalDate date;
         try {
-            return LocalDate.parse(value.trim());
+            date = LocalDate.parse(value.trim());
         } catch (DateTimeParseException e) {
             throw Inputs.badRequest(field + " must be a date in YYYY-MM-DD format.");
         }
+        if (date.isBefore(LocalDate.now(clock))) {
+            throw Inputs.badRequest(field + " cannot be in the past.");
+        }
+        return date;
     }
     
     @Transactional

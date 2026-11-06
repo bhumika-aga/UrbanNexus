@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,13 +137,33 @@ public class ResidentService {
                    .collect(Collectors.toList());
     }
     
+    /**
+     * Deletes the resident with their login and bookings. Their invoices are kept, labelled with their name. If any
+     * are still unpaid, deletion is refused with {@link UnpaidInvoicesException} unless {@code writeOffUnpaid} is
+     * set, in which case those invoices are marked "Written Off" (kept in the ledger, no longer counted as owed).
+     */
     @Transactional
-    public void deleteResident(Long residentId) {
+    public void deleteResident(Long residentId, boolean writeOffUnpaid) {
         Optional<Resident> resident = residentRepository.findById(residentId);
         if (resident.isEmpty()) {
             throw new RuntimeException("Resident not found.");
         }
         Resident r = resident.get();
+        
+        long unpaidCount = paymentRepository.countUnpaidForResident(residentId);
+        if (unpaidCount > 0) {
+            BigDecimal unpaidTotal = paymentRepository.sumUnpaidForResident(residentId);
+            if (!writeOffUnpaid) {
+                throw new UnpaidInvoicesException(unpaidCount, unpaidTotal);
+            }
+            paymentRepository.writeOffUnpaidForResident(residentId);
+            auditService.log("payment", "resident " + residentId, "WRITE_OFF",
+                "Wrote off " + unpaidCount + " unpaid invoice(s) totalling ₹" + unpaidTotal.toPlainString()
+                    + " for " + r.getName());
+        }
+        
+        // Must run before the delete: it finds the invoices through the bookings that the delete cascades away.
+        paymentRepository.recordBilledTo(residentId, r.getName());
         auditService.log("resident", residentId.toString(), "DELETE", "Deleted resident: " + r.getName());
         residentRepository.delete(r);
     }
@@ -154,15 +175,20 @@ public class ResidentService {
         
         StringBuilder details = new StringBuilder("Updated: ");
         if (updates.containsKey("name")) {
-            resident.setName((String) updates.get("name"));
+            resident.setName(Inputs.requireText(Inputs.asText(updates.get("name"), "name"), "name", 100));
             details.append("name, ");
         }
         if (updates.containsKey("contact")) {
-            resident.setContact((String) updates.get("contact"));
+            resident.setContact(Inputs.requireText(Inputs.asText(updates.get("contact"), "contact"), "contact", 20));
             details.append("contact, ");
         }
         if (updates.containsKey("no_of_members")) {
-            resident.setNoOfMembers(((Number) updates.get("no_of_members")).intValue());
+            // Form inputs arrive as strings ("3"), API clients may send numbers; accept both.
+            Integer members = Inputs.asInteger(updates.get("no_of_members"), "no_of_members");
+            if (members == null || members < 1) {
+                throw Inputs.badRequest("no_of_members must be at least 1.");
+            }
+            resident.setNoOfMembers(members);
             details.append("no_of_members, ");
         }
         residentRepository.save(resident);

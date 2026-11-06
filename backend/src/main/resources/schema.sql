@@ -50,6 +50,7 @@ CREATE TABLE payment
     cost              DECIMAL(10, 2) NOT NULL,
     payment_date      TIMESTAMP           DEFAULT CURRENT_TIMESTAMP,
     payment_reference VARCHAR(100)   NULL DEFAULT NULL,
+    billed_to         VARCHAR(100)   NULL DEFAULT NULL,
     PRIMARY KEY (trans_no)
 );
 
@@ -135,6 +136,7 @@ CREATE TABLE audit_log
     record_id      VARCHAR(50) NOT NULL,
     action_type    VARCHAR(50) NOT NULL,
     details        TEXT        NOT NULL,
+    changed_by     VARCHAR(50) NULL,
     changed_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

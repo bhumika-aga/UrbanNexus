@@ -52,6 +52,7 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   "Under Review": { bg: "#eff6ff", fg: "#1d4ed8" },
   Pending: { bg: "#fff7ed", fg: "#c2410c" },
   Overdue: { bg: "#fef2f2", fg: "#991b1b" },
+  "Written Off": { bg: "#f4f4f5", fg: "#52525b" },
 };
 
 const FinanceManager: React.FC = () => {
@@ -266,7 +267,9 @@ const FinanceManager: React.FC = () => {
                     <Typography variant="caption" color="text.secondary">
                       {tx.house_block === "SYS"
                         ? "System Managed"
-                        : `Unit ${tx.house_block}-${tx.house_unit}`}
+                        : tx.house_block == null
+                          ? "Former resident"
+                          : `Unit ${tx.house_block}-${tx.house_unit}`}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -343,7 +346,7 @@ const FinanceManager: React.FC = () => {
                         </Button>
                       </>
                     ) : (
-                      tx.status !== "Paid" && (
+                      (tx.status === "Pending" || tx.status === "Overdue") && (
                         <Button
                           size="small"
                           variant="text"

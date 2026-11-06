@@ -24,6 +24,7 @@ package com.urbannexus.controller;
 
 import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.ResidentService;
+import com.urbannexus.service.UnpaidInvoicesException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -134,19 +135,28 @@ public class ResidentController {
     }
     
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteResident(@AuthenticationPrincipal UserPrincipal currentUser, @PathVariable Long id) {
+    public ResponseEntity<?> deleteResident(@AuthenticationPrincipal UserPrincipal currentUser, @PathVariable Long id,
+                                            @RequestParam(name = "write_off_unpaid", defaultValue = "false")
+                                            boolean writeOffUnpaid) {
         if (!"SuperAdmin".equals(currentUser.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                        .body(Map.of("error", "Only SuperAdmin can remove residents from the grid."));
         }
         
         try {
-            residentService.deleteResident(id);
+            residentService.deleteResident(id, writeOffUnpaid);
             return ResponseEntity.ok(Map.of("message", "Resident and all associated records deleted successfully."));
+        } catch (UnpaidInvoicesException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", e.getMessage(),
+                "code", "UNPAID_INVOICES",
+                "unpaid_count", e.getInvoiceCount(),
+                "unpaid_total", e.getTotal()));
         } catch (RuntimeException e) {
-            if (e.getMessage().equals("Resident not found.")) {
+            if ("Resident not found.".equals(e.getMessage())) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
             }
+            log.error("Failed to delete resident {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Deletion failed."));
         }
     }

@@ -44,6 +44,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useState } from "react";
 import api from "../../api/axiosClient";
+import { localToday } from "../../utils/date";
 
 interface Props {
   onBack: () => void;
@@ -66,7 +67,7 @@ const TechBooker: React.FC<Props> = ({ onBack }) => {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     skill: "",
-    assign_date: new Date().toISOString().split("T")[0],
+    assign_date: localToday(),
     slot: 1,
   });
 
@@ -169,7 +170,10 @@ const TechBooker: React.FC<Props> = ({ onBack }) => {
                 onChange={(e) =>
                   setFormData({ ...formData, assign_date: e.target.value })
                 }
-                slotProps={{ inputLabel: { shrink: true } }}
+                slotProps={{
+                  inputLabel: { shrink: true },
+                  htmlInput: { min: localToday() },
+                }}
               />
               <TextField
                 fullWidth

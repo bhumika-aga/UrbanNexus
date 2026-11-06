@@ -48,6 +48,29 @@ final class Inputs {
         return trimmed;
     }
     
+    /** Returns the value as text; anything other than a string (or null) is rejected. */
+    static String asText(Object value, String field) {
+        if (value == null || value instanceof String) {
+            return (String) value;
+        }
+        throw badRequest(field + " must be text.");
+    }
+    
+    /** Accepts a JSON number or a numeric string (as HTML form inputs send); null stays null. */
+    static Integer asInteger(Object value, String field) {
+        if (value == null || (value instanceof String s && s.isBlank())) {
+            return null;
+        }
+        if (value instanceof Integer i) {
+            return i;
+        }
+        try {
+            return Integer.valueOf(value.toString().trim());
+        } catch (NumberFormatException e) {
+            throw badRequest(field + " must be a whole number.");
+        }
+    }
+    
     static long requirePositiveId(Long value, String field) {
         if (value == null || value < 1) {
             throw badRequest(field + " must be a positive number.");

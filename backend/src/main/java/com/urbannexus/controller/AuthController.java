@@ -36,6 +36,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -94,8 +95,9 @@ public class AuthController {
                                    .orElseThrow(() -> new RuntimeException("Technician record not found in database"));
                 return ResponseEntity.ok(t);
             } else if ("SuperAdmin".equals(currentUser.getRole())) {
+                // From the database, not the token, so a username changed on this session shows up.
                 return ResponseEntity.ok(Map.of(
-                    "username", currentUser.getUsername(),
+                    "username", adminService.getUsername(currentUser.getId()),
                     "name", "System Administrator",
                     "role", "SuperAdmin"));
             }
@@ -148,6 +150,8 @@ public class AuthController {
                 return ResponseEntity.ok(Map.of("message", "Profile updated successfully."));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid user role."));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (Exception e) {
             log.error("Update profile failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -65,7 +65,7 @@ public class PaymentController {
                        .body(Map.of("error", "Only the Admin can confirm payments."));
         }
         try {
-            paymentService.confirmPayment(transNo, currentUser.getUsername());
+            paymentService.confirmPayment(transNo);
             return ResponseEntity.ok(Map.of("message", "Transaction " + transNo + " marked as Paid."));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
@@ -80,7 +80,7 @@ public class PaymentController {
                        .body(Map.of("error", "Only the Admin can reject payments."));
         }
         try {
-            paymentService.rejectPayment(transNo, currentUser.getUsername());
+            paymentService.rejectPayment(transNo);
             return ResponseEntity.ok(Map.of("message", "Payment for " + transNo + " rejected; invoice is unpaid again."));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));

@@ -29,6 +29,8 @@ spring:
       separator: ";"
 
 app:
+  # Time zone of the community; decides what "today" is for booking dates.
+  timezone: Asia/Kolkata
   jwt:
     # Secret is supplied via the JWT_SECRET environment variable (no default);
     # generate one with: openssl rand -base64 48

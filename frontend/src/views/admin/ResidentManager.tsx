@@ -154,16 +154,40 @@ const ResidentManager: React.FC = () => {
 
   const handleDelete = async (id: number, name: string) => {
     if (
-      window.confirm(
+      !window.confirm(
         `Are you sure you want to remove ${name} from the community?`,
       )
     ) {
-      try {
-        await api.delete(`/residents/${id}`);
-        fetchResidents();
-      } catch {
-        alert("Delete failed");
+      return;
+    }
+    try {
+      await api.delete(`/residents/${id}`);
+      fetchResidents();
+    } catch (err) {
+      // A resident who still owes money is only removed if the admin agrees to write the debt off.
+      const data = axios.isAxiosError(err) ? err.response?.data : null;
+      if (data?.code === "UNPAID_INVOICES") {
+        if (
+          window.confirm(
+            `${name} still owes ₹${data.unpaid_total} across ${data.unpaid_count} unpaid invoice(s).\n\n` +
+              "Write this off and delete the resident? The invoices stay in the ledger marked 'Written Off'.",
+          )
+        ) {
+          try {
+            await api.delete(`/residents/${id}`, {
+              params: { write_off_unpaid: true },
+            });
+            fetchResidents();
+          } catch (retryErr) {
+            const msg = axios.isAxiosError(retryErr)
+              ? retryErr.response?.data?.error
+              : null;
+            alert(msg || "Delete failed");
+          }
+        }
+        return;
       }
+      alert(data?.error || "Delete failed");
     }
   };
 

@@ -39,6 +39,7 @@ import {
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import api from "../../api/axiosClient";
+import { localToday } from "../../utils/date";
 import { Amenity } from "../../types";
 
 interface Props {
@@ -51,7 +52,7 @@ const AmenityBooker: React.FC<Props> = ({ onBack }) => {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     amenity_id: "",
-    date: new Date().toISOString().split("T")[0],
+    date: localToday(),
     slot: 1,
     capacity_booked: 1,
   });
@@ -159,7 +160,10 @@ const AmenityBooker: React.FC<Props> = ({ onBack }) => {
                   onChange={(e) =>
                     setFormData({ ...formData, date: e.target.value })
                   }
-                  slotProps={{ inputLabel: { shrink: true } }}
+                  slotProps={{
+                    inputLabel: { shrink: true },
+                    htmlInput: { min: localToday() },
+                  }}
                 />
                 <TextField
                   fullWidth

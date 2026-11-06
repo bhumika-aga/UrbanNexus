@@ -336,7 +336,8 @@
                 "profile",
                 "update"
               ]
-            }
+            },
+            "description": "Updates the caller's own profile. Residents: name, contact, no_of_members (number or numeric string). Technicians: name, contact, available; only the admin can change a technician's skill (403). SuperAdmin: username."
           },
           "response": [
             {
@@ -747,7 +748,8 @@
                 "residents",
                 "27"
               ]
-            }
+            },
+            "description": "Deletes the resident with their login and bookings. Their invoices are kept and still show their name in the ledger. If they have unpaid invoices (Pending, Overdue or Under Review) the call returns 409 with code UNPAID_INVOICES, unpaid_count and unpaid_total; repeat it with ?write_off_unpaid=true to mark those invoices 'Written Off' and delete the resident."
           },
           "response": [
             {

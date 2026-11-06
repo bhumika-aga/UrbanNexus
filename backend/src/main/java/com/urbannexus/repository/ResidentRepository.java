@@ -33,9 +33,10 @@ import java.util.List;
 @Repository
 public interface ResidentRepository extends JpaRepository<Resident, Long> {
     
+    // Case-insensitive: "john" finds "John Doe", block "a" finds block "A".
     @Query("SELECT r FROM Resident r WHERE " +
-               "(:name IS NULL OR r.name LIKE %:name%) AND " +
-               "(:block IS NULL OR r.houseBlock = :block) AND " +
+               "(:name IS NULL OR LOWER(r.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+               "(:block IS NULL OR UPPER(r.houseBlock) = UPPER(:block)) AND " +
                "(:floor IS NULL OR r.houseFloor = :floor) AND " +
                "(:unit IS NULL OR r.houseUnit = :unit)")
     List<Resident> searchResidents(@Param("name") String name,

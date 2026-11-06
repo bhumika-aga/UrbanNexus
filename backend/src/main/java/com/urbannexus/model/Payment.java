@@ -55,6 +55,10 @@ public class Payment {
     @Column(name = "payment_reference", length = 100)
     private String paymentReference;
     
+    // The billed resident's name, recorded when that resident is deleted (see ResidentService.deleteResident).
+    @Column(name = "billed_to", length = 100)
+    private String billedTo;
+    
     @PrePersist
     public void calculateGST() {
         if (this.cost != null) {

@@ -48,6 +48,6 @@ public interface AdminRepository extends JpaRepository<Admin, Long> {
                "FROM Admin a WHERE a.adminId = :adminId")
     Optional<AccountState> findAccountState(@Param("adminId") Long adminId);
     
-    @Query(value = "SELECT log_id, table_affected, action_type, record_id, details, changed_at FROM audit_log ORDER BY changed_at DESC", nativeQuery = true)
+    @Query(value = "SELECT log_id, table_affected, action_type, record_id, details, changed_by, changed_at FROM audit_log ORDER BY changed_at DESC, log_id DESC", nativeQuery = true)
     List<Map<String, Object>> getAuditLogs();
 }

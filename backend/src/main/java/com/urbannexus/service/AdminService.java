@@ -66,7 +66,8 @@ public class AdminService {
     }
     
     public List<Resident> searchResidents(String name, String block, String floor, String unit) {
-        return residentRepository.searchResidents(name, block, floor, unit);
+        return residentRepository.searchResidents(blankToNull(name), blankToNull(block), blankToNull(floor),
+            blankToNull(unit));
     }
     
     public List<Technician> getTechnicians() {
@@ -81,6 +82,12 @@ public class AdminService {
     public void processOverduePayments() {
         paymentRepository.processOverduePayments();
         auditService.log("payment", "ALL", "OVERDUE_PROCESS", "Manual trigger of overdue payment processing.");
+    }
+    
+    public String getUsername(Long adminId) {
+        return adminRepository.findById(adminId)
+                   .map(Admin::getUsername)
+                   .orElseThrow(() -> new RuntimeException("Admin not found."));
     }
     
     @Transactional
@@ -120,5 +127,10 @@ public class AdminService {
                        return normalized;
                    })
                    .collect(Collectors.toList());
+    }
+    
+    // An empty query parameter (e.g. "?block=") means "no filter", not "match the empty string".
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

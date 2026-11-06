@@ -72,6 +72,8 @@ export interface AuditLogEntry {
   record_id: string;
   action_type: string;
   details: string;
+  // Who made the change; "system" for scheduled jobs, null for entries recorded before this was tracked.
+  changed_by: string | null;
   changed_at: string;
 }
 
@@ -84,8 +86,9 @@ export interface Amenity {
 export interface Transaction {
   trans_no: string;
   resident_name: string;
-  house_block: string;
-  house_unit: string;
+  // "SYS" for system charges; null for a former (deleted) resident.
+  house_block: string | null;
+  house_unit: string | null;
   status: string;
   cost: number;
   service_type: string;

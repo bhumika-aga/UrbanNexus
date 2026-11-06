@@ -100,7 +100,8 @@ while giving users ownership of their credentials after first login.
 
 ### Booking Flow
 
-1. Resident requests a technician booking (`skill`, `slot` 1–3, `assign_date` as `YYYY-MM-DD`)
+1. Resident requests a technician booking (`skill`, `slot` 1–3, `assign_date` as `YYYY-MM-DD`, today or later in the
+   community's time zone, `APP_TIMEZONE`)
 2. System locks every technician with that skill (`SELECT … FOR UPDATE`) and picks the first available one with no
    assignment in that slot on that date. Concurrent requests for the same skill wait on the lock, so two residents can
    never be given the same technician for one slot; a unique `(tech_id, assign_date, slot)` constraint enforces the
@@ -125,11 +126,19 @@ Pending / Overdue ──▶ Under Review    (resident: POST /api/payments/{trans
 Under Review ──────▶ Paid             (admin: POST /api/payments/{trans_no}/confirm)
 Under Review ──────▶ Pending/Overdue  (admin: POST /api/payments/{trans_no}/reject — back to whichever applies by age)
 Pending / Overdue ──▶ Paid            (admin records an offline payment directly with /confirm)
+Pending / Overdue / Under Review ──▶ Written Off   (admin deletes the resident and agrees to write the debt off)
 ```
 
 A resident can only submit their own unpaid invoices, and must give a payment reference (UPI ID, cheque number, …) that
 the admin sees in the Financial Ledger. Invoices under review still count as outstanding on the admin dashboard. Every
 submit, confirm and reject is written to the audit log.
+
+**Deleting a resident who owes money.** `DELETE /api/residents/{id}` is refused with `409` and
+`{"code": "UNPAID_INVOICES", "unpaid_count", "unpaid_total"}` while the resident has Pending, Overdue or Under Review
+invoices. The admin UI then offers to write the debt off; confirming repeats the call with `?write_off_unpaid=true`,
+which marks those invoices `Written Off` (kept in the ledger, no longer counted as owed) and deletes the resident. All of
+the resident's invoices keep their name (`payment.billed_to`), so the ledger shows them as a former resident instead of
+"UrbanNexus System".
 
 ### GST via @PrePersist
 
@@ -150,9 +159,11 @@ Seed data in `data.sql` stores costs at face value (pre-GST); the hook fires on 
 
 ### Audit Trail
 
-All critical mutations (resident/technician add/delete, task status changes, availability toggles) are written to
-`audit_log` via `AuditService` inside the same `@Transactional` boundary as the mutation itself. Auditing lives entirely
-in the application layer, so it is database-agnostic and needs no engine-specific triggers.
+All critical mutations (resident/technician add/delete, task status changes, availability toggles, payment reviews,
+password resets, write-offs) are written to `audit_log` via `AuditService` inside the same transaction as the mutation
+itself: if the change rolls back, so does its log entry, and logging uses no extra database connection. Each entry
+records who made the change (`changed_by`: the signed-in username, or `system` for scheduled jobs). Auditing lives
+entirely in the application layer, so it is database-agnostic and needs no engine-specific triggers.
 
 ---
 
@@ -176,6 +187,7 @@ defaults, but the two secrets below have **no default** and must be set.
 | `JWT_SECRET`   | local + prod | _(none — required)_ | **Base64** string, ≥ 32 bytes decoded (the app Base64-decodes it; 48 bytes → HS384). Generate **once** with `openssl rand -base64 48`, then reuse the same value — a changing secret invalidates all issued tokens |
 | `DB_URL`       | prod         | _(none — required)_ | The complete JDBC URL, credentials and options included (see below). Not used locally — the default profile is H2                                                                                                  |
 | `DB_INIT_MODE` | prod         | `never`             | Leave unset in normal operation. Set to `always` **once** to seed a brand-new database, then remove                                                                                                                |
+| `APP_TIMEZONE` | local + prod | `Asia/Kolkata`      | Time zone that decides "today" for booking dates (the server itself usually runs in UTC)                                                                                                                           |
 
 Local development (H2) only needs `JWT_SECRET`.
 
@@ -200,6 +212,10 @@ cd backend
 export JWT_SECRET="paste-the-base64-value-here"
 mvn spring-boot:run
 ```
+
+Run the tests with `mvn test`. They use in-memory H2 databases; `PostgresCompatibilityIntegrationTest` also runs the
+real `schema.sql`, `data.sql` and native queries against PostgreSQL 16 in a Docker container (Testcontainers) and is
+skipped automatically when Docker isn't running.
 
 On every start, `schema.sql` recreates all tables and `data.sql` seeds 26 residents, 16 technicians, 5 amenities, and
 pricing. Inspect the data at `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:file:./data/urbannexus`, user `sa`,
@@ -257,13 +273,13 @@ Accounts the admin creates later get a random temporary password instead.
 |--------|----------------------------------------|------------------------|--------------------------------------|
 | POST   | `/api/login`                           | Public                 | Login; returns JWT                   |
 | GET    | `/api/profile/me`                      | Any                    | Get own profile                      |
-| PUT    | `/api/profile/update`                  | Any                    | Update own contact info              |
+| PUT    | `/api/profile/update`                  | Any                    | Update own contact info (not skill)  |
 | PUT    | `/api/profile/password`                | Any                    | Change own password                  |
 | POST   | `/api/residents`                       | SuperAdmin             | Add resident + login account         |
 | GET    | `/api/residents/me/dues`               | Resident               | View unpaid / under-review invoices  |
 | GET    | `/api/residents/me/bookings`           | Resident               | View own bookings                    |
 | POST   | `/api/residents/{id}/reset-password`   | SuperAdmin             | Issue new temporary password         |
-| DELETE | `/api/residents/{id}`                  | SuperAdmin             | Delete resident + cascade            |
+| DELETE | `/api/residents/{id}`                  | SuperAdmin             | Delete resident (409 if owes money)  |
 | POST   | `/api/technicians`                     | SuperAdmin             | Add technician + login account       |
 | GET    | `/api/technicians/me`                  | Technician             | Get own profile                      |
 | GET    | `/api/technicians/me/tasks`            | Technician             | Get assigned tasks                   |
@@ -281,7 +297,7 @@ Accounts the admin creates later get a random temporary password instead.
 | POST   | `/api/payments/{trans_no}/confirm`     | SuperAdmin             | Mark payment as Paid                 |
 | POST   | `/api/payments/{trans_no}/reject`      | SuperAdmin             | Reject a reported payment            |
 | GET    | `/api/admin/stats`                     | SuperAdmin             | Dashboard stats                      |
-| GET    | `/api/admin/residents/search`          | SuperAdmin             | Search residents by name/block       |
+| GET    | `/api/admin/residents/search`          | SuperAdmin             | Search by name/block (any case)      |
 | GET    | `/api/admin/technicians`               | SuperAdmin             | List all technicians                 |
 | GET    | `/api/admin/transactions`              | SuperAdmin             | Transaction ledger with filters      |
 | POST   | `/api/admin/process-overdue`           | SuperAdmin             | Mark 30-day-old payments as Overdue  |

@@ -100,16 +100,40 @@ const ProfileView: React.FC = () => {
     fetchProfile();
   }, [fetchProfile]);
 
+  // Send only the fields this role may edit, under the API's field names (formData holds the
+  // whole profile as returned by /profile/me, in camelCase).
+  const buildUpdate = (): Record<string, unknown> => {
+    if (user?.role === "Resident") {
+      return {
+        name: formData.name,
+        contact: formData.contact,
+        no_of_members: formData.noOfMembers,
+      };
+    }
+    if (user?.role === "Technician") {
+      return {
+        name: formData.name,
+        contact: formData.contact,
+        available: !!formData.available,
+      };
+    }
+    return { username: formData.username };
+  };
+
   const handleUpdate = async () => {
     try {
       setSaving(true);
-      await api.put("/profile/update", formData);
-      setProfileData(formData);
+      await api.put("/profile/update", buildUpdate());
       setEditing(false);
       showSnackbar("Profile updated successfully!", "success");
+      // Reload so the page shows what was actually saved.
+      await fetchProfile();
     } catch (error) {
       console.error("Update failed:", error);
-      showSnackbar("Failed to update profile", "error");
+      const msg = axios.isAxiosError(error)
+        ? error.response?.data?.error
+        : null;
+      showSnackbar(msg || "Failed to update profile", "error");
     } finally {
       setSaving(false);
     }
@@ -383,10 +407,14 @@ const ProfileView: React.FC = () => {
                     fullWidth
                     label="Specialization / Skill"
                     name="skill"
-                    value={editing ? formData.skill : profileData.skill}
-                    onChange={handleChange}
-                    variant={editing ? "outlined" : "filled"}
-                    disabled={!editing}
+                    value={profileData.skill}
+                    variant="filled"
+                    disabled
+                    helperText={
+                      editing
+                        ? "Only the administrator can change your skill."
+                        : ""
+                    }
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>

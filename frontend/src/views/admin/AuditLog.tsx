@@ -126,6 +126,9 @@ const AuditLog: React.FC = () => {
                   DETAILS
                 </TableCell>
                 <TableCell sx={{ fontWeight: 700, color: "#64748b" }}>
+                  BY
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700, color: "#64748b" }}>
                   TIMESTAMP
                 </TableCell>
               </TableRow>
@@ -133,7 +136,7 @@ const AuditLog: React.FC = () => {
             <TableBody>
               {logs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                     <Typography color="text.secondary">
                       No audit logs found.
                     </Typography>
@@ -172,6 +175,9 @@ const AuditLog: React.FC = () => {
                     </TableCell>
                     <TableCell sx={{ fontSize: "0.85rem" }}>
                       {log.details}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: "0.85rem", fontWeight: 600 }}>
+                      {log.changed_by ?? "—"}
                     </TableCell>
                     <TableCell sx={{ fontSize: "0.85rem", color: "#64748b" }}>
                       {new Date(log.changed_at).toLocaleString()}

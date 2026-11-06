@@ -161,8 +161,7 @@ public class TechnicianService {
         
         assignment.setStatus(status);
         technicianManagementRepository.save(assignment);
-        auditService.log("technician_management", assignmentId.toString(), "UPDATE",
-            "Status set to " + status + " by " + actor.getUsername());
+        auditService.log("technician_management", assignmentId.toString(), "UPDATE", "Status set to " + status);
         return Map.of("message", "Task status updated to " + status + ".");
     }
     
@@ -195,19 +194,27 @@ public class TechnicianService {
         
         StringBuilder details = new StringBuilder("Updated: ");
         if (updates.containsKey("name")) {
-            tech.setName((String) updates.get("name"));
+            tech.setName(Inputs.requireText(Inputs.asText(updates.get("name"), "name"), "name", 100));
             details.append("name, ");
         }
         if (updates.containsKey("contact")) {
-            tech.setContact((String) updates.get("contact"));
+            tech.setContact(Inputs.requireText(Inputs.asText(updates.get("contact"), "contact"), "contact", 20));
             details.append("contact, ");
         }
+        // The skill decides which bookings a technician is matched to, so only the admin may change it.
+        // Echoing the current value back (as the profile form does) is fine.
         if (updates.containsKey("skill")) {
-            tech.setSkill((String) updates.get("skill"));
-            details.append("skill, ");
+            Object skill = updates.get("skill");
+            if (!(skill instanceof String s) || !s.trim().equals(tech.getSkill())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the administrator can change a technician's skill.");
+            }
         }
         if (updates.containsKey("available")) {
-            tech.setAvailable((Boolean) updates.get("available"));
+            if (!(updates.get("available") instanceof Boolean available)) {
+                throw Inputs.badRequest("available must be true or false.");
+            }
+            tech.setAvailable(available);
             details.append("available, ");
         }
         

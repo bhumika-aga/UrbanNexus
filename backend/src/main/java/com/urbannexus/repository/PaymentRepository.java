@@ -58,9 +58,10 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     @Query(value = """
         SELECT
             p.trans_no, p.status, p.type as service_type, p.cost, p.payment_reference,
-            COALESCE(r_am.name, r_tm.name, 'UrbanNexus System') AS resident_name,
-            COALESCE(r_am.house_block, r_tm.house_block, 'SYS') AS house_block,
-            COALESCE(r_am.house_unit, r_tm.house_unit, 'ADMIN') AS house_unit
+            COALESCE(r_am.name, r_tm.name, p.billed_to, 'UrbanNexus System') AS resident_name,
+            -- NULL block/unit with a name means a former (deleted) resident; 'SYS' means a system charge.
+            COALESCE(r_am.house_block, r_tm.house_block, CASE WHEN p.billed_to IS NULL THEN 'SYS' END) AS house_block,
+            COALESCE(r_am.house_unit, r_tm.house_unit, CASE WHEN p.billed_to IS NULL THEN 'ADMIN' END) AS house_unit
         FROM payment p
         LEFT JOIN amenity_mgmt am ON p.trans_no = am.trans_no
         LEFT JOIN resident r_am ON am.resident_id = r_am.resident_id
@@ -68,8 +69,9 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
         LEFT JOIN resident r_tm ON tm.resident_id = r_tm.resident_id
         WHERE (:status IS NULL OR p.status = :status)
         AND (:block IS NULL OR r_am.house_block = :block OR r_tm.house_block = :block)
-        AND (:residentName IS NULL OR :residentName = '' OR r_am.name LIKE CONCAT('%', :residentName, '%') OR r_tm.name LIKE CONCAT('%', :residentName, '%')
-             OR (:residentName = 'UrbanNexus System' AND r_am.name IS NULL AND r_tm.name IS NULL))
+        AND (:residentName IS NULL OR :residentName = ''
+             OR LOWER(COALESCE(r_am.name, r_tm.name, p.billed_to)) LIKE LOWER(CONCAT('%', :residentName, '%'))
+             OR (:residentName = 'UrbanNexus System' AND r_am.name IS NULL AND r_tm.name IS NULL AND p.billed_to IS NULL))
         """, nativeQuery = true)
     List<Map<String, Object>> searchTransactions(@Param("status") String status,
                                                  @Param("block") String block,
@@ -106,6 +108,32 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
         WHERE trans_no = :transNo AND status = 'Under Review'
         """, nativeQuery = true)
     int rejectPayment(@Param("transNo") String transNo);
+    
+    // A resident's invoices are linked only through their bookings, which are deleted with the resident.
+    String RESIDENT_TRANS_NOS =
+        "SELECT am.trans_no FROM amenity_mgmt am WHERE am.resident_id = :residentId "
+            + "UNION SELECT tm.trans_no FROM technician_management tm WHERE tm.resident_id = :residentId";
+    
+    @Query(value = "SELECT COUNT(*) FROM payment WHERE status IN ('Pending', 'Overdue', 'Under Review') "
+                       + "AND trans_no IN (" + RESIDENT_TRANS_NOS + ")", nativeQuery = true)
+    long countUnpaidForResident(@Param("residentId") Long residentId);
+    
+    @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status IN ('Pending', 'Overdue', 'Under Review') "
+                       + "AND trans_no IN (" + RESIDENT_TRANS_NOS + ")", nativeQuery = true)
+    java.math.BigDecimal sumUnpaidForResident(@Param("residentId") Long residentId);
+    
+    // Written-off invoices stay in the ledger for the record but no longer count as money owed.
+    @Modifying
+    @Query(value = "UPDATE payment SET status = 'Written Off' WHERE status IN ('Pending', 'Overdue', 'Under Review') "
+                       + "AND trans_no IN (" + RESIDENT_TRANS_NOS + ")", nativeQuery = true)
+    int writeOffUnpaidForResident(@Param("residentId") Long residentId);
+    
+    // Copies the resident's name onto their invoices so the ledger still shows who was billed after the
+    // resident (and with them the booking rows that link invoice to resident) are deleted.
+    @Modifying
+    @Query(value = "UPDATE payment SET billed_to = :name WHERE trans_no IN (" + RESIDENT_TRANS_NOS + ")",
+        nativeQuery = true)
+    int recordBilledTo(@Param("residentId") Long residentId, @Param("name") String name);
     
     // Money not yet received: includes claims still awaiting the admin's confirmation.
     @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status IN ('Pending', 'Under Review')", nativeQuery = true)

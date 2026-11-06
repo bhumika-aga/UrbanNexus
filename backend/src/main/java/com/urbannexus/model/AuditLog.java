@@ -49,6 +49,10 @@ public class AuditLog {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String details;
     
+    // Username of whoever made the change, or "system" for scheduled jobs.
+    @Column(name = "changed_by", length = 50)
+    private String changedBy;
+    
     @Column(name = "changed_at", insertable = false, updatable = false)
     private LocalDateTime changedAt;
 }

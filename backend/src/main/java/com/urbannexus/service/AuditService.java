@@ -24,9 +24,11 @@ package com.urbannexus.service;
 
 import com.urbannexus.model.AuditLog;
 import com.urbannexus.repository.AuditLogRepository;
+import com.urbannexus.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -35,13 +37,26 @@ public class AuditService {
     
     private final AuditLogRepository auditLogRepository;
     
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /**
+     * Records a change as part of the caller's transaction, so the entry is rolled back with the change it describes
+     * and never claims something that did not happen. The actor is the signed-in user, or "system" for scheduled jobs.
+     */
+    @Transactional
     public void log(String table, String recordId, String action, String details) {
         AuditLog log = new AuditLog();
         log.setTableAffected(table);
         log.setRecordId(recordId);
         log.setActionType(action);
         log.setDetails(details);
+        log.setChangedBy(currentActor());
         auditLogRepository.save(log);
+    }
+    
+    private static String currentActor() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal principal) {
+            return principal.getUsername();
+        }
+        return "system";
     }
 }

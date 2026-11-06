@@ -64,18 +64,18 @@ public class PaymentService {
     }
     
     @Transactional
-    public void confirmPayment(String transNo, String adminUsername) {
+    public void confirmPayment(String transNo) {
         if (paymentRepository.confirmPayment(transNo) == 0) {
             throw new RuntimeException("Invoice not found or already paid.");
         }
-        auditService.log("payment", transNo, "UPDATE", "Payment confirmed as received by " + adminUsername);
+        auditService.log("payment", transNo, "UPDATE", "Payment confirmed as received.");
     }
     
     @Transactional
-    public void rejectPayment(String transNo, String adminUsername) {
+    public void rejectPayment(String transNo) {
         if (paymentRepository.rejectPayment(transNo) == 0) {
             throw new RuntimeException("Invoice not found or not under review.");
         }
-        auditService.log("payment", transNo, "UPDATE", "Submitted payment rejected by " + adminUsername);
+        auditService.log("payment", transNo, "UPDATE", "Submitted payment rejected.");
     }
 }
