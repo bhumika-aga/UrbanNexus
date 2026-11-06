@@ -21,18 +21,18 @@ Rather than mixing user actions collectively, the React application intercepts t
 backend dynamically branching behavior securely into three boundaries:
 
 1. **Resident Portal:**
-    - Visualizes personal pending financial dues.
-    - Manages personal maintenance service bookings (Technicians mapping Plumbers, Electricians).
-    - Coordinates dynamic Amenity scheduling securely referencing backend capacities.
+   - Visualizes personal pending financial dues.
+   - Manages personal maintenance service bookings (Technicians mapping Plumbers, Electricians).
+   - Coordinates dynamic Amenity scheduling securely referencing backend capacities.
 
 2. **Technician Portal:**
-    - Dedicated simplified routing displaying currently mapped assignments scheduled via Admin hooks.
-    - Allows instant status changes referencing `COMPLETED` tags back modifying raw Java hooks.
+   - Dedicated simplified routing displaying currently mapped assignments scheduled via Admin hooks.
+   - Allows instant status changes referencing `COMPLETED` tags back modifying raw Java hooks.
 
 3. **Super Admin Dashboard:**
-    - God-view interfaces querying the comprehensive Grid mapping (Tenants, Tasks, Amenities, Transactions).
-    - Explicit buttons triggering administrative bulk backend cycles (ex: "Process Overdue Payments" mapping internally
-      onto Java Cron Jobs natively).
+   - God-view interfaces querying the comprehensive Grid mapping (Tenants, Tasks, Amenities, Transactions).
+   - Explicit buttons triggering administrative bulk backend cycles (ex: "Process Overdue Payments" mapping internally
+     onto Java Cron Jobs natively).
 
 ## 🔑 Stateless Integration via Axios
 

@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
 
 permissions:
@@ -70,7 +70,7 @@ jobs:
 
   e2e:
     name: Browser walkthrough
-    needs: [backend, frontend]
+    needs: [ backend, frontend ]
     runs-on: ubuntu-latest
     env:
       # Test-only signing key for this throwaway run; not used anywhere else.

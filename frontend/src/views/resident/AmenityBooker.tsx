@@ -39,8 +39,8 @@ import {
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import api from "../../api/axiosClient";
-import { localToday } from "../../utils/date";
 import { Amenity } from "../../types";
+import { localToday } from "../../utils/date";
 
 interface Props {
   onBack: () => void;

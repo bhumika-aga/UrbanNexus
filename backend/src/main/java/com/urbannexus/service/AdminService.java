@@ -99,7 +99,9 @@ public class AdminService {
             name == null ? null : "%" + name.toLowerCase(Locale.ROOT) + "%"));
     }
     
-    /** Marks Pending invoices issued more than 30 days ago as Overdue; returns how many changed. */
+    /**
+     * Marks Pending invoices issued more than 30 days ago as Overdue; returns how many changed.
+     */
     @Transactional
     public int processOverduePayments() {
         int marked = paymentRepository.processOverduePayments();

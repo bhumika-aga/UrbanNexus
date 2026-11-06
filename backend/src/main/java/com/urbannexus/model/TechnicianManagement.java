@@ -29,8 +29,6 @@ import java.time.LocalDate;
 
 @Data
 @Entity
-// One technician, one job per slot: the database rejects a second assignment even if two
-// bookings race past the service-level check.
 @Table(name = "technician_management",
     uniqueConstraints = @UniqueConstraint(name = "uk_technician_slot", columnNames = {"tech_id", "assign_date", "slot"}))
 public class TechnicianManagement {

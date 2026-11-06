@@ -23,9 +23,9 @@
 package com.urbannexus.service;
 
 import com.urbannexus.model.Admin;
+import com.urbannexus.model.Pricing.PricingCategory;
 import com.urbannexus.model.Technician;
 import com.urbannexus.model.TechnicianManagement;
-import com.urbannexus.model.Pricing.PricingCategory;
 import com.urbannexus.repository.AdminRepository;
 import com.urbannexus.repository.PricingRepository;
 import com.urbannexus.repository.TechnicianManagementRepository;
@@ -158,7 +158,9 @@ public class TechnicianService {
         return Map.of("message", "Technician updated.");
     }
     
-    /** Returns the skill if it is on the technician price list; any other skill could never be booked. */
+    /**
+     * Returns the skill if it is on the technician price list; any other skill could never be booked.
+     */
     private String requireBookableSkill(String skill) {
         String trimmed = Inputs.requireText(skill, "skill", 50);
         if (pricingRepository.findByItemNameAndCategory(trimmed, PricingCategory.Technician).isEmpty()) {

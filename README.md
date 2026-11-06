@@ -287,7 +287,7 @@ the backend before running it again.
 `.github/workflows/ci.yml` runs on every push to `main` and every pull request:
 
 | Job                     | What it checks                                                                   |
-|-------------------------|----------------------------------------------------------------------------------|
+| ----------------------- | -------------------------------------------------------------------------------- |
 | Backend tests           | `mvn test`, including the PostgreSQL compatibility tests (Docker is available)   |
 | Frontend                | type-check, lint and production build                                            |
 | Production image builds | `docker build backend` — the image the host deploys                              |
