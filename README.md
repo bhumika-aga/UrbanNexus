@@ -11,8 +11,10 @@ booking, payment tracking with 18% GST, and an administrative audit trail.
 ### Backend: Spring Boot 4.1 + Java 17
 
 The backend is a RESTful JSON API with JWT-based stateless authentication, on Spring Boot 4.1 (Spring Framework 7,
-Spring Security 7, Hibernate 7, Tomcat 11, Jackson 3). `pom.xml` overrides Logback to 1.6.x because Spring Boot 4.1 still
-manages a 1.5.x version affected by CVE-2026-19880; drop the override once Spring Boot ships Logback 1.6.3 or later.
+Spring Security 7, Hibernate 7, Tomcat 11, Jackson 3). `pom.xml` overrides a few versions that Spring Boot 4.1.2 manages
+but that have known vulnerabilities: Logback (CVE-2026-19880), Jackson 2 and 3 (CVE-2026-110879), and, for tests only,
+json-smart and ASM; it also swaps the unmaintained `android-json` test dependency for `org.json:json`. Each override is
+commented with its CVE; drop it once Spring Boot manages a fixed version itself.
 Key layers:
 
 - **Controller** — validates role-based access, maps HTTP requests to service calls

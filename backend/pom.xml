@@ -32,7 +32,27 @@
              (path traversal via MDCBasedDiscriminator). 1.6.3+ fixes it; 1.6.x is a drop-in
              replacement for 1.5.x. Remove this override once Spring Boot manages 1.6.3 or later. -->
         <logback.version>1.6.6</logback.version>
+        <!-- Security overrides of versions Spring Boot 4.1.2 manages. Remove each once Spring Boot
+             manages the fixed version (or later) itself.
+             Jackson: CVE-2026-110879 (critical; polymorphic type validation bypass), fixed in 3.1.8
+             and 2.21.8. Jackson 3 is Spring's; Jackson 2 is used by jjwt for JWT parsing.
+             json-smart (test only, via json-path): CVE-2026-113602, fixed in 2.6.1. -->
+        <jackson-bom.version>3.1.8</jackson-bom.version>
+        <jackson-2-bom.version>2.21.8</jackson-2-bom.version>
+        <json-smart.version>2.6.1</json-smart.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Test only (json-smart -> accessors-smart -> asm), not managed by Spring Boot:
+                 CVE-2026-110257 .. CVE-2026-110263 and CVE-2026-110591, fixed in 9.11. -->
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>9.11.1</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
@@ -110,6 +130,22 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <!-- An unmaintained 2013 repackage of org.json with no fix for CVE-2026-110974
+                     (unbounded recursion on nested JSON); replaced by org.json:json below. -->
+                <exclusion>
+                    <groupId>com.vaadin.external.google</groupId>
+                    <artifactId>android-json</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Provides the org.json classes JSONAssert (MockMvc content().json()) needs, in place of
+             android-json. -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20260814</version>
             <scope>test</scope>
         </dependency>
         <dependency>
