@@ -48,7 +48,7 @@ to install for local work. H2's compatibility mode is close to, but more lenient
 also runs the real SQL against PostgreSQL (see [Testing](#backend-local--embedded-h2)).
 
 | Profile | Database                                             | Init mode         | Purpose                             |
-| ------- | ---------------------------------------------------- | ----------------- | ----------------------------------- |
+|---------|------------------------------------------------------|-------------------|-------------------------------------|
 | (none)  | Embedded H2, file-based, `MODE=PostgreSQL`           | `always`          | Local development — zero setup      |
 | `prod`  | Supabase PostgreSQL via the transaction pooler (SSL) | `never` (default) | Deployed container (Docker sets it) |
 
@@ -115,7 +115,7 @@ while giving users ownership of their credentials after first login.
 ### Roles
 
 | Role         | Capabilities                                                                                                  |
-| ------------ | ------------------------------------------------------------------------------------------------------------- |
+|--------------|---------------------------------------------------------------------------------------------------------------|
 | `SuperAdmin` | Add, edit and delete residents and technicians (incl. skill); manage amenities (API only); reset passwords    |
 | `Resident`   | View own dues and report offline payments; book technicians and amenities; view own history; edit own profile |
 | `Technician` | View own jobs (with dates); mark own jobs Completed; toggle availability; edit own name and contact           |
@@ -208,7 +208,8 @@ list + 18%).
 ### Audit Trail
 
 All critical mutations (resident/technician add, edit and delete, amenity renames and deletes, task status changes,
-availability toggles, payment reviews, overdue scans, password resets, write-offs) are written to `audit_log` via `AuditService` inside the same transaction as the mutation
+availability toggles, payment reviews, overdue scans, password resets, write-offs) are written to `audit_log` via
+`AuditService` inside the same transaction as the mutation
 itself: if the change rolls back, so does its log entry, and logging uses no extra database connection. Each entry
 records who made the change (`changed_by`: the signed-in username, or `system` for scheduled jobs). Auditing lives
 entirely in the application layer, so it is database-agnostic and needs no engine-specific triggers.
@@ -246,7 +247,7 @@ Secrets are never hard-coded; they are read from the environment. In production,
 `CORS_ALLOWED_ORIGINS` have **no default** and must be set; the others have sensible defaults.
 
 | Variable               | Required in  | Default             | Notes                                                                                                                                                                                                              |
-| ---------------------- | ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|------------------------|--------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `JWT_SECRET`           | local + prod | _(none — required)_ | **Base64** string, ≥ 32 bytes decoded (the app Base64-decodes it; 48 bytes → HS384). Generate **once** with `openssl rand -base64 48`, then reuse the same value — a changing secret invalidates all issued tokens |
 | `DB_URL`               | prod         | _(none — required)_ | The complete JDBC URL, credentials and options included (see below). Not used locally — the default profile is H2                                                                                                  |
 | `DB_INIT_MODE`         | prod         | `never`             | Leave unset in normal operation. Set to `always` **once** to seed a brand-new database, then remove                                                                                                                |
@@ -278,13 +279,15 @@ mvn spring-boot:run
 ```
 
 Run the tests with `mvn test` (63 tests). They are integration tests over HTTP (MockMvc) against in-memory H2
-databases, grouped by area: security and accounts, bookings and provisioning, profiles/audit/deletion, error handling and
+databases, grouped by area: security and accounts, bookings and provisioning, profiles/audit/deletion, error handling
+and
 configuration, and maintenance fixes. `PostgresCompatibilityIntegrationTest` also runs the real `schema.sql`, `data.sql`
 and native queries against PostgreSQL 16 in a Docker container (Testcontainers) and is skipped automatically when Docker
 isn't running; CI always runs it.
 
 On every start, `schema.sql` recreates all tables and `data.sql` seeds 26 residents, 16 technicians, 5 amenities,
-pricing, and 10 sample invoices with their bookings. Inspect the data at `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:file:./data/urbannexus`, user `sa`,
+pricing, and 10 sample invoices with their bookings. Inspect the data at `http://localhost:8080/h2-console` (JDBC URL
+`jdbc:h2:file:./data/urbannexus`, user `sa`,
 empty password).
 
 ### Backend (Supabase — production profile)
@@ -343,7 +346,7 @@ the backend before running it again.
 `.github/workflows/ci.yml` runs on every push to `main` and every pull request:
 
 | Job                     | What it checks                                                                   |
-| ----------------------- | -------------------------------------------------------------------------------- |
+|-------------------------|----------------------------------------------------------------------------------|
 | Backend tests           | `mvn test`, including the PostgreSQL compatibility tests (Docker is available)   |
 | Frontend                | type-check, lint and production build                                            |
 | Production image builds | `docker build backend` — the image the host deploys                              |
@@ -365,7 +368,7 @@ created with `must_change_password = TRUE` and has to choose a new password at f
 production database with `data.sql` and leave these accounts unclaimed.
 
 | Role       | Username   | Seed password  |
-| ---------- | ---------- | -------------- |
+|------------|------------|----------------|
 | SuperAdmin | `admin`    | `Bhumika@1234` |
 | Resident   | `jane_s`   | `pwd123#`      |
 | Technician | `tech_tom` | `pwd123#`      |
@@ -376,7 +379,7 @@ Accounts the admin creates later get a random temporary password instead.
 ### Endpoints
 
 | Method | Path                                   | Role                   | Description                          |
-| ------ | -------------------------------------- | ---------------------- | ------------------------------------ |
+|--------|----------------------------------------|------------------------|--------------------------------------|
 | GET    | `/actuator/health`                     | Public                 | Health check (used by Docker/host)   |
 | POST   | `/api/login`                           | Public                 | Login; returns JWT                   |
 | GET    | `/api/profile/me`                      | Any                    | Get own profile                      |
@@ -496,7 +499,8 @@ has no headcount limit. **There is no API for prices yet:** a new amenity can on
 has a row for it, e.g.
 
 ```sql
-INSERT INTO pricing (item_name, category, base_price) VALUES ('Rooftop Garden', 'Amenity', 800.00);
+INSERT INTO pricing (item_name, category, base_price)
+VALUES ('Rooftop Garden', 'Amenity', 800.00);
 ```
 
 **Book Technician** (`POST /api/bookings/technician`):

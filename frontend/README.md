@@ -19,29 +19,29 @@ technician — chosen from the role in the user's JWT. All data comes from the S
 ## 🔀 Portals
 
 1. **Resident Portal**
-   - **My Dues:** pending, overdue and under-review invoices. There is no online payment; the resident pays offline
-     (UPI, bank transfer, cheque), clicks **I've Paid** and enters the payment reference. The invoice shows "Under
-     Review" until the administrator confirms it.
-   - **Facilities:** reserve an amenity for a date (today or later), slot and headcount. The server refuses bookings
-     that exceed the remaining capacity for that slot.
-   - **Staff Support:** request a technician. The skill list and the GST-inclusive price of each service come from the
-     API (`/bookings/technician-skills`), so they follow the price list.
-   - **My Activity:** past and upcoming reservations and service tickets.
+    - **My Dues:** pending, overdue and under-review invoices. There is no online payment; the resident pays offline
+      (UPI, bank transfer, cheque), clicks **I've Paid** and enters the payment reference. The invoice shows "Under
+      Review" until the administrator confirms it.
+    - **Facilities:** reserve an amenity for a date (today or later), slot and headcount. The server refuses bookings
+      that exceed the remaining capacity for that slot.
+    - **Staff Support:** request a technician. The skill list and the GST-inclusive price of each service come from the
+      API (`/bookings/technician-skills`), so they follow the price list.
+    - **My Activity:** past and upcoming reservations and service tickets.
 
 2. **Technician Portal**
-   - The open jobs queue, with each job's date (past-due dates in red) and time slot, and a **Resolve Task** button to
-     mark one's own job completed.
-   - Counters for resolved, active, today's and past-due jobs, an archive of completed jobs, and a duty-status switch
-     (available for new assignments or not).
+    - The open jobs queue, with each job's date (past-due dates in red) and time slot, and a **Resolve Task** button to
+      mark one's own job completed.
+    - Counters for resolved, active, today's and past-due jobs, an archive of completed jobs, and a duty-status switch
+      (available for new assignments or not).
 
 3. **Admin Dashboard**
-   - Summary cards (residents, payments to review, unpaid total, open assignments) that refresh after each action.
-   - **Resident Directory:** search, add a resident (shows their one-time credentials), reset a password, delete a
-     resident — with an offer to write off any money they still owe.
-   - **Technical Crew:** add a technician, edit name, contact, skill or availability, reset a password.
-   - **Financial Ledger:** search invoices; confirm or reject reported payments, record offline payments, and run the
-     overdue scan.
-   - **Open Assignments**, **Facility Bookings**, **Service History** and **Audit Logs** (who changed what, and when).
+    - Summary cards (residents, payments to review, unpaid total, open assignments) that refresh after each action.
+    - **Resident Directory:** search, add a resident (shows their one-time credentials), reset a password, delete a
+      resident — with an offer to write off any money they still owe.
+    - **Technical Crew:** add a technician, edit name, contact, skill or availability, reset a password.
+    - **Financial Ledger:** search invoices; confirm or reject reported payments, record offline payments, and run the
+      overdue scan.
+    - **Open Assignments**, **Facility Bookings**, **Service History** and **Audit Logs** (who changed what, and when).
 
 Every user also has a **Profile** page (contact details, family members for residents, password change). Technicians see
 their skill but only the administrator can change it.
@@ -91,7 +91,7 @@ Then open `http://localhost:5173`. The seed accounts are listed in the main [REA
 ### Scripts
 
 | Command                | What it does                                       |
-| ---------------------- | -------------------------------------------------- |
+|------------------------|----------------------------------------------------|
 | `npm run dev`          | Dev server with hot reload                         |
 | `npm run build`        | Production build into `dist/`                      |
 | `npm run preview`      | Serve the production build locally                 |
