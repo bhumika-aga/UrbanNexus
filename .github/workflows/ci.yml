@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the run still in progress.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend tests (H2 + PostgreSQL)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      # Docker is available on GitHub's Ubuntu runners, so PostgresCompatibilityIntegrationTest
+      # runs here against a real PostgreSQL (it is skipped only where Docker is missing).
+      - name: Run tests
+        run: mvn -B -ntp test
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-test-reports
+          path: backend/target/surefire-reports
+
+  frontend:
+    name: Frontend type-check, lint and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Type-check
+        run: npx tsc --noEmit -p tsconfig.json
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+
+  docker:
+    name: Production image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # The same build the host runs on deploy (backend/Dockerfile); nothing is pushed anywhere.
+      - name: Build image
+        run: docker build -t urbannexus-backend:ci backend
+
+  e2e:
+    name: Browser walkthrough
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    env:
+      # Test-only signing key for this throwaway run; not used anywhere else.
+      JWT_SECRET: dGVzdC1zZWNyZXQtdGhhdC1pcy1hdC1sZWFzdC00OC1ieXRlcy1sb25nLWZvci1oczM4NA==
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+
+      - name: Build backend
+        working-directory: backend
+        run: mvn -B -ntp -q package -DskipTests
+
+      # Default (local) profile: embedded H2, reseeded from data.sql on start, as the walkthrough needs.
+      - name: Start backend
+        run: |
+          mkdir -p "$RUNNER_TEMP/backend"
+          cd "$RUNNER_TEMP/backend"
+          nohup java -jar "$GITHUB_WORKSPACE"/backend/target/backend-*.jar > backend.log 2>&1 &
+          timeout 120 bash -c 'until curl -sf http://localhost:8080/actuator/health > /dev/null; do sleep 2; done'
+
+      - name: Build and serve frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          nohup npx vite preview --port 5173 --strictPort > "$RUNNER_TEMP/frontend.log" 2>&1 &
+          timeout 60 bash -c 'until curl -sf http://localhost:5173 > /dev/null; do sleep 1; done'
+
+      # Drives the Google Chrome preinstalled on the runner (no browser download).
+      - name: Run walkthrough
+        working-directory: e2e
+        env:
+          SCREENSHOT_DIR: ${{ runner.temp }}/screenshots
+        run: |
+          npm ci
+          npm test
+
+      - name: Upload screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-screenshots-and-logs
+          path: |
+            ${{ runner.temp }}/screenshots
+            ${{ runner.temp }}/backend/backend.log
+            ${{ runner.temp }}/frontend.log

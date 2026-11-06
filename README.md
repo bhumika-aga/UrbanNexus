@@ -263,6 +263,39 @@ npm run dev
 Frontend runs at `http://localhost:5173`. API calls target `http://localhost:8080/api` by default. Override this with a
 `VITE_API_URL` environment variable (useful when pointing at a remote backend).
 
+### Browser walkthrough (end-to-end)
+
+`e2e/walkthrough.mjs` drives the whole app in headless Chrome as admin, resident and technician (login and forced
+password change, every admin tab, bookings, payments and their review, technician tasks, deletion with write-off) and
+saves a screenshot of each screen. It needs Google Chrome installed, a **freshly started** local backend (the default
+H2 profile reseeds on every start; the walkthrough changes seeded passwords and data) and the frontend on port 5173:
+
+```bash
+# terminal 1: backend (local profile)        # terminal 2: frontend
+cd backend && mvn spring-boot:run            cd frontend && npm run dev
+# terminal 3
+cd e2e
+npm install
+npm test        # screenshots in e2e/screenshots/; exits non-zero on any failure
+```
+
+`APP_URL`, `SCREENSHOT_DIR` and `BROWSER_CHANNEL` override the frontend address, screenshot folder and browser. Restart
+the backend before running it again.
+
+### Continuous integration
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
+
+| Job                     | What it checks                                                                   |
+|-------------------------|----------------------------------------------------------------------------------|
+| Backend tests           | `mvn test`, including the PostgreSQL compatibility tests (Docker is available)   |
+| Frontend                | type-check, lint and production build                                            |
+| Production image builds | `docker build backend` — the image the host deploys                              |
+| Browser walkthrough     | the e2e walkthrough against a freshly seeded backend and the production frontend |
+
+Screenshots and server logs from the walkthrough are attached to every run as the `e2e-screenshots-and-logs` artifact,
+and backend test reports are attached when tests fail.
+
 ---
 
 ## API Reference
@@ -418,9 +451,10 @@ Slots are integers 1–3 (Morning / Afternoon / Evening).
 
 ```txt
 UrbanNexus/
+├── .github/workflows/ci.yml  CI: backend tests, frontend checks, image build, browser walkthrough
 ├── backend/
 │   ├── src/main/java/com/urbannexus/
-│   │   ├── config/          SecurityConfig
+│   │   ├── config/          SecurityConfig, TimeConfig, PaymentResidentBackfill
 │   │   ├── controller/      AuthController, AdminController, ResidentController,
 │   │   │                    TechnicianController, BookingController,
 │   │   │                    AmenityController, PaymentController
@@ -436,6 +470,8 @@ UrbanNexus/
 │       ├── application-prod.yml     Supabase PostgreSQL datasource (prod profile)
 │       ├── schema.sql               Portable DDL (H2 PostgreSQL-mode + Supabase)
 │       └── data.sql                 Seed data (residents, technicians, pricing)
+│   (src/test/java/...)              Integration tests on H2, plus PostgreSQL via Testcontainers
+├── e2e/                     Browser walkthrough (headless Chrome, playwright-core)
 ├── frontend/
 │   └── src/
 │       ├── views/           admin/, resident/, technician/ portals + Login
