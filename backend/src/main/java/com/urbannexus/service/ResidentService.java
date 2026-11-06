@@ -48,24 +48,30 @@ public class ResidentService {
     private final AmenityMgmtRepository amenityMgmtRepository;
     private final TechnicianManagementRepository technicianManagementRepository;
     private final AuditService auditService;
+    private final UsernameGenerator usernameGenerator;
     
     @Transactional
     public Map<String, Object> addResident(String name, String houseBlock, String houseFloor, String houseUnit,
                                            String ownershipStatus, String contact, Integer noOfMembers) {
-        log.info("Adding new resident: {} in block: {}", name, houseBlock);
+        // Lengths match the resident table's columns.
+        String residentName = Inputs.requireText(name, "name", 100);
         Resident resident = new Resident();
-        resident.setName(name);
-        resident.setHouseBlock(houseBlock);
-        resident.setHouseFloor(houseFloor);
-        resident.setHouseUnit(houseUnit);
-        resident.setOwnershipStatus(ownershipStatus);
-        resident.setContact(contact);
+        resident.setName(residentName);
+        resident.setHouseBlock(Inputs.requireText(houseBlock, "house_block", 10));
+        resident.setHouseFloor(Inputs.requireText(houseFloor, "house_floor", 10));
+        resident.setHouseUnit(Inputs.requireText(houseUnit, "house_unit", 10));
+        resident.setOwnershipStatus(Inputs.requireText(ownershipStatus, "ownership_status", 50));
+        resident.setContact(Inputs.requireText(contact, "contact", 20));
+        if (noOfMembers != null && noOfMembers < 1) {
+            throw Inputs.badRequest("no_of_members must be at least 1.");
+        }
         resident.setNoOfMembers(noOfMembers);
+        log.info("Adding new resident: {} in block: {}", residentName, resident.getHouseBlock());
         
         resident = residentRepository.save(resident);
         Long newResidentId = resident.getResidentId();
         
-        String username = name.toLowerCase().replaceAll("\\s+", "_") + newResidentId;
+        String username = usernameGenerator.generate(residentName, newResidentId);
         
         Admin admin = new Admin();
         admin.setUsername(username);
@@ -74,7 +80,7 @@ public class ResidentService {
         String temporaryPassword = authService.issueTemporaryPassword(admin);
         log.info("Resident created successfully inside database with generated username: {}", username);
         
-        auditService.log("resident", newResidentId.toString(), "ADD", "Added new resident: " + name);
+        auditService.log("resident", newResidentId.toString(), "ADD", "Added new resident: " + residentName);
         
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Resident and Login created!");

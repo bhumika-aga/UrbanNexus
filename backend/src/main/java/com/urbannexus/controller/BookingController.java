@@ -26,6 +26,7 @@ import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.BookingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -41,9 +43,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class BookingController {
-    
+
     private final BookingService bookingService;
-    
+
     @PostMapping("/technician")
     public ResponseEntity<?> bookTechnician(@AuthenticationPrincipal UserPrincipal currentUser,
                                             @RequestBody Map<String, Object> payload) {
@@ -57,22 +59,29 @@ public class BookingController {
                                   : (payload.get("resident_id") != null
                                          ? Long.parseLong(payload.get("resident_id").toString())
                                          : null);
-            
+
             String skill = (String) payload.get("skill");
             Integer slot = payload.get("slot") != null ? Integer.parseInt(payload.get("slot").toString())
                                : null;
             String assignDate = (String) payload.get("assign_date");
-            
+
             return ResponseEntity.status(HttpStatus.CREATED)
                        .body(bookingService.bookTechnician(residentId, skill, slot, assignDate));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
+        } catch (DataIntegrityViolationException e) {
+            // The unique (tech_id, assign_date, slot) constraint caught a booking that raced past the check.
+            log.warn("Technician booking collided with a concurrent booking", e);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                       .body(Map.of("error", "That slot was just taken. Please try again."));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", String.valueOf(e.getMessage())));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Booking failed"));
         }
     }
-    
+
     @PostMapping("/amenity")
     public ResponseEntity<?> bookAmenity(@AuthenticationPrincipal UserPrincipal currentUser,
                                          @RequestBody Map<String, Object> payload) {
@@ -80,13 +89,13 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                        .body(Map.of("error", "Only Residents or Admins can create bookings."));
         }
-        
+
         try {
             Long residentId = "Resident".equals(currentUser.getRole()) ? currentUser.getResidentId()
                                   : (payload.get("resident_id") != null
                                          ? Long.parseLong(payload.get("resident_id").toString())
                                          : null);
-            
+
             Long amenityId = payload.get("amenity_id") != null
                                  ? Long.parseLong(payload.get("amenity_id").toString())
                                  : null;
@@ -96,12 +105,14 @@ public class BookingController {
             Integer capacityBooked = payload.get("capacity_booked") != null
                                          ? Integer.parseInt(payload.get("capacity_booked").toString())
                                          : null;
-            
+
             return ResponseEntity.status(HttpStatus.CREATED)
                        .body(bookingService.bookAmenity(residentId, amenityId, date, slot,
                            capacityBooked));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", String.valueOf(e.getMessage())));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to book amenity."));
         }

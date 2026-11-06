@@ -26,10 +26,12 @@ import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.ResidentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -58,13 +60,24 @@ public class ResidentController {
             String ownershipStatus = (String) payload.get("ownership_status");
             String contact = (String) payload.get("contact");
             Integer noOfMembers = payload.get("no_of_members") != null
-                                      ? ((Number) payload.get("no_of_members")).intValue()
+                                      ? Integer.parseInt(payload.get("no_of_members").toString())
                                       : null;
             
             Map<String, Object> res = residentService.addResident(name, houseBlock, houseFloor, houseUnit,
                 ownershipStatus, contact, noOfMembers);
             return ResponseEntity.status(HttpStatus.CREATED).body(res);
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
+        } catch (NumberFormatException | ClassCastException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                       .body(Map.of("error", "Invalid resident details: text fields must be text and no_of_members a number."));
+        } catch (DataIntegrityViolationException e) {
+            // The generated username was claimed by a concurrent insert.
+            log.warn("Resident creation hit a uniqueness conflict", e);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                       .body(Map.of("error", "Could not reserve a unique username. Please try again."));
         } catch (Exception e) {
+            log.error("Failed to create resident account", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to create resident account"));
         }

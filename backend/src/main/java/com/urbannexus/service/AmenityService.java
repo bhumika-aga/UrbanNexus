@@ -24,6 +24,8 @@ package com.urbannexus.service;
 
 import com.urbannexus.model.Amenity;
 import com.urbannexus.repository.AmenityRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,36 +35,60 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AmenityService {
-    
+
     private final AmenityRepository amenityRepository;
-    
+    private final EntityManager entityManager;
+
     @Transactional
     public void addAmenity(Long amenityId, String name, Integer capacity) {
+        long id = Inputs.requirePositiveId(amenityId, "amenity_id");
+        String amenityName = Inputs.requireText(name, "name", 100);
+        requireValidCapacity(capacity);
+
+        if (amenityRepository.existsById(id)) {
+            throw Inputs.conflict("Amenity ID " + id + " already exists.");
+        }
+
         Amenity amenity = new Amenity();
-        amenity.setAmenityId(amenityId);
-        amenity.setName(name);
+        amenity.setAmenityId(id);
+        amenity.setName(amenityName);
         amenity.setCapacity(capacity);
-        amenityRepository.save(amenity);
+        // persist, not save(): with an admin-assigned id, save() merges and would silently
+        // overwrite a row inserted since the check above; persist always INSERTs.
+        try {
+            entityManager.persist(amenity);
+            entityManager.flush();
+        } catch (PersistenceException e) {
+            throw Inputs.conflict("Amenity ID " + id + " already exists.");
+        }
     }
-    
+
     public List<Amenity> getAllAmenities() {
         return amenityRepository.findAll();
     }
-    
+
     @Transactional
     public void updateAmenity(Long id, String name, Integer capacity) {
         Amenity amenity = amenityRepository.findById(id)
-                              .orElseThrow(() -> new RuntimeException("Amenity not found."));
-        if (name != null) amenity.setName(name);
+                              .orElseThrow(() -> Inputs.notFound("Amenity not found."));
+        requireValidCapacity(capacity);
+        if (name != null) amenity.setName(Inputs.requireText(name, "name", 100));
         if (capacity != null) amenity.setCapacity(capacity);
         amenityRepository.save(amenity);
     }
-    
+
     @Transactional
     public void deleteAmenity(Long id) {
         if (!amenityRepository.existsById(id)) {
-            throw new RuntimeException("Amenity not found.");
+            throw Inputs.notFound("Amenity not found.");
         }
         amenityRepository.deleteById(id);
+    }
+
+    // NULL is allowed and means "no headcount limit".
+    private static void requireValidCapacity(Integer capacity) {
+        if (capacity != null && capacity < 1) {
+            throw Inputs.badRequest("capacity must be at least 1.");
+        }
     }
 }

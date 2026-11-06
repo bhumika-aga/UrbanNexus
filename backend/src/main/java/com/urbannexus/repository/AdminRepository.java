@@ -37,7 +37,9 @@ import java.util.Optional;
 public interface AdminRepository extends JpaRepository<Admin, Long> {
     
     Optional<Admin> findByUsername(String username);
-    
+
+    boolean existsByUsername(String username);
+
     Optional<Admin> findByResident_ResidentId(Long residentId);
     
     Optional<Admin> findByTechnician_TechId(Long techId);

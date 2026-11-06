@@ -98,6 +98,8 @@ CREATE TABLE technician_management
     slot          INTEGER      NOT NULL,
     assign_date   DATE         NOT NULL,
     PRIMARY KEY (assignment_id),
+    -- A technician can hold only one assignment per date and slot.
+    CONSTRAINT uk_technician_slot UNIQUE (tech_id, assign_date, slot),
     FOREIGN KEY (resident_id) REFERENCES resident (resident_id) ON DELETE CASCADE,
     FOREIGN KEY (tech_id) REFERENCES technician (tech_id) ON DELETE CASCADE,
     FOREIGN KEY (trans_no) REFERENCES payment (trans_no) ON DELETE SET NULL

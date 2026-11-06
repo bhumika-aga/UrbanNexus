@@ -120,8 +120,11 @@ const ResidentManager: React.FC = () => {
         password: res.data.password,
       });
       fetchResidents();
-    } catch {
-      alert("Failed to add resident");
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? err.response?.data?.error
+        : null;
+      alert("Failed to add resident: " + (errorMsg || "Unknown error"));
     }
   };
 

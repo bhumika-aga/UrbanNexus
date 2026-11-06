@@ -28,6 +28,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -52,4 +53,9 @@ public interface AmenityMgmtRepository extends JpaRepository<AmenityMgmt, Long> 
     List<Map<String, Object>> findAllBookingsDetailed();
     
     long countByStatus(String status);
+    
+    @Query("SELECT COALESCE(SUM(b.capacityBooked), 0) FROM AmenityMgmt b " +
+               "WHERE b.amenity.amenityId = :amenityId AND b.date = :date AND b.slot = :slot AND b.status = 'Confirmed'")
+    long sumBookedCapacity(@Param("amenityId") Long amenityId, @Param("date") LocalDate date,
+                           @Param("slot") Integer slot);
 }

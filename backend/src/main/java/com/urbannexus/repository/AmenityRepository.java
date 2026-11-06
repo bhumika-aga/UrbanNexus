@@ -23,10 +23,21 @@
 package com.urbannexus.repository;
 
 import com.urbannexus.model.Amenity;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
 
 @Repository
 public interface AmenityRepository extends JpaRepository<Amenity, Long> {
     
+    // SELECT ... FOR UPDATE: bookings for the same amenity queue on this row lock, so each one
+    // checks remaining capacity after the previous booking has committed.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM Amenity a WHERE a.amenityId = :amenityId")
+    Optional<Amenity> findByIdForUpdate(@Param("amenityId") Long amenityId);
 }

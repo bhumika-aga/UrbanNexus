@@ -23,7 +23,9 @@
 package com.urbannexus.repository;
 
 import com.urbannexus.model.Technician;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -43,5 +45,9 @@ public interface TechnicianRepository extends JpaRepository<Technician, Long> {
         """, nativeQuery = true)
     List<Map<String, Object>> getTasksForTechnician(@Param("techId") Long techId);
     
-    List<Technician> findBySkill(String skill);
+    // SELECT ... FOR UPDATE on every technician with the skill: concurrent bookings for that skill
+    // are served one at a time, so two requests cannot both pick the same free technician.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM Technician t WHERE t.skill = :skill ORDER BY t.techId")
+    List<Technician> findBySkillForUpdate(@Param("skill") String skill);
 }

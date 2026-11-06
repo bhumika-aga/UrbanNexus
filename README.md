@@ -34,7 +34,7 @@ Production runs on **Supabase PostgreSQL**. Local development runs on an **embed
 no external database to install for local work.
 
 | Profile | Database                                             | Init mode         | Purpose                             |
-|---------|------------------------------------------------------|-------------------|-------------------------------------|
+| ------- | ---------------------------------------------------- | ----------------- | ----------------------------------- |
 | (none)  | Embedded H2, file-based, `MODE=PostgreSQL`           | `always`          | Local development — zero setup      |
 | `prod`  | Supabase PostgreSQL via the transaction pooler (SSL) | `never` (default) | Deployed container (Docker sets it) |
 
@@ -68,9 +68,12 @@ UrbanNexus has no public self-registration. All accounts are provisioned by the 
 
 1. **Admin creates resident or technician** via the admin dashboard (or `POST /api/residents` /
    `POST /api/technicians`).
-2. **Backend auto-generates credentials** — username is derived as `<lowercase_name><id>` (e.g., `jane_smith42`), and a
-   random 12-character **temporary password** (unique per account, from `SecureRandom`) is bcrypt-hashed and stored in
-   the `admin` table alongside a role and a FK link to the resident or technician record.
+2. **Backend auto-generates credentials** — username is derived as `<lowercase_name><id>` (e.g., `jane_smith42`;
+   accents are stripped, other punctuation becomes `_`, and a name ending in a digit gets a separator, as in `ann1_2`).
+   Residents and technicians share one username space, so a name+id that is already taken gets a `_2`, `_3`, … suffix,
+   and usernames are capped at 50 characters. A random 12-character **temporary password** (unique per account, from
+   `SecureRandom`) is bcrypt-hashed and stored in the `admin` table alongside a role and a FK link to the resident or
+   technician record.
 3. **Credentials dialog** — the API response returns `{ username, password }` in plaintext (only on creation or reset).
    The admin dashboard shows this in a one-time modal with copy buttons. The admin must share the credentials with the
    new user; they will not be surfaced again.
@@ -90,21 +93,27 @@ while giving users ownership of their credentials after first login.
 ### Roles
 
 | Role         | Capabilities                                                                            |
-|--------------|-----------------------------------------------------------------------------------------|
+| ------------ | --------------------------------------------------------------------------------------- |
 | `SuperAdmin` | Full CRUD on residents/technicians/amenities; confirm payments; reset user passwords    |
 | `Resident`   | View own dues and report offline payments; book technicians and amenities; view history |
 | `Technician` | View own task assignments; mark own tasks Completed; toggle availability                |
 
 ### Booking Flow
 
-1. Resident requests a technician booking (`skill`, `slot`, `assign_date`)
-2. System finds the first available technician with matching skill who has no conflicting slot on that date
+1. Resident requests a technician booking (`skill`, `slot` 1–3, `assign_date` as `YYYY-MM-DD`)
+2. System locks every technician with that skill (`SELECT … FOR UPDATE`) and picks the first available one with no
+   assignment in that slot on that date. Concurrent requests for the same skill wait on the lock, so two residents can
+   never be given the same technician for one slot; a unique `(tech_id, assign_date, slot)` constraint enforces the
+   same rule in the database. If nobody is free the request fails with `409`.
 3. A `Payment` record is created with base price — `@PrePersist` automatically applies 18% GST
 4. An assignment record is created in `technician_management` linking resident, technician, and payment
 5. The response returns `assignment_id`, `technician_name`, `trans_no`, and `total_with_gst` (GST-inclusive cost)
 
-Amenity booking follows the same pattern: capacity validation → payment with GST → booking record. The response returns
-`booking_id`, `amenity_name`, `trans_no`, and `total_with_gst`.
+Amenity booking follows the same pattern: capacity validation → payment with GST → booking record. Capacity is per
+date and slot and counts every confirmed booking already made for it: the amenity row is locked while the requested
+headcount (at least 1) is checked against the places left, so simultaneous bookings cannot oversell it. A request that
+does not fit returns `409` with the number of places left. An amenity with no capacity set has no headcount limit. The
+response returns `booking_id`, `amenity_name`, `trans_no`, and `total_with_gst`.
 
 ### Payment Lifecycle
 
@@ -163,7 +172,7 @@ Secrets are never hard-coded; they are read from the environment. Non-secret con
 defaults, but the two secrets below have **no default** and must be set.
 
 | Variable       | Required in  | Default             | Notes                                                                                                                                                                                                              |
-|----------------|--------------|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `JWT_SECRET`   | local + prod | _(none — required)_ | **Base64** string, ≥ 32 bytes decoded (the app Base64-decodes it; 48 bytes → HS384). Generate **once** with `openssl rand -base64 48`, then reuse the same value — a changing secret invalidates all issued tokens |
 | `DB_URL`       | prod         | _(none — required)_ | The complete JDBC URL, credentials and options included (see below). Not used locally — the default profile is H2                                                                                                  |
 | `DB_INIT_MODE` | prod         | `never`             | Leave unset in normal operation. Set to `always` **once** to seed a brand-new database, then remove                                                                                                                |
@@ -234,7 +243,7 @@ created with `must_change_password = TRUE` and has to choose a new password at f
 production database with `data.sql` and leave these accounts unclaimed.
 
 | Role       | Username   | Seed password  |
-|------------|------------|----------------|
+| ---------- | ---------- | -------------- |
 | SuperAdmin | `admin`    | `Bhumika@1234` |
 | Resident   | `jane_s`   | `pwd123#`      |
 | Technician | `tech_tom` | `pwd123#`      |
@@ -245,7 +254,7 @@ Accounts the admin creates later get a random temporary password instead.
 ### Endpoints
 
 | Method | Path                                   | Role                   | Description                          |
-|--------|----------------------------------------|------------------------|--------------------------------------|
+| ------ | -------------------------------------- | ---------------------- | ------------------------------------ |
 | POST   | `/api/login`                           | Public                 | Login; returns JWT                   |
 | GET    | `/api/profile/me`                      | Any                    | Get own profile                      |
 | PUT    | `/api/profile/update`                  | Any                    | Update own contact info              |
@@ -433,7 +442,9 @@ the token, so controllers don't need to load the account themselves.
 `400`.
 
 **Manual IDs for amenities and technicians** — Both tables use non-auto-increment primary keys. IDs are admin-assigned,
-which keeps the catalog stable and predictable (e.g., amenity 1 is always the Paddock Club Lounge).
+which keeps the catalog stable and predictable (e.g., amenity 1 is always the Paddock Club Lounge). Adding a record with
+an ID that already exists returns `409` and leaves the existing record untouched: the services insert with
+`EntityManager.persist` rather than `save()`, which would merge into (overwrite) the existing row.
 
 **Disposable seed locally, durable data in production** — Local H2 sets `spring.sql.init.mode: always`, so `schema.sql`
 drops and recreates the tables and `data.sql` reseeds them on each start — a fresh, deterministic dataset every run.

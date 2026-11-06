@@ -26,7 +26,7 @@ import com.urbannexus.security.UserPrincipal;
 import com.urbannexus.service.TechnicianService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -63,10 +63,20 @@ public class TechnicianController {
             
             Map<String, Object> res = technicianService.addTechnician(techId, name, contact, skill);
             return ResponseEntity.status(HttpStatus.CREATED).body(res);
-        } catch (DuplicateKeyException e) {
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Tech ID must be a number."));
+        } catch (ClassCastException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                       .body(Map.of("error", "name, contact and skill must be text."));
+        } catch (DataIntegrityViolationException e) {
+            // The tech ID or generated username was claimed by a concurrent insert.
+            log.warn("Technician creation hit a uniqueness conflict", e);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
                        .body(Map.of("error", "This Tech ID or Username is already taken on the grid."));
         } catch (Exception e) {
+            log.error("Failed to add technician", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to add technician to the grid."));
         }

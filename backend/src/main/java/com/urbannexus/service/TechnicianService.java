@@ -29,6 +29,8 @@ import com.urbannexus.repository.AdminRepository;
 import com.urbannexus.repository.TechnicianManagementRepository;
 import com.urbannexus.repository.TechnicianRepository;
 import com.urbannexus.security.UserPrincipal;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -53,18 +55,35 @@ public class TechnicianService {
     private final AdminRepository adminRepository;
     private final AuthService authService;
     private final AuditService auditService;
+    private final UsernameGenerator usernameGenerator;
+    private final EntityManager entityManager;
     
     @Transactional
     public Map<String, Object> addTechnician(Long techId, String name, String contact, String skill) {
+        long id = Inputs.requirePositiveId(techId, "tech_id");
+        String techName = Inputs.requireText(name, "name", 100);
+        String techContact = Inputs.requireText(contact, "contact", 20);
+        String techSkill = Inputs.requireText(skill, "skill", 50);
+        
+        if (technicianRepository.existsById(id)) {
+            throw Inputs.conflict("Technician ID " + id + " already exists.");
+        }
+        
         Technician tech = new Technician();
-        tech.setTechId(techId);
-        tech.setName(name);
-        tech.setContact(contact);
-        tech.setSkill(skill);
+        tech.setTechId(id);
+        tech.setName(techName);
+        tech.setContact(techContact);
+        tech.setSkill(techSkill);
+        // persist, not save(): with an admin-assigned id, save() merges and would silently
+        // overwrite a row inserted since the check above; persist always INSERTs.
+        try {
+            entityManager.persist(tech);
+            entityManager.flush();
+        } catch (PersistenceException e) {
+            throw Inputs.conflict("Technician ID " + id + " already exists.");
+        }
         
-        tech = technicianRepository.save(tech);
-        
-        String username = name.toLowerCase().replaceAll("\\s+", "_") + techId;
+        String username = usernameGenerator.generate(techName, id);
         
         Admin admin = new Admin();
         admin.setUsername(username);
@@ -72,7 +91,7 @@ public class TechnicianService {
         admin.setTechnician(tech);
         String temporaryPassword = authService.issueTemporaryPassword(admin);
         
-        auditService.log("technician", techId.toString(), "ADD", "Added new technician: " + name);
+        auditService.log("technician", String.valueOf(id), "ADD", "Added new technician: " + techName);
         
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Technician profile configured successfully.");
