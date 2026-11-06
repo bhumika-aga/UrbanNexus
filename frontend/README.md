@@ -1,69 +1,103 @@
 # UrbanNexus Frontend Application (React)
 
-The `frontend` module is the visual core of the UrbanNexus platform, providing isolated logical portals for various
-property stakeholders securely accessing the overarching database models.
+The `frontend` module is the single-page web app for UrbanNexus. One login serves three portals — admin, resident and
+technician — chosen from the role in the user's JWT. All data comes from the Spring Boot API in `../backend`.
 
 ## 📱 Tech Stack & Tooling
 
-- **Core Framework:** React 19, utilizing functional components and hooks (`useState`, `useEffect`, `useContext`).
-- **TypeScript:** Enforced strict typing across all components and API layers to ensure zero "any" types and robust
-  compilation.
-- **Vite Bundler:** High-speed HMR build tool for optimized development and bundling.
-- **Component Library:** **Material-UI (MUI)**. Leverages a custom theme for a clean **Vercel/Apple-inspired**
-  aesthetic, featuring glassmorphism and monochrome accents.
-- **Icons:** `lucide-react` for consistent, lightweight vector iconography.
-- **Routing:** `react-router-dom` for seamless SPA navigation.
-- **API Bridging:** `Axios` with interceptors for automatic JWT handling.
+- **Core Framework:** React 19 with functional components and hooks.
+- **TypeScript 5:** shared API types live in `src/types/index.ts`.
+- **Vite 8:** dev server with hot reload, and the production build. Requires Node.js 20.19+ or 22.12+.
+- **Component Library:** Material UI (MUI) v9 with a custom theme (`src/theme/`) for a clean, Vercel/Apple-inspired
+  look.
+- **Icons:** Font Awesome (`@fortawesome/react-fontawesome`), plus a few MUI icons.
+- **Animation:** Framer Motion for page and component transitions.
+- **Routing:** React Router 7 (`/login` and `/dashboard`; the dashboard renders the portal for the user's role).
+- **API:** Axios (`src/api/axiosClient.ts`) and `jwt-decode` for reading the token on the client.
+- **Quality:** ESLint 9 and Prettier 3.
 
-## 🔀 Application Workflows
+## 🔀 Portals
 
-Rather than mixing user actions collectively, the React application intercepts the JWT generated through the Java Spring
-backend dynamically branching behavior securely into three boundaries:
+1. **Resident Portal**
+   - **My Dues:** pending, overdue and under-review invoices. There is no online payment; the resident pays offline
+     (UPI, bank transfer, cheque), clicks **I've Paid** and enters the payment reference. The invoice shows "Under
+     Review" until the administrator confirms it.
+   - **Facilities:** reserve an amenity for a date (today or later), slot and headcount. The server refuses bookings
+     that exceed the remaining capacity for that slot.
+   - **Staff Support:** request a technician. The skill list and the GST-inclusive price of each service come from the
+     API (`/bookings/technician-skills`), so they follow the price list.
+   - **My Activity:** past and upcoming reservations and service tickets.
 
-1. **Resident Portal:**
-   - Visualizes personal pending financial dues.
-   - Manages personal maintenance service bookings (Technicians mapping Plumbers, Electricians).
-   - Coordinates dynamic Amenity scheduling securely referencing backend capacities.
+2. **Technician Portal**
+   - The open jobs queue, with each job's date (past-due dates in red) and time slot, and a **Resolve Task** button to
+     mark one's own job completed.
+   - Counters for resolved, active, today's and past-due jobs, an archive of completed jobs, and a duty-status switch
+     (available for new assignments or not).
 
-2. **Technician Portal:**
-   - Dedicated simplified routing displaying currently mapped assignments scheduled via Admin hooks.
-   - Allows instant status changes referencing `COMPLETED` tags back modifying raw Java hooks.
+3. **Admin Dashboard**
+   - Summary cards (residents, payments to review, unpaid total, open assignments) that refresh after each action.
+   - **Resident Directory:** search, add a resident (shows their one-time credentials), reset a password, delete a
+     resident — with an offer to write off any money they still owe.
+   - **Technical Crew:** add a technician, edit name, contact, skill or availability, reset a password.
+   - **Financial Ledger:** search invoices; confirm or reject reported payments, record offline payments, and run the
+     overdue scan.
+   - **Open Assignments**, **Facility Bookings**, **Service History** and **Audit Logs** (who changed what, and when).
 
-3. **Super Admin Dashboard:**
-   - God-view interfaces querying the comprehensive Grid mapping (Tenants, Tasks, Amenities, Transactions).
-   - Explicit buttons triggering administrative bulk backend cycles (ex: "Process Overdue Payments" mapping internally
-     onto Java Cron Jobs natively).
+Every user also has a **Profile** page (contact details, family members for residents, password change). Technicians see
+their skill but only the administrator can change it.
 
-## 🔑 Stateless Integration via Axios
+## 🔑 Authentication
 
-All components rely on an `AuthContext` wrapper. Whenever a Resident logs in:
+`AuthProvider` (`src/context/`) holds the session:
 
-1. React parses the returning Spring Boot `token`.
-2. Stores it successfully via browser storage (`localStorage`).
-3. Dynamically attaches an intercept pipeline using Axios appending `Authorization: Bearer <token>` on all future
-   `/api/**` traffic seamlessly bypassing internal 403 Forbidden constraints.
+1. The login page posts the credentials to `/api/login` (after clearing any old token) and stores the returned JWT in
+   `localStorage`.
+2. The Axios client adds `Authorization: Bearer <token>` to every request.
+3. A `401` from the API — expired, revoked (password changed or reset elsewhere) or deleted account — clears the token
+   and returns to the login page. A `403` only means that one action was refused; it does not sign the user out.
+4. The session also ends on its own when the token expires (24 hours); an expired token found on page load is
+   discarded.
+5. Accounts on an admin-issued temporary password see only the **Set your own password** screen until they replace
+   it. A successful password change returns a new token, which replaces the old (now revoked) one.
 
 ## 🚀 Running the Client
 
-### 1. Verification
-
-Ensure Node packages have been installed cleanly inside the `/frontend` working directory:
+### 1. Install
 
 ```bash
 npm install
 ```
 
-### 2. Environment Mapping
+### 2. Configure the API address
 
-Standard connections check against `http://localhost:8080/api` natively mapping toward the Java API server. Ensure any
-`.env` mapping (`VITE_API_BASE_URL`) aligns sequentially with the backend Tomcat host.
+The app calls `http://localhost:8080/api` by default. To use another backend, set `VITE_API_URL`, for example in
+`frontend/.env.local`:
 
-### 3. Execution
+```bash
+VITE_API_URL=https://your-backend.example.com/api
+```
 
-Launch the Vite hot-reloading listener:
+The backend only accepts browser requests from origins listed in its `CORS_ALLOWED_ORIGINS` (locally any
+`http://localhost` port is allowed).
+
+### 3. Run
 
 ```bash
 npm run dev
 ```
 
-Navigate internally to the localhost target typically matching `localhost:5173`.
+Then open `http://localhost:5173`. The seed accounts are listed in the main [README](../README.md#credentials).
+
+### Scripts
+
+| Command                | What it does                                       |
+| ---------------------- | -------------------------------------------------- |
+| `npm run dev`          | Dev server with hot reload                         |
+| `npm run build`        | Production build into `dist/`                      |
+| `npm run preview`      | Serve the production build locally                 |
+| `npm run lint`         | ESLint (`npm run lint:fix` to fix what it can)     |
+| `npx tsc --noEmit`     | Type-check                                         |
+| `npm run format:check` | Check Prettier formatting (`npm run format` fixes) |
+
+CI runs the type-check, lint and build on every push and pull request. The browser walkthrough in `../e2e` exercises
+every screen against a running backend; see the main [README](../README.md#browser-walkthrough-end-to-end).

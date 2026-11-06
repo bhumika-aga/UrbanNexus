@@ -57,7 +57,8 @@
               "path": [
                 "login"
               ]
-            }
+            },
+            "description": "Signs in and returns a JWT (valid 24 hours), saved to {{jwt_token}} by the test script. admin.mustChangePassword is true while the account still has a seeded or admin-issued temporary password; until it is changed, every other request except Get My Profile and Change Password returns 403 PASSWORD_CHANGE_REQUIRED. After 5 consecutive failures the username is locked for 15 minutes (429)."
           },
           "response": [
             {
@@ -134,7 +135,8 @@
               "path": [
                 "login"
               ]
-            }
+            },
+            "description": "Signs in as the seeded resident jane_s. See Login (Admin) for the response and the temporary-password rules."
           },
           "response": [
             {
@@ -171,7 +173,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"<JWT>\",\n  \"admin\": {\n    \"username\": \"john_doe\",\n    \"role\": \"Resident\",\n    \"mustChangePassword\": true\n  }\n}"
+              "body": "{\n  \"message\": \"Login successful!\",\n  \"token\": \"<JWT>\",\n  \"admin\": {\n    \"username\": \"jane_s\",\n    \"role\": \"Resident\",\n    \"mustChangePassword\": true\n  }\n}"
             }
           ]
         },
@@ -211,7 +213,8 @@
               "path": [
                 "login"
               ]
-            }
+            },
+            "description": "Signs in as the seeded technician tech_tom. See Login (Admin) for the response and the temporary-password rules."
           },
           "response": [
             {
@@ -271,7 +274,8 @@
                 "profile",
                 "me"
               ]
-            }
+            },
+            "description": "Returns the caller's own record: the resident or technician entity, or {username, name, role} for the admin. Allowed while the account still has a temporary password."
           },
           "response": [
             {
@@ -305,7 +309,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"residentId\": 1,\n  \"name\": \"John Doe\",\n  \"houseBlock\": \"A\",\n  \"houseFloor\": \"4\",\n  \"houseUnit\": \"44\",\n  \"ownershipStatus\": \"Owner\",\n  \"contact\": \"9444444444\",\n  \"noOfMembers\": 2\n}"
+              "body": "{\n  \"contact\": \"9123456780\",\n  \"houseBlock\": \"A\",\n  \"houseFloor\": \"1\",\n  \"houseUnit\": \"101\",\n  \"name\": \"Jane Smith\",\n  \"noOfMembers\": 3,\n  \"ownershipStatus\": \"Tenant\",\n  \"residentId\": 2\n}"
             }
           ]
         },
@@ -571,7 +575,8 @@
                 "me",
                 "dues"
               ]
-            }
+            },
+            "description": "The caller's unpaid invoices: Pending, Overdue and Under Review (with the payment_reference they reported). payment_date is when the invoice was issued."
           },
           "response": [
             {
@@ -606,7 +611,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"invoices\": [],\n  \"total_unpaid_invoices\": 0,\n  \"message\": \"Your pending dues retrieved successfully.\"\n}"
+              "body": "{\n  \"invoices\": [\n    {\n      \"trans_no\": \"TXN-101\",\n      \"service_type\": \"Technician\",\n      \"cost\": 590.0,\n      \"payment_reference\": \"UPI-412345678901\",\n      \"payment_date\": \"2026-11-01T22:09:55.981423\",\n      \"status\": \"Under Review\"\n    },\n    {\n      \"trans_no\": \"TXN-TECH-6AF60005\",\n      \"service_type\": \"Technician\",\n      \"cost\": 590.0,\n      \"payment_reference\": null,\n      \"payment_date\": \"2026-11-06T22:10:18.140421\",\n      \"status\": \"Pending\"\n    },\n    {\n      \"trans_no\": \"TXN-AMEN-F1F3AA4A\",\n      \"service_type\": \"Amenity\",\n      \"cost\": 354.0,\n      \"payment_reference\": null,\n      \"payment_date\": \"2026-11-06T22:10:18.15583\",\n      \"status\": \"Pending\"\n    }\n  ],\n  \"total_unpaid_invoices\": 3,\n  \"message\": \"Your pending dues retrieved successfully.\"\n}"
             }
           ]
         },
@@ -630,7 +635,8 @@
                 "me",
                 "bookings"
               ]
-            }
+            },
+            "description": "The caller's amenity reservations and technician service tickets, past and upcoming."
           },
           "response": [
             {
@@ -665,7 +671,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"amenities\": [],\n  \"technicians\": []\n}"
+              "body": "{\n  \"amenities\": [\n    {\n      \"date\": \"2027-01-20\",\n      \"booking_id\": 6,\n      \"amenity\": \"Parc Fermé Gym\",\n      \"slot\": 1,\n      \"status\": \"Confirmed\"\n    },\n    {\n      \"date\": \"2026-04-21\",\n      \"booking_id\": 1,\n      \"amenity\": \"Monaco Rooftop Pool\",\n      \"slot\": 1,\n      \"status\": \"Confirmed\"\n    }\n  ],\n  \"technicians\": [\n    {\n      \"assignment_id\": 1,\n      \"assign_date\": \"2026-04-21\",\n      \"skill\": \"Plumber\",\n      \"technician\": \"Tom Kristensen\",\n      \"slot\": 1,\n      \"status\": \"Assigned\"\n    },\n    {\n      \"assignment_id\": 6,\n      \"assign_date\": \"2027-01-15\",\n      \"skill\": \"Plumber\",\n      \"technician\": \"Tom Kristensen\",\n      \"slot\": 1,\n      \"status\": \"Assigned\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -885,7 +891,8 @@
                 "me",
                 "tasks"
               ]
-            }
+            },
+            "description": "All jobs assigned to the calling technician (open and completed), with the resident's unit and phone. assign_date is YYYY-MM-DD."
           },
           "response": [
             {
@@ -920,7 +927,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"assignment_id\": 1,\n    \"house_unit\": \"101\",\n    \"resident_name\": \"Jane Smith\",\n    \"assign_date\": \"2026-04-21\",\n    \"resident_phone\": \"9123456780\",\n    \"house_block\": \"A\",\n    \"slot\": 1,\n    \"status\": \"Assigned\"\n  }\n]"
+              "body": "[\n  {\n    \"house_unit\": \"101\",\n    \"assignment_id\": 1,\n    \"resident_name\": \"Jane Smith\",\n    \"assign_date\": \"2026-04-21\",\n    \"resident_phone\": \"9123456780\",\n    \"house_block\": \"A\",\n    \"slot\": 1,\n    \"status\": \"Assigned\"\n  },\n  {\n    \"assignment_id\": 6,\n    \"house_unit\": \"101\",\n    \"resident_name\": \"Jane Smith\",\n    \"assign_date\": \"2027-01-15\",\n    \"resident_phone\": \"9123456780\",\n    \"house_block\": \"A\",\n    \"slot\": 1,\n    \"status\": \"Assigned\"\n  }\n]"
             }
           ]
         },
@@ -1021,7 +1028,8 @@
                 "technicians",
                 "me"
               ]
-            }
+            },
+            "description": "The calling technician's record, including their skill and availability."
           },
           "response": [
             {
@@ -1055,7 +1063,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"techId\": 1,\n  \"name\": \"Tom Kristensen\",\n  \"skill\": \"Plumber\",\n  \"contact\": \"9000000001\",\n  \"available\": true\n}"
+              "body": "{\n  \"available\": true,\n  \"contact\": \"9000000001\",\n  \"name\": \"Tom Kristensen\",\n  \"skill\": \"Plumber\",\n  \"techId\": 1\n}"
             }
           ]
         },
@@ -1087,7 +1095,8 @@
                 "me",
                 "availability"
               ]
-            }
+            },
+            "description": "Sets whether the technician can be assigned new jobs. Body must contain available: true or false (400 otherwise)."
           },
           "response": [
             {
@@ -1349,7 +1358,8 @@
               "path": [
                 "amenities"
               ]
-            }
+            },
+            "description": "Lists amenities with their capacity per slot (null = no headcount limit). Any signed-in user."
           },
           "response": [
             {
@@ -1382,7 +1392,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"amenityId\": 1,\n    \"name\": \"Paddock Club Lounge\",\n    \"capacity\": 20\n  },\n  {\n    \"amenityId\": 2,\n    \"name\": \"Monaco Rooftop Pool\",\n    \"capacity\": 15\n  },\n  {\n    \"amenityId\": 3,\n    \"name\": \"Parc Ferm\\u00e9 Gym\",\n    \"capacity\": 10\n  },\n  {\n    \"amenityId\": 4,\n    \"name\": \"Spa & Wellness Center\",\n    \"capacity\": 8\n  },\n  {\n    \"amenityId\": 5,\n    \"name\": \"Community Theater\",\n    \"capacity\": 50\n  }\n]"
+              "body": "[\n  {\n    \"amenityId\": 1,\n    \"capacity\": 20,\n    \"name\": \"Paddock Club Lounge\"\n  },\n  {\n    \"amenityId\": 2,\n    \"capacity\": 15,\n    \"name\": \"Monaco Rooftop Pool\"\n  },\n  {\n    \"amenityId\": 3,\n    \"capacity\": 10,\n    \"name\": \"Parc Fermé Gym\"\n  },\n  {\n    \"amenityId\": 4,\n    \"capacity\": 8,\n    \"name\": \"Spa & Wellness Center\"\n  },\n  {\n    \"amenityId\": 5,\n    \"capacity\": 50,\n    \"name\": \"Community Theater\"\n  }\n]"
             }
           ]
         },
@@ -1649,7 +1659,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"skill\": \"Carpenter\",\n    \"price_with_gst\": 649.0\n  },\n  {\n    \"skill\": \"Electrician\",\n    \"price_with_gst\": 708.0\n  },\n  {\n    \"skill\": \"Plumber\",\n    \"price_with_gst\": 590.0\n  }\n]"
+              "body": "[\n  {\n    \"skill\": \"Carpenter\",\n    \"price_with_gst\": 649.0\n  },\n  {\n    \"skill\": \"Electrician\",\n    \"price_with_gst\": 708.0\n  },\n  {\n    \"skill\": \"HVAC\",\n    \"price_with_gst\": 944.0\n  },\n  {\n    \"skill\": \"Landscaper\",\n    \"price_with_gst\": 1770.0\n  }\n]"
             }
           ]
         },
@@ -1669,7 +1679,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"skill\": \"Plumber\",\n  \"slot\": 1,\n  \"assign_date\": \"2026-06-10\"\n}"
+              "raw": "{\n  \"skill\": \"Plumber\",\n  \"slot\": 1,\n  \"assign_date\": \"2027-01-15\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/bookings/technician",
@@ -1700,7 +1710,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"skill\": \"Plumber\",\n  \"slot\": 1,\n  \"assign_date\": \"2026-06-10\"\n}"
+                  "raw": "{\n  \"skill\": \"Plumber\",\n  \"slot\": 1,\n  \"assign_date\": \"2027-01-15\"\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/bookings/technician",
@@ -1723,7 +1733,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"total_with_gst\": 590.0,\n  \"assignment_id\": 6,\n  \"technician_name\": \"Tom Kristensen\",\n  \"trans_no\": \"TXN-TECH-BBD34B04\"\n}"
+              "body": "{\n  \"total_with_gst\": 590.0,\n  \"assignment_id\": 6,\n  \"technician_name\": \"Tom Kristensen\",\n  \"trans_no\": \"TXN-TECH-6AF60005\"\n}"
             }
           ]
         },
@@ -1743,7 +1753,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amenity_id\": 1,\n  \"date\": \"2026-06-15\",\n  \"slot\": 2,\n  \"capacity_booked\": 4\n}"
+              "raw": "{\n  \"amenity_id\": 1,\n  \"date\": \"2027-01-20\",\n  \"slot\": 2,\n  \"capacity_booked\": 4\n}"
             },
             "url": {
               "raw": "{{base_url}}/bookings/amenity",
@@ -1774,7 +1784,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"amenity_id\": 1,\n  \"date\": \"2026-06-15\",\n  \"slot\": 2,\n  \"capacity_booked\": 4\n}"
+                  "raw": "{\n  \"amenity_id\": 1,\n  \"date\": \"2027-01-20\",\n  \"slot\": 2,\n  \"capacity_booked\": 4\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/bookings/amenity",
@@ -1797,7 +1807,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"amenity_name\": \"Parc Ferm\\u00e9 Gym\",\n  \"total_with_gst\": 354.0,\n  \"trans_no\": \"TXN-AMEN-AFDD6CCB\",\n  \"booking_id\": 6\n}"
+              "body": "{\n  \"booking_id\": 6,\n  \"amenity_name\": \"Parc Fermé Gym\",\n  \"total_with_gst\": 354.0,\n  \"trans_no\": \"TXN-AMEN-F1F3AA4A\"\n}"
             }
           ]
         }
@@ -2027,7 +2037,7 @@
                 "stats"
               ]
             },
-            "description": "pendingTickets counts technician jobs not yet completed plus amenity bookings from today on; paymentsToReview counts residents' reported payments awaiting confirmation; pendingLedger/overdueLedger are the GST-inclusive amounts owed."
+            "description": "pendingTickets counts technician jobs not yet completed plus amenity bookings from today on; paymentsToReview counts residents' reported payments awaiting confirmation; pendingLedger (Pending + Under Review) and overdueLedger are GST-inclusive amounts owed."
           },
           "response": [
             {
@@ -2061,7 +2071,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"totalResidents\": 26,\n  \"pendingLedger\": 2704.0,\n  \"overdueLedger\": 2600.0,\n  \"pendingTickets\": 9,\n  \"paymentsToReview\": 1\n}"
+              "body": "{\n  \"overdueLedger\": 2478.0,\n  \"paymentsToReview\": 1,\n  \"pendingLedger\": 3540.0,\n  \"pendingTickets\": 5,\n  \"totalResidents\": 26\n}"
             }
           ]
         },
@@ -2095,7 +2105,8 @@
                   "value": "A"
                 }
               ]
-            }
+            },
+            "description": "Optional filters name, block, floor, unit. name and block are case-insensitive; an empty value means no filter."
           },
           "response": [
             {
@@ -2140,7 +2151,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"residentId\": 3,\n    \"name\": \"Michael Johnson\",\n    \"houseBlock\": \"A\",\n    \"houseFloor\": \"2\",\n    \"houseUnit\": \"202\",\n    \"ownershipStatus\": \"Owner\",\n    \"contact\": \"9123456781\",\n    \"noOfMembers\": 4\n  },\n  {\n    \"residentId\": 1,\n    \"name\": \"John Doe\",\n    \"houseBlock\": \"A\",\n    \"houseFloor\": \"4\",\n    \"houseUnit\": \"44\",\n    \"ownershipStatus\": \"Owner\",\n    \"contact\": \"9444444999\",\n    \"noOfMembers\": 2\n  }\n]"
+              "body": "[\n  {\n    \"contact\": \"9444444444\",\n    \"houseBlock\": \"A\",\n    \"houseFloor\": \"4\",\n    \"houseUnit\": \"44\",\n    \"name\": \"John Doe\",\n    \"noOfMembers\": 2,\n    \"ownershipStatus\": \"Owner\",\n    \"residentId\": 1\n  },\n  {\n    \"contact\": \"9123456781\",\n    \"houseBlock\": \"A\",\n    \"houseFloor\": \"2\",\n    \"houseUnit\": \"202\",\n    \"name\": \"Michael Johnson\",\n    \"noOfMembers\": 4,\n    \"ownershipStatus\": \"Owner\",\n    \"residentId\": 3\n  }\n]"
             }
           ]
         },
@@ -2163,7 +2174,8 @@
                 "admin",
                 "technicians"
               ]
-            }
+            },
+            "description": "All technicians with skill, contact and availability. SuperAdmin (and residents, for listing)."
           },
           "response": [
             {
@@ -2197,7 +2209,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"techId\": 1,\n    \"name\": \"Tom Kristensen\",\n    \"skill\": \"Plumber\",\n    \"contact\": \"9000000001\",\n    \"available\": true\n  },\n  {\n    \"techId\": 2,\n    \"name\": \"Jacky Ickx\",\n    \"skill\": \"Electrician\",\n    \"contact\": \"9000000002\",\n    \"available\": true\n  },\n  {\n    \"techId\": 3,\n    \"name\": \"Derek Bell\",\n    \"skill\": \"Carpenter\",\n    \"contact\": \"9000000003\",\n    \"available\": true\n  },\n  {\n    \"techId\": 4,\n    \"name\": \"Frank Biela\",\n    \"skill\": \"Maintenance\",\n    \"contact\": \"9000000004\",\n    \"available\": true\n  },\n  {\n    \"techId\": 5,\n    \"name\": \"Emanuele Pirro\",\n    \"skill\": \"Plumber\",\n    \"contact\": \"9000000005\",\n    \"available\": true\n  },\n  {\n    \"techId\": 6,\n    \"name\": \"Sebastien Buemi\",\n    \"skill\": \"Electrician\",\n    \"contact\": \"9000000006\",\n    \"available\": true\n  },\n  {\n    \"techId\": 7,\n    \"name\": \"Brendon Hartley\",\n    \"skill\": \"HVAC\",\n    \"contact\": \"9000000007\",\n    \"available\": true\n  },\n  {\n    \"techId\": 8,\n    \"name\": \"Andre Lotterer\",\n    \"skill\": \"Painter\",\n    \"contact\": \"9000000008\",\n    \"available\": true\n  },\n  {\n    \"techId\": 9,\n    \"name\": \"Benoit Treluyer\",\n    \"skill\": \"Mason\",\n    \"contact\": \"9000000009\",\n    \"available\": true\n  },\n  {\n    \"techId\": 10,\n    \"name\": \"Marcel Fassler\",\n    \"skill\": \"Carpenter\",\n    \"contact\": \"9000000010\",\n    \"available\": true\n  },\n  {\n    \"techId\": 11,\n    \"name\": \"Allan McNish\",\n    \"skill\": \"HVAC\",\n    \"contact\": \"9000000011\",\n    \"available\": true\n  },\n  {\n    \"techId\": 12,\n    \"name\": \"Dindo Capello\",\n    \"skill\": \"Pest Control\",\n    \"contact\": \"9000000012\",\n    \"available\": true\n  },\n  {\n    \"techId\": 13,\n    \"name\": \"Loic Duval\",\n    \"skill\": \"Security Expert\",\n    \"contact\": \"9000000013\",\n    \"available\": true\n  },\n  {\n    \"techId\": 14,\n    \"name\": \"Romain Dumas\",\n    \"skill\": \"Landscaper\",\n    \"contact\": \"9000000014\",\n    \"available\": true\n  },\n  {\n    \"techId\": 15,\n    \"name\": \"Marc Gene\",\n    \"skill\": \"Plumber\",\n    \"contact\": \"9000000015\",\n    \"available\": true\n  },\n  {\n    \"techId\": 16,\n    \"name\": \"Alexander Wurz\",\n    \"skill\": \"Electrician\",\n    \"contact\": \"9000000016\",\n    \"available\": true\n  }\n]"
+              "body": "[\n  {\n    \"available\": true,\n    \"contact\": \"9000000001\",\n    \"name\": \"Tom Kristensen\",\n    \"skill\": \"Plumber\",\n    \"techId\": 1\n  },\n  {\n    \"available\": true,\n    \"contact\": \"9000000002\",\n    \"name\": \"Jacky Ickx\",\n    \"skill\": \"Electrician\",\n    \"techId\": 2\n  }\n]"
             }
           ]
         },
@@ -2235,7 +2247,8 @@
                   "disabled": true
                 }
               ]
-            }
+            },
+            "description": "The financial ledger. Optional filters status (Pending, Overdue, Under Review, Paid, Written Off), block and resident_name (case-insensitive). issued_at is when the invoice was issued; paid_at when the admin confirmed it. A null house_block with a resident_name marks a former (deleted) resident."
           },
           "response": [
             {
@@ -2284,7 +2297,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"resident_name\": \"Emily Davis\",\n    \"trans_no\": \"TXN-105\",\n    \"house_unit\": \"105\",\n    \"service_type\": \"Technician\",\n    \"cost\": 400.0,\n    \"house_block\": \"B\",\n    \"status\": \"Paid\"\n  },\n  {\n    \"trans_no\": \"TXN-108\",\n    \"resident_name\": \"Sarah Wilson\",\n    \"house_unit\": \"505\",\n    \"service_type\": \"Technician\",\n    \"cost\": 800.0,\n    \"house_block\": \"B\",\n    \"status\": \"Paid\"\n  },\n  {\n    \"house_unit\": \"44\",\n    \"resident_name\": \"John Doe\",\n    \"trans_no\": \"TXN-TECH-BBD34B04\",\n    \"service_type\": \"Technician\",\n    \"cost\": 590.0,\n    \"house_block\": \"A\",\n    \"status\": \"Paid\"\n  },\n  {\n    \"house_unit\": \"101\",\n    \"trans_no\": \"TXN-102\",\n    \"resident_name\": \"Jane Smith\",\n    \"service_type\": \"Amenity\",\n    \"cost\": 1500.0,\n    \"house_block\": \"A\",\n    \"status\": \"Paid\"\n  },\n  {\n    \"house_unit\": \"204\",\n    \"resident_name\": \"Jessica Taylor\",\n    \"trans_no\": \"TXN-110\",\n    \"service_type\": \"Amenity\",\n    \"cost\": 5000.0,\n    \"house_block\": \"C\",\n    \"status\": \"Paid\"\n  }\n]"
+              "body": "[\n  {\n    \"house_unit\": \"101\",\n    \"paid_at\": null,\n    \"trans_no\": \"TXN-AMEN-F1F3AA4A\",\n    \"resident_name\": \"Jane Smith\",\n    \"service_type\": \"Amenity\",\n    \"cost\": 354.0,\n    \"house_block\": \"A\",\n    \"payment_reference\": null,\n    \"issued_at\": \"2026-11-06T22:10:18.15583\",\n    \"status\": \"Pending\"\n  },\n  {\n    \"house_unit\": \"101\",\n    \"paid_at\": null,\n    \"trans_no\": \"TXN-TECH-6AF60005\",\n    \"resident_name\": \"Jane Smith\",\n    \"service_type\": \"Technician\",\n    \"cost\": 590.0,\n    \"house_block\": \"A\",\n    \"payment_reference\": null,\n    \"issued_at\": \"2026-11-06T22:10:18.140421\",\n    \"status\": \"Pending\"\n  },\n  {\n    \"trans_no\": \"TXN-104\",\n    \"paid_at\": null,\n    \"house_unit\": \"202\",\n    \"resident_name\": \"Michael Johnson\",\n    \"service_type\": \"Amenity\",\n    \"cost\": 354.0,\n    \"house_block\": \"A\",\n    \"payment_reference\": null,\n    \"issued_at\": \"2026-11-03T22:09:55.981423\",\n    \"status\": \"Pending\"\n  }\n]"
             }
           ]
         },
@@ -2342,7 +2355,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"message\": \"Overdue scan complete: 1 invoice(s) more than 30 days old are now marked Overdue.\",\n  \"marked_overdue\": 1\n}"
+              "body": "{\n  \"marked_overdue\": 0,\n  \"message\": \"Overdue scan complete: no pending invoices are more than 30 days old.\"\n}"
             }
           ]
         },
@@ -2365,7 +2378,8 @@
                 "admin",
                 "audit-logs"
               ]
-            }
+            },
+            "description": "Newest first. changed_by is the username that made the change, or 'system' for scheduled jobs."
           },
           "response": [
             {
@@ -2399,7 +2413,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"record_id\": \"ALL\",\n    \"log_id\": 7,\n    \"action_type\": \"OVERDUE_PROCESS\",\n    \"details\": \"Manual trigger of overdue payment processing.\",\n    \"changed_at\": \"2026-07-21T09:51:19.389+00:00\",\n    \"table_affected\": \"payment\"\n  },\n  {\n    \"record_id\": \"99\",\n    \"log_id\": 6,\n    \"action_type\": \"DELETE\",\n    \"details\": \"Deleted technician: New Tech\",\n    \"changed_at\": \"2026-07-21T09:50:30.899+00:00\",\n    \"table_affected\": \"technician\"\n  },\n  {\n    \"record_id\": \"1\",\n    \"log_id\": 5,\n    \"action_type\": \"UPDATE\",\n    \"changed_at\": \"2026-07-21T09:50:30.354+00:00\",\n    \"details\": \"Updated availability to: true\",\n    \"table_affected\": \"technician\"\n  },\n  {\n    \"record_id\": \"99\",\n    \"log_id\": 4,\n    \"action_type\": \"ADD\",\n    \"details\": \"Added new technician: New Tech\",\n    \"changed_at\": \"2026-07-21T09:50:29.240+00:00\",\n    \"table_affected\": \"technician\"\n  },\n  {\n    \"log_id\": 3,\n    \"record_id\": \"27\",\n    \"action_type\": \"DELETE\",\n    \"details\": \"Deleted resident: Test Newman\",\n    \"changed_at\": \"2026-07-21T09:50:28.093+00:00\",\n    \"table_affected\": \"resident\"\n  },\n  {\n    \"log_id\": 2,\n    \"record_id\": \"27\",\n    \"action_type\": \"ADD\",\n    \"changed_at\": \"2026-07-21T09:50:26.705+00:00\",\n    \"details\": \"Added new resident: Test Newman\",\n    \"table_affected\": \"resident\"\n  },\n  {\n    \"log_id\": 1,\n    \"record_id\": \"1\",\n    \"action_type\": \"UPDATE\",\n    \"changed_at\": \"2026-07-21T09:50:24.864+00:00\",\n    \"details\": \"Updated: contact, \",\n    \"table_affected\": \"resident\"\n  }\n]"
+              "body": "[\n  {\n    \"record_id\": \"TXN-101\",\n    \"log_id\": 1,\n    \"action_type\": \"UPDATE\",\n    \"changed_by\": \"jane_s\",\n    \"changed_at\": \"2026-11-06T22:10:18.16313\",\n    \"details\": \"Resident submitted payment for review. Reference: UPI-412345678901\",\n    \"table_affected\": \"payment\"\n  }\n]"
             }
           ]
         },
@@ -2423,7 +2437,7 @@
                 "assignments"
               ]
             },
-            "description": "Technician assignments that are not yet Completed. Completed ones are under Get Technician Service History."
+            "description": "Technician jobs that are not yet Completed."
           },
           "response": [
             {
@@ -2457,7 +2471,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"resident_name\": \"John Doe\",\n    \"assignment_id\": 6,\n    \"trans_no\": \"TXN-TECH-BBD34B04\",\n    \"assign_date\": \"2026-08-01\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Tom Kristensen\",\n    \"slot\": 2,\n    \"status\": \"Assigned\"\n  },\n  {\n    \"trans_no\": \"TXN-108\",\n    \"assignment_id\": 5,\n    \"resident_name\": \"Sarah Wilson\",\n    \"assign_date\": \"2026-04-23\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Emanuele Pirro\",\n    \"slot\": 2,\n    \"status\": \"Completed\"\n  },\n  {\n    \"trans_no\": \"TXN-106\",\n    \"assignment_id\": 4,\n    \"resident_name\": \"Chris Brown\",\n    \"assign_date\": \"2026-04-22\",\n    \"skill\": \"Maintenance\",\n    \"technician\": \"Frank Biela\",\n    \"slot\": 1,\n    \"status\": \"Assigned\"\n  },\n  {\n    \"assignment_id\": 1,\n    \"trans_no\": \"TXN-101\",\n    \"resident_name\": \"Jane Smith\",\n    \"assign_date\": \"2026-04-21\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Tom Kristensen\",\n    \"slot\": 1,\n    \"status\": \"Completed\"\n  },\n  {\n    \"assignment_id\": 2,\n    \"trans_no\": \"TXN-103\",\n    \"resident_name\": \"Michael Johnson\",\n    \"assign_date\": \"2026-04-20\",\n    \"skill\": \"Electrician\",\n    \"technician\": \"Jacky Ickx\",\n    \"slot\": 2,\n    \"status\": \"Assigned\"\n  },\n  {\n    \"resident_name\": \"Emily Davis\",\n    \"assignment_id\": 3,\n    \"trans_no\": \"TXN-105\",\n    \"assign_date\": \"2026-04-19\",\n    \"skill\": \"Carpenter\",\n    \"technician\": \"Derek Bell\",\n    \"slot\": 3,\n    \"status\": \"Completed\"\n  }\n]"
+              "body": "[\n  {\n    \"assignment_id\": 6,\n    \"trans_no\": \"TXN-TECH-6AF60005\",\n    \"resident_name\": \"Jane Smith\",\n    \"assign_date\": \"2027-01-15\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Tom Kristensen\",\n    \"slot\": 1,\n    \"status\": \"Assigned\"\n  },\n  {\n    \"assignment_id\": 4,\n    \"trans_no\": \"TXN-106\",\n    \"resident_name\": \"Chris Brown\",\n    \"assign_date\": \"2026-04-22\",\n    \"skill\": \"Maintenance\",\n    \"technician\": \"Frank Biela\",\n    \"slot\": 1,\n    \"status\": \"Assigned\"\n  }\n]"
             }
           ]
         },
@@ -2481,7 +2495,8 @@
                 "amenities",
                 "bookings"
               ]
-            }
+            },
+            "description": "Every amenity booking, newest date first."
           },
           "response": [
             {
@@ -2516,7 +2531,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"resident_name\": \"John Doe\",\n    \"booking_id\": 6,\n    \"date\": \"2026-08-02\",\n    \"trans_no\": \"TXN-AMEN-AFDD6CCB\",\n    \"amenity\": \"Parc Ferm\\u00e9 Gym\",\n    \"slot\": 1,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 2\n  },\n  {\n    \"booking_id\": 5,\n    \"resident_name\": \"Jessica Taylor\",\n    \"trans_no\": \"TXN-110\",\n    \"date\": \"2026-04-25\",\n    \"amenity\": \"Spa & Wellness Center\",\n    \"slot\": 2,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 4\n  },\n  {\n    \"trans_no\": \"TXN-107\",\n    \"booking_id\": 4,\n    \"date\": \"2026-04-24\",\n    \"resident_name\": \"David Miller\",\n    \"amenity\": \"Monaco Rooftop Pool\",\n    \"slot\": 1,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 3\n  },\n  {\n    \"trans_no\": \"TXN-109\",\n    \"resident_name\": \"Emily Davis\",\n    \"booking_id\": 3,\n    \"date\": \"2026-04-23\",\n    \"amenity\": \"Paddock Club Lounge\",\n    \"slot\": 3,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 5\n  },\n  {\n    \"booking_id\": 2,\n    \"date\": \"2026-04-22\",\n    \"trans_no\": \"TXN-104\",\n    \"resident_name\": \"Michael Johnson\",\n    \"amenity\": \"Parc Ferm\\u00e9 Gym\",\n    \"slot\": 2,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 1\n  },\n  {\n    \"booking_id\": 1,\n    \"date\": \"2026-04-21\",\n    \"trans_no\": \"TXN-102\",\n    \"resident_name\": \"Jane Smith\",\n    \"amenity\": \"Monaco Rooftop Pool\",\n    \"slot\": 1,\n    \"status\": \"Confirmed\",\n    \"capacity_booked\": 2\n  }\n]"
+              "body": "[\n  {\n    \"trans_no\": \"TXN-AMEN-F1F3AA4A\",\n    \"date\": \"2027-01-20\",\n    \"booking_id\": 6,\n    \"resident_name\": \"Jane Smith\",\n    \"amenity\": \"Parc Fermé Gym\",\n    \"slot\": 1,\n    \"capacity_booked\": 4,\n    \"status\": \"Confirmed\"\n  },\n  {\n    \"date\": \"2026-04-25\",\n    \"booking_id\": 5,\n    \"resident_name\": \"Jessica Taylor\",\n    \"trans_no\": \"TXN-110\",\n    \"amenity\": \"Spa & Wellness Center\",\n    \"slot\": 2,\n    \"capacity_booked\": 4,\n    \"status\": \"Confirmed\"\n  }\n]"
             }
           ]
         },
@@ -2540,7 +2555,8 @@
                 "technicians",
                 "bookings"
               ]
-            }
+            },
+            "description": "Completed technician jobs, newest first."
           },
           "response": [
             {
@@ -2575,7 +2591,7 @@
                 }
               ],
               "cookie": [],
-              "body": "[\n  {\n    \"trans_no\": \"TXN-108\",\n    \"assignment_id\": 5,\n    \"resident_name\": \"Sarah Wilson\",\n    \"assign_date\": \"2026-04-23\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Emanuele Pirro\",\n    \"slot\": 2,\n    \"status\": \"Completed\"\n  },\n  {\n    \"assignment_id\": 1,\n    \"trans_no\": \"TXN-101\",\n    \"resident_name\": \"Jane Smith\",\n    \"assign_date\": \"2026-04-21\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Tom Kristensen\",\n    \"slot\": 1,\n    \"status\": \"Completed\"\n  },\n  {\n    \"resident_name\": \"Emily Davis\",\n    \"assignment_id\": 3,\n    \"trans_no\": \"TXN-105\",\n    \"assign_date\": \"2026-04-19\",\n    \"skill\": \"Carpenter\",\n    \"technician\": \"Derek Bell\",\n    \"slot\": 3,\n    \"status\": \"Completed\"\n  }\n]"
+              "body": "[\n  {\n    \"assignment_id\": 5,\n    \"trans_no\": \"TXN-108\",\n    \"resident_name\": \"Sarah Wilson\",\n    \"assign_date\": \"2026-04-23\",\n    \"skill\": \"Plumber\",\n    \"technician\": \"Emanuele Pirro\",\n    \"slot\": 2,\n    \"status\": \"Completed\"\n  },\n  {\n    \"trans_no\": \"TXN-105\",\n    \"resident_name\": \"Emily Davis\",\n    \"assignment_id\": 3,\n    \"assign_date\": \"2026-04-19\",\n    \"skill\": \"Carpenter\",\n    \"technician\": \"Derek Bell\",\n    \"slot\": 3,\n    \"status\": \"Completed\"\n  }\n]"
             }
           ]
         }

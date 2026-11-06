@@ -11,18 +11,26 @@ booking, payment tracking with 18% GST, and an administrative audit trail.
 ### Backend: Spring Boot 4.1 + Java 17
 
 The backend is a RESTful JSON API with JWT-based stateless authentication, on Spring Boot 4.1 (Spring Framework 7,
-Spring Security 7, Hibernate 7, Tomcat 11, Jackson 3). `pom.xml` overrides a few versions that Spring Boot 4.1.2 manages
-but that have known vulnerabilities: Logback (CVE-2026-19880), Jackson 2 and 3 (CVE-2026-110879), and, for tests only,
-json-smart and ASM; it also swaps the unmaintained `android-json` test dependency for `org.json:json`. Each override is
-commented with its CVE; drop it once Spring Boot manages a fixed version itself.
+Spring Security 7, Hibernate 7, Tomcat 11, Jackson 3).
+
+`pom.xml` overrides a few versions that Spring Boot 4.1.2 manages but that have known vulnerabilities: Logback
+(CVE-2026-19880), Jackson 2 and 3 (CVE-2026-110879), and, for tests only, json-smart and ASM; it also swaps the
+unmaintained `android-json` test dependency for `org.json:json`. Each override is commented with its CVE; drop it once
+Spring Boot manages a fixed version itself.
+
 Key layers:
 
-- **Controller** — validates role-based access, maps HTTP requests to service calls
-- **Service** — contains all business logic (`@Transactional` boundary guards multi-step operations)
+- **Controller** — checks the caller's role, maps HTTP requests to service calls, and turns service errors into
+  `{ "error": … }` responses
+- **Service** — all business logic, each multi-step operation in one `@Transactional` boundary; input validation
+  (`Inputs`) and username generation (`UsernameGenerator`) live here too
 - **Repository** — Spring Data JPA interfaces; native queries are written in PostgreSQL-compatible SQL
-- **Security** — `JwtAuthenticationFilter` extracts claims from every request; `UserPrincipal` carries `role`,
-  `residentId`, `techId`
-- **Model** — JPA entities with a `@PrePersist` lifecycle hook on `Payment` that applies 18% GST before insert
+- **Security** — `JwtAuthenticationFilter` validates every token (signature, expiry, and that the account still exists
+  with the same `token_version`), lets accounts on a temporary password reach only the password change, and builds the
+  `UserPrincipal` (`role`, `residentId`, `techId`); `LoginAttemptService` handles login lockout
+- **Model** — JPA entities; `Payment` applies 18% GST in a `@PrePersist` hook
+- **Config** — security and CORS (`SecurityConfig`), the community clock (`TimeConfig`), and a startup step that links
+  older invoices to their resident (`PaymentResidentBackfill`)
 - **Utilities** — Lombok (`@Data`, `@RequiredArgsConstructor`) eliminates boilerplate across all layers
 
 ### Frontend: React 19 + Vite + TypeScript
@@ -35,8 +43,9 @@ Key layers:
 ### Database Strategy
 
 Production runs on **Supabase PostgreSQL**. Local development runs on an **embedded H2** database started in
-`MODE=PostgreSQL`, so a single set of DDL, seed, and native-query SQL executes identically in both environments — with
-no external database to install for local work.
+`MODE=PostgreSQL`, so one set of DDL, seed, and native-query SQL runs in both environments — with no external database
+to install for local work. H2's compatibility mode is close to, but more lenient than, PostgreSQL, so the test suite
+also runs the real SQL against PostgreSQL (see [Testing](#backend-local--embedded-h2)).
 
 | Profile | Database                                             | Init mode         | Purpose                             |
 | ------- | ---------------------------------------------------- | ----------------- | ----------------------------------- |
@@ -62,6 +71,14 @@ reseed** — data persists. `ddl-auto: update` still reconciles the schema (adds
 seed a brand-new database once, deploy a single time with `DB_INIT_MODE=always`, then remove it. The full connection
 string is supplied by the `DB_URL` environment variable — see [Environment Variables](#environment-variables) for how to
 build it from Supabase's IPv4 transaction pooler.
+
+**Schema changes on an existing database.** `ddl-auto: update` adds these to a database created before them, with no
+manual migration: `admin.must_change_password` (defaults to `TRUE`, so every existing account sets a new password at
+its next login) and `admin.token_version`; `payment.payment_reference`, `billed_to`, `paid_at` and `resident_id` (plus
+an index); `audit_log.changed_by`; and the unique `(tech_id, assign_date, slot)` constraint on
+`technician_management`. On first start, `PaymentResidentBackfill` fills `payment.resident_id` for existing invoices.
+If the database already holds two assignments for the same technician, date and slot, the unique constraint cannot be
+added (Hibernate logs a warning); the application still prevents new double bookings.
 
 ---
 
@@ -97,11 +114,14 @@ while giving users ownership of their credentials after first login.
 
 ### Roles
 
-| Role         | Capabilities                                                                            |
-| ------------ | --------------------------------------------------------------------------------------- |
-| `SuperAdmin` | Full CRUD on residents/technicians/amenities; confirm payments; reset user passwords    |
-| `Resident`   | View own dues and report offline payments; book technicians and amenities; view history |
-| `Technician` | View own task assignments; mark own tasks Completed; toggle availability                |
+| Role         | Capabilities                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------- |
+| `SuperAdmin` | Add, edit and delete residents and technicians (incl. skill); manage amenities (API only); reset passwords    |
+| `Resident`   | View own dues and report offline payments; book technicians and amenities; view own history; edit own profile |
+| `Technician` | View own jobs (with dates); mark own jobs Completed; toggle availability; edit own name and contact           |
+
+The `SuperAdmin` also reviews payments (confirm, reject, record offline payments, write off debts) and sees the
+ledger, open assignments, facility bookings, service history and audit log.
 
 ### Booking Flow
 
@@ -111,7 +131,8 @@ while giving users ownership of their credentials after first login.
    assignment in that slot on that date. Concurrent requests for the same skill wait on the lock, so two residents can
    never be given the same technician for one slot; a unique `(tech_id, assign_date, slot)` constraint enforces the
    same rule in the database. If nobody is free the request fails with `409`.
-3. A `Payment` record is created with base price — `@PrePersist` automatically applies 18% GST
+3. A `Payment` record is created for the resident (`payment.resident_id`) at the skill's price-list base price —
+   `@PrePersist` adds 18% GST. Only skills on the price list can be booked
 4. An assignment record is created in `technician_management` linking resident, technician, and payment
 5. The response returns `assignment_id`, `technician_name`, `trans_no`, and `total_with_gst` (GST-inclusive cost)
 
@@ -119,7 +140,11 @@ Amenity booking follows the same pattern: capacity validation → payment with G
 date and slot and counts every confirmed booking already made for it: the amenity row is locked while the requested
 headcount (at least 1) is checked against the places left, so simultaneous bookings cannot oversell it. A request that
 does not fit returns `409` with the number of places left. An amenity with no capacity set has no headcount limit. The
-response returns `booking_id`, `amenity_name`, `trans_no`, and `total_with_gst`.
+response returns `booking_id`, `amenity_name`, `trans_no`, and `total_with_gst`. Amenity prices are looked up by the
+amenity's name in the `pricing` table, so an amenity can only be booked once it has a price there (see
+[Add Amenity](#request-bodies)).
+
+Residents cannot cancel bookings yet.
 
 ### Payment Lifecycle
 
@@ -142,9 +167,8 @@ submit, confirm and reject is written to the audit log.
 `{"code": "UNPAID_INVOICES", "unpaid_count", "unpaid_total"}` while the resident has Pending, Overdue or Under Review
 invoices. The admin UI then offers to write the debt off; confirming repeats the call with `?write_off_unpaid=true`,
 which marks those invoices `Written Off` (kept in the ledger, no longer counted as owed) and deletes the resident. All
-of
-the resident's invoices keep their name (`payment.billed_to`), so the ledger shows them as a former resident instead of
-"UrbanNexus System".
+of the resident's invoices keep their name (`payment.billed_to`), so the ledger shows them as a former resident instead
+of "UrbanNexus System".
 
 **Invoice dates.** `payment.payment_date` is when the invoice was **issued** (the booking was made) — the 30-day overdue
 rule counts from it. `payment.paid_at` records when the admin confirmed the payment, and the ledger shows it as "Paid
@@ -162,25 +186,45 @@ changed by the admin (`PUT /api/technicians/{id}`), and renaming an amenity carr
 The `Payment` entity applies an 18% GST multiplier before every insert:
 
 ```java
+public static BigDecimal withGst(BigDecimal basePrice) {
+    return basePrice.multiply(new BigDecimal("1.18")).setScale(2, RoundingMode.HALF_UP);
+}
 
 @PrePersist
 public void calculateGST() {
     if (this.cost != null) {
-        this.cost = this.cost.multiply(new BigDecimal("1.18")).setScale(2, RoundingMode.HALF_UP);
+        this.cost = withGst(this.cost);
     }
-    if (this.paymentDate == null) this.paymentDate = LocalDateTime.now();
+    if (this.issuedAt == null) {
+        this.issuedAt = LocalDateTime.now();
+    }
 }
 ```
 
-Seed data in `data.sql` stores costs at face value (pre-GST); the hook fires on every `save()`.
+`withGst` is also used to show GST-inclusive prices before booking (`GET /api/bookings/technician-skills`). The seed
+invoices in `data.sql` are inserted with SQL, which bypasses the hook, so their costs are written GST-inclusive (price
+list + 18%).
 
 ### Audit Trail
 
-All critical mutations (resident/technician add/delete, task status changes, availability toggles, payment reviews,
-password resets, write-offs) are written to `audit_log` via `AuditService` inside the same transaction as the mutation
+All critical mutations (resident/technician add, edit and delete, amenity renames and deletes, task status changes,
+availability toggles, payment reviews, overdue scans, password resets, write-offs) are written to `audit_log` via `AuditService` inside the same transaction as the mutation
 itself: if the change rolls back, so does its log entry, and logging uses no extra database connection. Each entry
 records who made the change (`changed_by`: the signed-in username, or `system` for scheduled jobs). Auditing lives
 entirely in the application layer, so it is database-agnostic and needs no engine-specific triggers.
+
+### Security
+
+- **Accounts:** no self-registration; every password the admin issues is random and temporary, and must be replaced
+  before the account can do anything else. Passwords are stored as bcrypt hashes.
+- **Login:** 5 consecutive failures lock a username for 15 minutes (`429`). The lockout is held in memory, so it resets
+  on restart and is per instance. Unknown usernames take as long to reject as wrong passwords.
+- **Sessions:** JWTs expire after 24 hours and are revoked immediately by a password change, an admin reset, or deletion
+  of the account. The frontend signs out on any `401` and when the token expires.
+- **Authorization:** every endpoint checks the caller's role; residents and technicians can only act on their own
+  invoices, bookings and jobs.
+- **Production profile:** CORS allows only `CORS_ALLOWED_ORIGINS`, without credentials; the H2 console is off; error
+  responses never include internal exception text.
 
 ---
 
@@ -188,16 +232,18 @@ entirely in the application layer, so it is database-agnostic and needs no engin
 
 ### Prerequisites
 
-- JDK 17
-- Maven 3.8+ (or `mvnw` if added to the project)
-- Node.js 18+
+- JDK 17 (or newer)
+- Maven 3.9+
+- Node.js 20.19+ or 22.12+ (required by Vite 8)
+- Optional: Docker, to run the PostgreSQL tests and build the production image; Google Chrome, for the browser
+  walkthrough
 
 No database install is needed for local development — the default profile uses an embedded H2 database.
 
 ### Environment Variables
 
-Secrets are never hard-coded; they are read from the environment. Non-secret connection parameters have sensible
-defaults, but the two secrets below have **no default** and must be set.
+Secrets are never hard-coded; they are read from the environment. In production, `JWT_SECRET`, `DB_URL` and
+`CORS_ALLOWED_ORIGINS` have **no default** and must be set; the others have sensible defaults.
 
 | Variable               | Required in  | Default             | Notes                                                                                                                                                                                                              |
 | ---------------------- | ------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -231,12 +277,14 @@ export JWT_SECRET="paste-the-base64-value-here"
 mvn spring-boot:run
 ```
 
-Run the tests with `mvn test`. They use in-memory H2 databases; `PostgresCompatibilityIntegrationTest` also runs the
-real `schema.sql`, `data.sql` and native queries against PostgreSQL 16 in a Docker container (Testcontainers) and is
-skipped automatically when Docker isn't running.
+Run the tests with `mvn test` (63 tests). They are integration tests over HTTP (MockMvc) against in-memory H2
+databases, grouped by area: security and accounts, bookings and provisioning, profiles/audit/deletion, error handling and
+configuration, and maintenance fixes. `PostgresCompatibilityIntegrationTest` also runs the real `schema.sql`, `data.sql`
+and native queries against PostgreSQL 16 in a Docker container (Testcontainers) and is skipped automatically when Docker
+isn't running; CI always runs it.
 
-On every start, `schema.sql` recreates all tables and `data.sql` seeds 26 residents, 16 technicians, 5 amenities, and
-pricing. Inspect the data at `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:file:./data/urbannexus`, user `sa`,
+On every start, `schema.sql` recreates all tables and `data.sql` seeds 26 residents, 16 technicians, 5 amenities,
+pricing, and 10 sample invoices with their bookings. Inspect the data at `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:file:./data/urbannexus`, user `sa`,
 empty password).
 
 ### Backend (Supabase — production profile)
@@ -253,6 +301,12 @@ The `prod` profile connects to Supabase over SSL. Restarts do **not** drop or re
 seed it, then unset it. The `Dockerfile` activates this profile automatically (`-Dspring.profiles.active=prod`); supply
 `JWT_SECRET`, `DB_URL` and `CORS_ALLOWED_ORIGINS` (the frontend's URL) to the container's environment. In this profile
 the H2 console is disabled and SQL statements are not logged.
+
+```bash
+docker build -t urbannexus-backend backend
+# On Apple Silicon: the eclipse-temurin:17-jre-alpine base image is x86-64 only
+docker build --platform linux/amd64 -t urbannexus-backend backend
+```
 
 ### Frontend
 
@@ -323,6 +377,7 @@ Accounts the admin creates later get a random temporary password instead.
 
 | Method | Path                                   | Role                   | Description                          |
 | ------ | -------------------------------------- | ---------------------- | ------------------------------------ |
+| GET    | `/actuator/health`                     | Public                 | Health check (used by Docker/host)   |
 | POST   | `/api/login`                           | Public                 | Login; returns JWT                   |
 | GET    | `/api/profile/me`                      | Any                    | Get own profile                      |
 | PUT    | `/api/profile/update`                  | Any                    | Update own contact info (not skill)  |
@@ -359,6 +414,10 @@ Accounts the admin creates later get a random temporary password instead.
 | GET    | `/api/admin/assignments`               | SuperAdmin             | Open (not completed) assignments     |
 | GET    | `/api/admin/amenities/bookings`        | SuperAdmin             | All amenity bookings                 |
 | GET    | `/api/admin/technicians/bookings`      | SuperAdmin             | Completed technician service history |
+
+Query parameters: `GET /api/admin/residents/search` takes optional `name`, `block`, `floor`, `unit` (name and block
+are case-insensitive; empty means "any"). `GET /api/admin/transactions` takes optional `status`, `block` and
+`resident_name`. `DELETE /api/residents/{id}` takes `write_off_unpaid=true` to delete a resident who still owes money.
 
 Errors are returned as `{ "error": "<message>" }`. Messages are written for the user (e.g. `"Resident not found."`);
 internal details such as SQL errors or exception text are only logged on the server, never returned.
@@ -410,7 +469,17 @@ The password is a random one-time password that must be changed at first login.
 Response includes `{ "message", "username", "password" }` — the generated login credentials to hand to the technician.
 The password is a random one-time password that must be changed at first login.
 
-Note: `tech_id` is admin-assigned (no auto-increment on the technician table).
+Note: `tech_id` is admin-assigned (no auto-increment on the technician table). `skill` must be one of the technician
+services on the price list (`GET /api/bookings/technician-skills`).
+
+**Update Technician** (`PUT /api/technicians/{id}`, admin) — any of `name`, `contact`, `skill`, `available`:
+
+```json
+{
+  "skill": "HVAC",
+  "available": true
+}
+```
 
 **Add Amenity** (`POST /api/amenities`):
 
@@ -422,7 +491,13 @@ Note: `tech_id` is admin-assigned (no auto-increment on the technician table).
 }
 ```
 
-Note: `amenity_id` is required (no auto-increment on the amenity table).
+Note: `amenity_id` is required (no auto-increment on the amenity table). `capacity` is optional; without it the amenity
+has no headcount limit. **There is no API for prices yet:** a new amenity can only be booked once the `pricing` table
+has a row for it, e.g.
+
+```sql
+INSERT INTO pricing (item_name, category, base_price) VALUES ('Rooftop Garden', 'Amenity', 800.00);
+```
 
 **Book Technician** (`POST /api/bookings/technician`):
 
@@ -430,7 +505,7 @@ Note: `amenity_id` is required (no auto-increment on the amenity table).
 {
   "skill": "Plumber",
   "slot": 1,
-  "assign_date": "2026-06-10"
+  "assign_date": "2027-01-15"
 }
 ```
 
@@ -439,13 +514,26 @@ Note: `amenity_id` is required (no auto-increment on the amenity table).
 ```json
 {
   "amenity_id": 2,
-  "date": "2026-06-15",
+  "date": "2027-01-20",
   "slot": 1,
   "capacity_booked": 4
 }
 ```
 
-Slots are integers 1–3 (Morning / Afternoon / Evening).
+Slots are integers 1–3 (09:00–12:00, 12:00–15:00, 15:00–18:00). Dates are `YYYY-MM-DD` and must be today or later in
+`APP_TIMEZONE`.
+
+**Report a Payment** (`POST /api/payments/{trans_no}/submit`, resident):
+
+```json
+{
+  "reference": "UPI-412345678901"
+}
+```
+
+**Update Profile** (`PUT /api/profile/update`) — residents: `name`, `contact`, `no_of_members` (a number or numeric
+string); technicians: `name`, `contact`, `available` (sending a different `skill` returns `403`); admin: `username`
+(3–50 letters, digits, `.`, `_` or `-`; must be unused).
 
 ---
 
@@ -461,11 +549,13 @@ UrbanNexus/
 │   │   │                    TechnicianController, BookingController,
 │   │   │                    AmenityController, PaymentController
 │   │   ├── service/         AuthService, AdminService, ResidentService,
-│   │   │                    TechnicianService, BookingService, AuditService,
-│   │   │                    PaymentService
+│   │   │                    TechnicianService, BookingService, AmenityService,
+│   │   │                    PaymentService, AuditService, UsernameGenerator, Inputs
 │   │   ├── repository/      JPA repositories (Spring Data)
 │   │   ├── model/           JPA entities (Payment has @PrePersist GST hook)
-│   │   ├── security/        JwtTokenProvider, JwtAuthenticationFilter, UserPrincipal
+│   │   ├── security/        JwtTokenProvider, JwtAuthenticationFilter, UserPrincipal,
+│   │   │                    AccountState, LoginAttemptService, TemporaryPasswordGenerator
+│   │   ├── exception/       LoginLockedException, UnpaidInvoicesException
 │   │   └── dto/             AuthResponse, LoginRequest, DashboardStatsDTO
 │   └── src/main/resources/
 │       ├── application.yml          Base config + local H2 (MODE=PostgreSQL) datasource
@@ -474,11 +564,14 @@ UrbanNexus/
 │       └── data.sql                 Seed data (residents, technicians, pricing)
 │   (src/test/java/...)              Integration tests on H2, plus PostgreSQL via Testcontainers
 ├── e2e/                     Browser walkthrough (headless Chrome, playwright-core)
-├── frontend/
+├── frontend/                (see frontend/README.md)
 │   └── src/
-│       ├── views/           admin/, resident/, technician/ portals + Login
+│       ├── views/           admin/, resident/, technician/ portals; Login, Dashboard,
+│       │                    ProfileView, ChangePasswordCard
 │       ├── api/             axiosClient.ts with JWT interceptor
-│       ├── context/         AuthContext.tsx
+│       ├── context/         AuthContext.tsx, AuthProvider.tsx
+│       ├── theme/           MUI theme and global CSS
+│       ├── utils/           date.ts (local dates for inputs and display)
 │       └── types/           index.ts
 └── UrbanNexus_Postman_Collection.json
 ```
@@ -504,14 +597,15 @@ once before every insert. This eliminates double-GST bugs and keeps pricing logi
 **H2 locally, Supabase PostgreSQL in production — one dialect** — Local development uses embedded H2 in
 `MODE=PostgreSQL` so there is nothing to install, while production uses Supabase PostgreSQL. The same `schema.sql`,
 `data.sql`, and native queries run on both because they are written in portable, PostgreSQL-flavoured SQL that H2's
-compatibility mode accepts verbatim (identity columns, `BOOLEAN`, `INTERVAL '30' DAY`, `ALTER … RESTART WITH`). This
-keeps local iteration friction-free without introducing a dev/prod dialect gap.
+compatibility mode accepts verbatim (identity columns, `BOOLEAN`, `INTERVAL '30' DAY`, `ALTER … RESTART WITH`). H2 is
+more lenient in places — for example it accepts `UPPER(:param)` on a null parameter, which PostgreSQL rejects — so
+queries never apply a function to a parameter that can be null (case-folding happens in Java), and the PostgreSQL
+compatibility tests run every native query against real PostgreSQL.
 
 **Revocable JWTs** — Every token carries the account's `token_version`. `JwtAuthenticationFilter` looks the account up
 on each request (one indexed primary-key read) and rejects the token if the account was deleted or the version has moved
 on — which happens on every password change and admin reset. `UserPrincipal` still carries `residentId` and `techId`
-from
-the token, so controllers don't need to load the account themselves.
+from the token, so controllers don't need to load the account themselves.
 
 **Guarded payment transitions** — Each payment query names the statuses it may move from (e.g. submit only from
 `Pending`/`Overdue`, reject only from `Under Review`), so repeated or out-of-order calls change nothing and return
@@ -528,8 +622,15 @@ Production sets the mode to `${DB_INIT_MODE:never}`, so **restarts never drop or
 `ddl-auto: update` still reconciles the schema without dropping. A brand-new production database is seeded once by
 deploying with `DB_INIT_MODE=always`, after which the flag is removed.
 
-**`@Modifying(clearAutomatically = true)`** — The `updateTaskStatus` JPQL update clears the persistence context after
-execution, preventing stale entity reads from JPA's first-level cache.
+**Row locks instead of check-then-insert** — Booking a technician locks every technician with the requested skill, and
+booking an amenity locks the amenity row (`SELECT … FOR UPDATE`), before checking availability. Concurrent requests
+queue on the lock, so a slot cannot be double-booked and an amenity cannot be oversold; a unique constraint backs up
+the technician rule in the database.
+
+**Invoices outlive what they bill for** — An invoice stores its resident (`payment.resident_id`, deliberately not a
+foreign key) instead of relying on the booking row. Deleting a technician or amenity (which deletes their bookings) or
+a resident therefore never orphans an invoice: residents keep seeing what they owe, and the ledger keeps the name of a
+former resident (`payment.billed_to`).
 
 ---
 
