@@ -21,6 +21,7 @@
  */
 
 import {
+  faCalendarDay,
   faCheckCircle,
   faClock,
   faMapMarkerAlt,
@@ -43,8 +44,16 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import { Booking } from "../../types";
+import { formatDay, localToday } from "../../utils/date";
 import HistoryManager from "./HistoryManager";
 import StatsGrid from "./StatsGrid";
+
+// Same slots the residents book from.
+const SLOT_TIMES: Record<number, string> = {
+  1: "09:00 - 12:00",
+  2: "12:00 - 15:00",
+  3: "15:00 - 18:00",
+};
 
 const TechnicianDashboard: React.FC = () => {
   const [tasks, setTasks] = useState<Booking[]>([]);
@@ -109,6 +118,9 @@ const TechnicianDashboard: React.FC = () => {
   }
 
   const activeTasks = tasks.filter((t) => t.status !== "Completed");
+  const today = localToday();
+  const isPastDue = (t: Booking) =>
+    !!t.assign_date && t.assign_date.slice(0, 10) < today;
 
   return (
     <Box>
@@ -280,6 +292,24 @@ const TechnicianDashboard: React.FC = () => {
                         display: "flex",
                         alignItems: "center",
                         gap: 0.5,
+                        // Jobs whose date has passed but are still open stand out.
+                        color: isPastDue(task) ? "#dc2626" : "#64748b",
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faCalendarDay}
+                        style={{ fontSize: 14 }}
+                      />
+                      <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                        {task.assign_date ? formatDay(task.assign_date) : "—"}
+                        {isPastDue(task) && " · past due"}
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
                         color: "#64748b",
                       }}
                     >
@@ -288,7 +318,7 @@ const TechnicianDashboard: React.FC = () => {
                         style={{ fontSize: 14 }}
                       />
                       <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                        Slot {task.slot}
+                        {SLOT_TIMES[task.slot] ?? `Slot ${task.slot}`}
                       </Typography>
                     </Box>
                     <Box

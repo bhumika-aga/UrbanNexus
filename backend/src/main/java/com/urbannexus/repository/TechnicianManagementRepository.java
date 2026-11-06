@@ -55,6 +55,8 @@ public interface TechnicianManagementRepository extends JpaRepository<Technician
     
     long countByStatus(String status);
     
+    long countByTechnician_TechIdAndStatus(Long techId, String status);
+    
     @Query(value = """
         SELECT tm.assignment_id, r.name as resident_name, t.name as technician, t.skill, tm.assign_date, tm.slot, tm.status, tm.trans_no
         FROM technician_management tm

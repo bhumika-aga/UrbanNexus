@@ -58,6 +58,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider tokenProvider;
     private final AdminRepository adminRepository;
     
+    /**
+     * Login is public and never needs the caller's token. Skipping it here means a stale token left in the
+     * browser (e.g. one still flagged must-change-password) cannot block signing in again.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "/api/login".equals(request.getRequestURI());
+    }
+    
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {

@@ -61,6 +61,8 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
+    // Don't send a previous session's token with the login request.
+    localStorage.removeItem("token");
 
     try {
       const response = await api.post("/login", { username, password });

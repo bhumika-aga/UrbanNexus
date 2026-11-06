@@ -40,4 +40,6 @@ public interface AmenityRepository extends JpaRepository<Amenity, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Amenity a WHERE a.amenityId = :amenityId")
     Optional<Amenity> findByIdForUpdate(@Param("amenityId") Long amenityId);
+    
+    boolean existsByNameAndAmenityIdNot(String name, Long amenityId);
 }

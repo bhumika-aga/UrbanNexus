@@ -62,6 +62,8 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   // The invoice being reported as paid, and the reference the resident enters for it.
   const [payingInvoice, setPayingInvoice] = useState<Transaction | null>(null);
+  // Separate from payingInvoice so the dialog keeps its text while it fades out after closing.
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [reference, setReference] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -80,6 +82,7 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
   const openSubmitDialog = (invoice: Transaction) => {
     setReference("");
     setPayingInvoice(invoice);
+    setDialogOpen(true);
   };
 
   // There is no payment gateway: the resident reports an offline payment, and the invoice
@@ -91,7 +94,7 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
       await api.post(`/payments/${payingInvoice.trans_no}/submit`, {
         reference: reference.trim(),
       });
-      setPayingInvoice(null);
+      setDialogOpen(false);
       alert(
         "Payment submitted for review. It will show as paid once the administrator confirms it.",
       );
@@ -248,8 +251,8 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
       </TableContainer>
 
       <Dialog
-        open={payingInvoice !== null}
-        onClose={() => !submitting && setPayingInvoice(null)}
+        open={dialogOpen}
+        onClose={() => !submitting && setDialogOpen(false)}
         fullWidth
         maxWidth="xs"
       >
@@ -271,7 +274,7 @@ const DuesManager: React.FC<Props> = ({ onBack }) => {
           />
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setPayingInvoice(null)} disabled={submitting}>
+          <Button onClick={() => setDialogOpen(false)} disabled={submitting}>
             Cancel
           </Button>
           <Button

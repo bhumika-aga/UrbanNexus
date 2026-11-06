@@ -31,3 +31,17 @@ export const localToday = (): string => {
   const day = String(now.getDate()).padStart(2, "0");
   return `${now.getFullYear()}-${month}-${day}`;
 };
+
+/**
+ * Formats a YYYY-MM-DD date for display (e.g. "Thu, 6 Nov 2026"). Parsed as a local date: new Date("2026-11-06")
+ * would be UTC midnight, which shows as the previous day west of Greenwich.
+ */
+export const formatDay = (isoDate: string): string => {
+  const [year, month, day] = isoDate.slice(0, 10).split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};

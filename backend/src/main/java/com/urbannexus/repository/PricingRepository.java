@@ -26,6 +26,9 @@ import com.urbannexus.model.Pricing;
 import com.urbannexus.model.Pricing.PricingCategory;
 import com.urbannexus.model.PricingId;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -36,4 +39,11 @@ public interface PricingRepository extends JpaRepository<Pricing, PricingId> {
     Optional<Pricing> findByItemNameAndCategory(String itemName, PricingCategory category);
     
     List<Pricing> findByCategoryOrderByItemNameAsc(PricingCategory category);
+    
+    // Prices are keyed by item name; used when an amenity is renamed.
+    @Modifying
+    @Query(value = "UPDATE pricing SET item_name = :newName WHERE item_name = :oldName AND category = :category",
+        nativeQuery = true)
+    int renameItem(@Param("oldName") String oldName, @Param("newName") String newName,
+                   @Param("category") String category);
 }

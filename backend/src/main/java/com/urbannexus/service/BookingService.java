@@ -102,6 +102,7 @@ public class BookingService {
         payment.setTransNo(transNo);
         payment.setStatus("Pending");
         payment.setType("Technician");
+        payment.setResidentId(resident.getResidentId());
         payment.setCost(pricing.getBasePrice()); // @PrePersist applies 18% GST
         payment = paymentRepository.saveAndFlush(payment);
         
@@ -160,6 +161,7 @@ public class BookingService {
         payment.setTransNo(transNo);
         payment.setStatus("Pending");
         payment.setType("Amenity");
+        payment.setResidentId(resident.getResidentId());
         payment.setCost(pricing.getBasePrice()); // @PrePersist applies 18% GST
         payment = paymentRepository.saveAndFlush(payment);
         

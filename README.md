@@ -148,6 +148,13 @@ the resident's invoices keep their name (`payment.billed_to`), so the ledger sho
 rule counts from it. `payment.paid_at` records when the admin confirmed the payment, and the ledger shows it as "Paid
 on".
 
+**Who an invoice belongs to.** Each invoice records its resident in `payment.resident_id` (set when the booking is
+made; older invoices are linked at startup from their booking). It is deliberately not a foreign key, so an invoice
+keeps its owner when the booking behind it disappears. A technician with open (Assigned) jobs, or an amenity with
+upcoming bookings, cannot be deleted (`409`); once their work is in the past they can be, and residents still see and
+can settle the related invoices. Technician skills are restricted to the services on the price list and can only be
+changed by the admin (`PUT /api/technicians/{id}`), and renaming an amenity carries its price over to the new name.
+
 ### GST via @PrePersist
 
 The `Payment` entity applies an 18% GST multiplier before every insert:
@@ -296,11 +303,12 @@ Accounts the admin creates later get a random temporary password instead.
 | PUT    | `/api/technicians/tasks/{id}/status`   | Technician, SuperAdmin | Update status (technician: own only) |
 | PUT    | `/api/technicians/me/availability`     | Technician             | Toggle availability                  |
 | POST   | `/api/technicians/{id}/reset-password` | SuperAdmin             | Issue new temporary password         |
-| DELETE | `/api/technicians/{id}`                | SuperAdmin             | Remove technician                    |
+| PUT    | `/api/technicians/{id}`                | SuperAdmin             | Edit name, contact, skill, available |
+| DELETE | `/api/technicians/{id}`                | SuperAdmin             | Remove technician (409 if open jobs) |
 | GET    | `/api/amenities`                       | Any                    | List all amenities                   |
 | POST   | `/api/amenities`                       | SuperAdmin             | Add amenity                          |
-| PUT    | `/api/amenities/{id}`                  | SuperAdmin             | Update amenity                       |
-| DELETE | `/api/amenities/{id}`                  | SuperAdmin             | Delete amenity                       |
+| PUT    | `/api/amenities/{id}`                  | SuperAdmin             | Update amenity (rename keeps price)  |
+| DELETE | `/api/amenities/{id}`                  | SuperAdmin             | Delete amenity (409 if booked ahead) |
 | GET    | `/api/bookings/technician-skills`      | Resident, SuperAdmin   | Bookable skills with GST price       |
 | POST   | `/api/bookings/technician`             | Resident, SuperAdmin   | Book a technician                    |
 | POST   | `/api/bookings/amenity`                | Resident, SuperAdmin   | Book an amenity                      |
@@ -311,7 +319,7 @@ Accounts the admin creates later get a random temporary password instead.
 | GET    | `/api/admin/residents/search`          | SuperAdmin             | Search by name/block (any case)      |
 | GET    | `/api/admin/technicians`               | SuperAdmin             | List all technicians                 |
 | GET    | `/api/admin/transactions`              | SuperAdmin             | Transaction ledger with filters      |
-| POST   | `/api/admin/process-overdue`           | SuperAdmin             | Mark 30-day-old payments as Overdue  |
+| POST   | `/api/admin/process-overdue`           | SuperAdmin             | Mark 30-day-old invoices Overdue     |
 | GET    | `/api/admin/audit-logs`                | SuperAdmin             | System audit trail                   |
 | GET    | `/api/admin/assignments`               | SuperAdmin             | Open (not completed) assignments     |
 | GET    | `/api/admin/amenities/bookings`        | SuperAdmin             | All amenity bookings                 |

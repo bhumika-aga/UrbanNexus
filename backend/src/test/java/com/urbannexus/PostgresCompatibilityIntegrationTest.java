@@ -113,6 +113,40 @@ class PostgresCompatibilityIntegrationTest {
             .containsExactly("John Doe");
     }
     
+    @Test
+    void invoicesSurviveTechnicianDeletionAndRenamedAmenitiesStayBookableOnPostgres() throws Exception {
+        // Seed: tech 13 (Security Expert) has no jobs; give them one, complete it, then delete them.
+        String emily = activate("emily_d");
+        String nextWeek = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata")).plusDays(7).toString();
+        JsonNode job = body(mvc.perform(withToken(post("/api/bookings/technician"), emily)
+                                            .contentType(MediaType.APPLICATION_JSON)
+                                            .content(json(Map.of("skill", "Security Expert", "assign_date", nextWeek,
+                                                "slot", 3))))
+                                .andExpect(status().isCreated()).andReturn());
+        mvc.perform(withToken(delete("/api/technicians/13"), admin())).andExpect(status().isConflict());
+        mvc.perform(withToken(put("/api/technicians/tasks/" + job.get("assignment_id").asLong() + "/status"), admin())
+                        .contentType(MediaType.APPLICATION_JSON).content(json(Map.of("status", "Completed"))))
+            .andExpect(status().isOk());
+        mvc.perform(withToken(delete("/api/technicians/13"), admin())).andExpect(status().isOk());
+        
+        JsonNode dues = body(mvc.perform(withToken(get("/api/residents/me/dues"), emily))
+                                 .andExpect(status().isOk()).andReturn());
+        assertThat(dues.get("invoices").findValuesAsString("trans_no")).contains(job.get("trans_no").asString());
+        
+        // Rename moves the price (native UPDATE on the pricing key).
+        mvc.perform(withToken(put("/api/amenities/4"), admin())
+                        .contentType(MediaType.APPLICATION_JSON).content(json(Map.of("name", "Spa Retreat"))))
+            .andExpect(status().isOk());
+        mvc.perform(withToken(post("/api/bookings/amenity"), emily)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(Map.of("amenity_id", 4, "date", nextWeek, "slot", 1, "capacity_booked", 1))))
+            .andExpect(status().isCreated());
+        
+        mvc.perform(withToken(post("/api/admin/process-overdue"), admin()))
+            .andExpect(status().isOk())
+            .andExpect(result -> assertThat(body(result).has("marked_overdue")).isTrue());
+    }
+    
     private JsonNode searchResidents(Map<String, String> params) throws Exception {
         MockHttpServletRequestBuilder request = withToken(get("/api/admin/residents/search"), admin());
         params.forEach(request::param);

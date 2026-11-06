@@ -23,13 +23,18 @@
 package com.urbannexus.service;
 
 import com.urbannexus.model.Amenity;
+import com.urbannexus.model.Pricing.PricingCategory;
+import com.urbannexus.repository.AmenityMgmtRepository;
 import com.urbannexus.repository.AmenityRepository;
+import com.urbannexus.repository.PricingRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -37,7 +42,11 @@ import java.util.List;
 public class AmenityService {
     
     private final AmenityRepository amenityRepository;
+    private final AmenityMgmtRepository amenityMgmtRepository;
+    private final PricingRepository pricingRepository;
+    private final AuditService auditService;
     private final EntityManager entityManager;
+    private final Clock clock;
     
     // NULL is allowed and means "no headcount limit".
     private static void requireValidCapacity(Integer capacity) {
@@ -79,16 +88,44 @@ public class AmenityService {
         Amenity amenity = amenityRepository.findById(id)
                               .orElseThrow(() -> Inputs.notFound("Amenity not found."));
         requireValidCapacity(capacity);
-        if (name != null) amenity.setName(Inputs.requireText(name, "name", 100));
+        if (name != null) {
+            String newName = Inputs.requireText(name, "name", 100);
+            if (!newName.equals(amenity.getName())) {
+                rename(amenity, newName);
+            }
+        }
         if (capacity != null) amenity.setCapacity(capacity);
         amenityRepository.save(amenity);
     }
     
+    // Prices are keyed by amenity name, so a rename must carry the amenity's price over to the new name;
+    // otherwise the amenity can no longer be booked ("No pricing found").
+    private void rename(Amenity amenity, String newName) {
+        if (amenityRepository.existsByNameAndAmenityIdNot(newName, amenity.getAmenityId())) {
+            throw Inputs.conflict("Another amenity is already called " + newName + ".");
+        }
+        if (pricingRepository.findByItemNameAndCategory(newName, PricingCategory.Amenity).isPresent()) {
+            throw Inputs.conflict("A price for \"" + newName + "\" already exists; choose a different name.");
+        }
+        pricingRepository.renameItem(amenity.getName(), newName, PricingCategory.Amenity.name());
+        auditService.log("amenity", amenity.getAmenityId().toString(), "UPDATE",
+            "Renamed " + amenity.getName() + " to " + newName);
+        amenity.setName(newName);
+    }
+    
     @Transactional
     public void deleteAmenity(Long id) {
-        if (!amenityRepository.existsById(id)) {
-            throw Inputs.notFound("Amenity not found.");
+        Amenity amenity = amenityRepository.findById(id)
+                              .orElseThrow(() -> Inputs.notFound("Amenity not found."));
+        // Deleting the amenity deletes its bookings; residents' invoices survive (they carry
+        // payment.resident_id), but upcoming reservations would silently disappear.
+        long upcoming = amenityMgmtRepository.countByAmenity_AmenityIdAndStatusAndDateGreaterThanEqual(
+            id, "Confirmed", LocalDate.now(clock));
+        if (upcoming > 0) {
+            throw Inputs.conflict(amenity.getName() + " has " + upcoming + " upcoming booking(s) and cannot be "
+                                      + "deleted until they have taken place.");
         }
-        amenityRepository.deleteById(id);
+        auditService.log("amenity", id.toString(), "DELETE", "Deleted amenity: " + amenity.getName());
+        amenityRepository.delete(amenity);
     }
 }

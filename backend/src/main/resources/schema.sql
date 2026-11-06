@@ -53,8 +53,11 @@ CREATE TABLE payment
     payment_reference VARCHAR(100)   NULL DEFAULT NULL,
     billed_to         VARCHAR(100)   NULL DEFAULT NULL,
     paid_at           TIMESTAMP      NULL DEFAULT NULL,
+    -- The billed resident; not a foreign key, because invoices outlive residents and bookings.
+    resident_id       BIGINT         NULL DEFAULT NULL,
     PRIMARY KEY (trans_no)
 );
+CREATE INDEX idx_payment_resident ON payment (resident_id);
 
 -- -----------------------------------------------------
 -- Table amenity_mgmt

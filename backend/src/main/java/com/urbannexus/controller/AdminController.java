@@ -100,9 +100,12 @@ public class AdminController {
         
         try {
             log.info("SuperAdmin {} is processing overdue payments", currentUser.getUsername());
-            adminService.processOverduePayments();
-            return ResponseEntity
-                       .ok(Map.of("message", "Successfully ran the cursor. Pending payments are now marked as Overdue."));
+            int marked = adminService.processOverduePayments();
+            return ResponseEntity.ok(Map.of(
+                "message", marked == 0
+                               ? "Overdue scan complete: no pending invoices are more than 30 days old."
+                               : "Overdue scan complete: " + marked + " invoice(s) more than 30 days old are now marked Overdue.",
+                "marked_overdue", marked));
         } catch (Exception e) {
             log.error("Failed to process overdue payments", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

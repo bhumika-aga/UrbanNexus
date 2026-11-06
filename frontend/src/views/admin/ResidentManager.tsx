@@ -66,10 +66,16 @@ interface Credentials {
   password: string;
 }
 
-const ResidentManager: React.FC = () => {
+interface Props {
+  // Called after residents are added or removed, so the dashboard cards stay current.
+  onDataChanged?: () => void;
+}
+
+const ResidentManager: React.FC<Props> = ({ onDataChanged }) => {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(false);
+  // Starts true so the table shows a spinner, not "No residents found", before the first load.
+  const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [formData, setFormData] = useState({
@@ -123,6 +129,7 @@ const ResidentManager: React.FC = () => {
         password: res.data.password,
       });
       fetchResidents();
+      onDataChanged?.();
     } catch (err) {
       const errorMsg = axios.isAxiosError(err)
         ? err.response?.data?.error
@@ -166,6 +173,7 @@ const ResidentManager: React.FC = () => {
     try {
       await api.delete(`/residents/${id}`);
       fetchResidents();
+      onDataChanged?.();
     } catch (err) {
       // A resident who still owes money is only removed if the admin agrees to write the debt off.
       const data = axios.isAxiosError(err) ? err.response?.data : null;
@@ -181,6 +189,7 @@ const ResidentManager: React.FC = () => {
               params: { write_off_unpaid: true },
             });
             fetchResidents();
+            onDataChanged?.();
           } catch (retryErr) {
             const msg = axios.isAxiosError(retryErr)
               ? retryErr.response?.data?.error

@@ -25,7 +25,9 @@ package com.urbannexus.service;
 import com.urbannexus.model.Admin;
 import com.urbannexus.model.Technician;
 import com.urbannexus.model.TechnicianManagement;
+import com.urbannexus.model.Pricing.PricingCategory;
 import com.urbannexus.repository.AdminRepository;
+import com.urbannexus.repository.PricingRepository;
 import com.urbannexus.repository.TechnicianManagementRepository;
 import com.urbannexus.repository.TechnicianRepository;
 import com.urbannexus.security.UserPrincipal;
@@ -57,13 +59,14 @@ public class TechnicianService {
     private final AuditService auditService;
     private final UsernameGenerator usernameGenerator;
     private final EntityManager entityManager;
+    private final PricingRepository pricingRepository;
     
     @Transactional
     public Map<String, Object> addTechnician(Long techId, String name, String contact, String skill) {
         long id = Inputs.requirePositiveId(techId, "tech_id");
         String techName = Inputs.requireText(name, "name", 100);
         String techContact = Inputs.requireText(contact, "contact", 20);
-        String techSkill = Inputs.requireText(skill, "skill", 50);
+        String techSkill = requireBookableSkill(skill);
         
         if (technicianRepository.existsById(id)) {
             throw Inputs.conflict("Technician ID " + id + " already exists.");
@@ -115,6 +118,53 @@ public class TechnicianService {
         response.put("username", admin.getUsername());
         response.put("password", temporaryPassword);
         return response;
+    }
+    
+    /**
+     * Admin edit of a technician: name, contact, skill and availability (all optional). This is the only way a
+     * technician's skill changes; technicians cannot change their own.
+     */
+    @Transactional
+    public Map<String, Object> updateTechnician(Long techId, Map<String, Object> updates) {
+        Technician tech = technicianRepository.findById(techId)
+                              .orElseThrow(() -> Inputs.notFound("Technician not found."));
+        
+        StringBuilder details = new StringBuilder("Updated by admin: ");
+        if (updates.containsKey("name")) {
+            tech.setName(Inputs.requireText(Inputs.asText(updates.get("name"), "name"), "name", 100));
+            details.append("name, ");
+        }
+        if (updates.containsKey("contact")) {
+            tech.setContact(Inputs.requireText(Inputs.asText(updates.get("contact"), "contact"), "contact", 20));
+            details.append("contact, ");
+        }
+        if (updates.containsKey("skill")) {
+            String skill = requireBookableSkill(Inputs.asText(updates.get("skill"), "skill"));
+            if (!skill.equals(tech.getSkill())) {
+                details.append("skill ").append(tech.getSkill()).append(" -> ").append(skill).append(", ");
+                tech.setSkill(skill);
+            }
+        }
+        if (updates.containsKey("available")) {
+            if (!(updates.get("available") instanceof Boolean available)) {
+                throw Inputs.badRequest("available must be true or false.");
+            }
+            tech.setAvailable(available);
+            details.append("available, ");
+        }
+        
+        technicianRepository.save(tech);
+        auditService.log("technician", techId.toString(), "UPDATE", details.toString());
+        return Map.of("message", "Technician updated.");
+    }
+    
+    /** Returns the skill if it is on the technician price list; any other skill could never be booked. */
+    private String requireBookableSkill(String skill) {
+        String trimmed = Inputs.requireText(skill, "skill", 50);
+        if (pricingRepository.findByItemNameAndCategory(trimmed, PricingCategory.Technician).isEmpty()) {
+            throw Inputs.badRequest("Unknown skill \"" + trimmed + "\". Choose one of the services on the price list.");
+        }
+        return trimmed;
     }
     
     public List<Map<String, Object>> getTasks(Long techId) {
@@ -169,6 +219,13 @@ public class TechnicianService {
     public void deleteTechnician(Long techId) {
         Technician tech = technicianRepository.findById(techId)
                               .orElseThrow(() -> Inputs.notFound("Technician not found."));
+        // Deleting the technician deletes their assignments; residents' invoices survive (they carry
+        // payment.resident_id), but an unfinished job would silently vanish from the resident's bookings.
+        long openJobs = technicianManagementRepository.countByTechnician_TechIdAndStatus(techId, "Assigned");
+        if (openJobs > 0) {
+            throw Inputs.conflict(tech.getName() + " still has " + openJobs + " open job(s). Complete them first, "
+                                      + "or mark the technician unavailable instead of deleting them.");
+        }
         auditService.log("technician", techId.toString(), "DELETE", "Deleted technician: " + tech.getName());
         technicianRepository.delete(tech);
     }

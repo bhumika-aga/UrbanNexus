@@ -31,7 +31,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "payment")
+@Table(name = "payment", indexes = @Index(name = "idx_payment_resident", columnList = "resident_id"))
 public class Payment {
     
     @Id
@@ -60,6 +60,11 @@ public class Payment {
     // the invoice for review and cleared if the admin rejects it.
     @Column(name = "payment_reference", length = 100)
     private String paymentReference;
+    
+    // The billed resident. Deliberately not a foreign key: the invoice outlives the resident (and the
+    // booking, technician or amenity it was for), so it must not depend on any of those rows.
+    @Column(name = "resident_id")
+    private Long residentId;
     
     // The billed resident's name, recorded when that resident is deleted (see ResidentService.deleteResident).
     @Column(name = "billed_to", length = 100)

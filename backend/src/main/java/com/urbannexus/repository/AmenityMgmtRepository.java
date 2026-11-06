@@ -56,6 +56,8 @@ public interface AmenityMgmtRepository extends JpaRepository<AmenityMgmt, Long> 
     
     long countByStatusAndDateGreaterThanEqual(String status, LocalDate date);
     
+    long countByAmenity_AmenityIdAndStatusAndDateGreaterThanEqual(Long amenityId, String status, LocalDate date);
+    
     @Query("SELECT COALESCE(SUM(b.capacityBooked), 0) FROM AmenityMgmt b " +
                "WHERE b.amenity.amenityId = :amenityId AND b.date = :date AND b.slot = :slot AND b.status = 'Confirmed'")
     long sumBookedCapacity(@Param("amenityId") Long amenityId, @Param("date") LocalDate date,

@@ -24,6 +24,7 @@ import {
   faCopy,
   faHashtag,
   faKey,
+  faPen,
   faPhone,
   faUserPlus,
   faWrench,
@@ -38,6 +39,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid,
   IconButton,
   InputAdornment,
@@ -48,6 +50,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  Switch,
   TableRow,
   TextField,
   Tooltip,
@@ -63,9 +66,27 @@ interface Credentials {
   password: string;
 }
 
+interface EditForm {
+  name: string;
+  contact: string;
+  skill: string;
+  available: boolean;
+}
+
 const TechnicianManager: React.FC = () => {
   const [techs, setTechs] = useState<Technician[]>([]);
-  const [loading, setLoading] = useState(false);
+  // Starts true so the table shows a spinner, not "No technical crew registered", before the first load.
+  const [loading, setLoading] = useState(true);
+  // Skills on the technician price list; only these can be booked, so only these can be assigned.
+  const [skills, setSkills] = useState<string[]>([]);
+  const [editing, setEditing] = useState<Technician | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>({
+    name: "",
+    contact: "",
+    skill: "",
+    available: true,
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [formData, setFormData] = useState({
@@ -139,8 +160,43 @@ const TechnicianManager: React.FC = () => {
     }
   };
 
+  // A technician's current skill may predate the price list; keep it selectable so the form shows it.
+  const skillOptions = (current: string) =>
+    current && !skills.includes(current) ? [current, ...skills] : skills;
+
+  const openEdit = (tech: Technician) => {
+    setEditForm({
+      name: tech.name,
+      contact: tech.contact,
+      skill: tech.skill,
+      available: tech.available,
+    });
+    setEditing(tech);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editing) return;
+    setSavingEdit(true);
+    try {
+      await api.put(`/technicians/${editing.techId}`, editForm);
+      setEditing(null);
+      fetchTechs();
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? err.response?.data?.error
+        : null;
+      alert("Failed to update technician: " + (errorMsg || "Unknown error"));
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   useEffect(() => {
     fetchTechs();
+    api
+      .get<{ skill: string }[]>("/bookings/technician-skills")
+      .then((res) => setSkills(res.data.map((s) => s.skill)))
+      .catch(() => console.error("Failed to fetch technician skills"));
   }, []);
 
   return (
@@ -267,6 +323,14 @@ const TechnicianManager: React.FC = () => {
                     {tech.contact}
                   </TableCell>
                   <TableCell align="right">
+                    <Tooltip title="Edit technician">
+                      <IconButton size="small" onClick={() => openEdit(tech)}>
+                        <FontAwesomeIcon
+                          icon={faPen}
+                          style={{ fontSize: 15 }}
+                        />
+                      </IconButton>
+                    </Tooltip>
                     <Tooltip title="Reset password">
                       <IconButton
                         size="small"
@@ -376,16 +440,11 @@ const TechnicianManager: React.FC = () => {
                   },
                 }}
               >
-                <MenuItem value="Plumber">Plumber</MenuItem>
-                <MenuItem value="Electrician">Electrician</MenuItem>
-                <MenuItem value="Maintenance">Maintenance</MenuItem>
-                <MenuItem value="Carpenter">Carpenter</MenuItem>
-                <MenuItem value="HVAC">HVAC</MenuItem>
-                <MenuItem value="Painter">Painter</MenuItem>
-                <MenuItem value="Mason">Mason</MenuItem>
-                <MenuItem value="Pest Control">Pest Control</MenuItem>
-                <MenuItem value="Security Expert">Security Expert</MenuItem>
-                <MenuItem value="Landscaper">Landscaper</MenuItem>
+                {skillOptions(formData.skill).map((skill) => (
+                  <MenuItem key={skill} value={skill}>
+                    {skill}
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
           </Grid>
@@ -400,6 +459,89 @@ const TechnicianManager: React.FC = () => {
             disabled={!formData.name || !formData.techId}
           >
             Deploy Staff
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={editing !== null}
+        onClose={() => !savingEdit && setEditing(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>
+          Edit Technician #{editing?.techId}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            <Grid size={12}>
+              <TextField
+                fullWidth
+                label="Full Name"
+                value={editForm.name}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, name: e.target.value })
+                }
+              />
+            </Grid>
+            <Grid size={12}>
+              <TextField
+                fullWidth
+                label="Contact"
+                value={editForm.contact}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, contact: e.target.value })
+                }
+              />
+            </Grid>
+            <Grid size={12}>
+              <TextField
+                fullWidth
+                select
+                label="Primary Skill"
+                value={editForm.skill}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, skill: e.target.value })
+                }
+                helperText="Decides which service requests this technician is assigned."
+              >
+                {skillOptions(editForm.skill).map((skill) => (
+                  <MenuItem key={skill} value={skill}>
+                    {skill}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={editForm.available}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, available: e.target.checked })
+                    }
+                    color="success"
+                  />
+                }
+                label="Available for new assignments"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button
+            onClick={() => setEditing(null)}
+            variant="outlined"
+            disabled={savingEdit}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSaveEdit}
+            variant="contained"
+            disabled={savingEdit || !editForm.name || !editForm.contact}
+          >
+            Save Changes
           </Button>
         </DialogActions>
       </Dialog>

@@ -37,7 +37,7 @@ import {
   Tabs,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import api from "../../api/axiosClient";
 import AssignmentManager from "./AssignmentManager";
 import AuditLog from "./AuditLog";
@@ -75,19 +75,21 @@ const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await api.get("/admin/stats");
-        setStats(response.data);
-      } catch (error) {
-        console.error("Failed to fetch dashboard stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
+  // Also passed to the tabs that change these numbers, so the cards update after each action.
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await api.get("/admin/stats");
+      setStats(response.data);
+    } catch (error) {
+      console.error("Failed to fetch dashboard stats:", error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -287,13 +289,13 @@ const AdminDashboard: React.FC = () => {
       </Box>
 
       <TabPanel value={tabValue} index={0}>
-        <ResidentManager />
+        <ResidentManager onDataChanged={fetchStats} />
       </TabPanel>
       <TabPanel value={tabValue} index={1}>
         <TechnicianManager />
       </TabPanel>
       <TabPanel value={tabValue} index={2}>
-        <FinanceManager />
+        <FinanceManager onDataChanged={fetchStats} />
       </TabPanel>
       <TabPanel value={tabValue} index={3}>
         <AssignmentManager />

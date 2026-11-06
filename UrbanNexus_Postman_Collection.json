@@ -1195,6 +1195,80 @@
           ]
         },
         {
+          "name": "Update Technician (Admin only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skill\": \"HVAC\",\n  \"contact\": \"9000000888\",\n  \"available\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/technicians/8",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "technicians",
+                "8"
+              ]
+            },
+            "description": "Admin edit of a technician: name, contact, skill and available, all optional. The skill must be one of the services on the technician price list (400 otherwise); technicians cannot change their own skill."
+          },
+          "response": [
+            {
+              "name": "OK (200)",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwt_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"skill\": \"HVAC\",\n  \"contact\": \"9000000888\",\n  \"available\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/technicians/8",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "technicians",
+                    "8"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Technician updated.\"\n}"
+            }
+          ]
+        },
+        {
           "name": "Delete Technician (Admin only)",
           "request": {
             "method": "DELETE",
@@ -1213,7 +1287,8 @@
                 "technicians",
                 "17"
               ]
-            }
+            },
+            "description": "Deletes the technician, their login and their assignments. Refused with 409 while they have open (Assigned) jobs. Residents' invoices for their past jobs are kept and stay payable."
           },
           "response": [
             {
@@ -1410,7 +1485,8 @@
                 "amenities",
                 "6"
               ]
-            }
+            },
+            "description": "Updates the name and/or capacity. Renaming carries the amenity's price over to the new name; a name used by another amenity returns 409."
           },
           "response": [
             {
@@ -1475,7 +1551,8 @@
                 "amenities",
                 "6"
               ]
-            }
+            },
+            "description": "Deletes the amenity and its bookings. Refused with 409 while it has upcoming bookings. Residents' invoices for past bookings are kept and stay payable."
           },
           "response": [
             {
@@ -2230,7 +2307,8 @@
                 "admin",
                 "process-overdue"
               ]
-            }
+            },
+            "description": "Marks Pending invoices issued more than 30 days ago as Overdue and reports how many changed."
           },
           "response": [
             {
@@ -2264,7 +2342,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n  \"message\": \"Successfully ran the cursor. Pending payments are now marked as Overdue.\"\n}"
+              "body": "{\n  \"message\": \"Overdue scan complete: 1 invoice(s) more than 30 days old are now marked Overdue.\",\n  \"marked_overdue\": 1\n}"
             }
           ]
         },

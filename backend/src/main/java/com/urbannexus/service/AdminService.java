@@ -92,13 +92,20 @@ public class AdminService {
     }
     
     public List<Map<String, Object>> searchTransactions(String status, String block, String residentName) {
-        return normalizeMaps(paymentRepository.searchTransactions(status, block, residentName));
+        String name = blankToNull(residentName);
+        return normalizeMaps(paymentRepository.searchTransactions(
+            blankToNull(status),
+            blankToNull(block),
+            name == null ? null : "%" + name.toLowerCase(Locale.ROOT) + "%"));
     }
     
+    /** Marks Pending invoices issued more than 30 days ago as Overdue; returns how many changed. */
     @Transactional
-    public void processOverduePayments() {
-        paymentRepository.processOverduePayments();
-        auditService.log("payment", "ALL", "OVERDUE_PROCESS", "Manual trigger of overdue payment processing.");
+    public int processOverduePayments() {
+        int marked = paymentRepository.processOverduePayments();
+        auditService.log("payment", "ALL", "OVERDUE_PROCESS",
+            "Manual overdue scan: " + marked + " invoice(s) marked Overdue.");
+        return marked;
     }
     
     public String getUsername(Long adminId) {

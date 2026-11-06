@@ -35,16 +35,25 @@ import java.util.Map;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, String> {
     
-    // A resident's invoices are linked only through their bookings, which are deleted with the resident.
-    String RESIDENT_TRANS_NOS =
-        "SELECT am.trans_no FROM amenity_mgmt am WHERE am.resident_id = :residentId "
-            + "UNION SELECT tm.trans_no FROM technician_management tm WHERE tm.resident_id = :residentId";
-    
     long countByStatus(String status);
     
+    // Returns how many invoices were marked Overdue.
     @Modifying
     @Query(value = "UPDATE payment SET status = 'Overdue' WHERE status = 'Pending' AND payment_date < NOW() - INTERVAL '30' DAY", nativeQuery = true)
-    void processOverduePayments();
+    int processOverduePayments();
+    
+    // Fills payment.resident_id for invoices created before the column existed, from the booking that
+    // produced them. Rows that already have it are untouched, so running it on every startup is safe.
+    @Modifying
+    @Query(value = """
+        UPDATE payment p SET resident_id = COALESCE(
+            (SELECT MIN(am.resident_id) FROM amenity_mgmt am WHERE am.trans_no = p.trans_no),
+            (SELECT MIN(tm.resident_id) FROM technician_management tm WHERE tm.trans_no = p.trans_no))
+        WHERE p.resident_id IS NULL
+        AND (EXISTS (SELECT 1 FROM amenity_mgmt am WHERE am.trans_no = p.trans_no)
+             OR EXISTS (SELECT 1 FROM technician_management tm WHERE tm.trans_no = p.trans_no))
+        """, nativeQuery = true)
+    int backfillResidentIds();
     
     @Query(value = """
         SELECT
@@ -55,48 +64,41 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
             p.payment_date,
             p.payment_reference
         FROM payment p
-        LEFT JOIN amenity_mgmt am ON p.trans_no = am.trans_no
-        LEFT JOIN technician_management tm ON p.trans_no = tm.trans_no
-        WHERE (am.resident_id = :residentId OR tm.resident_id = :residentId)
+        WHERE p.resident_id = :residentId
         AND p.status IN ('Pending', 'Overdue', 'Under Review')
+        ORDER BY p.payment_date
         """, nativeQuery = true)
     List<Map<String, Object>> findPendingDuesByResidentId(@Param("residentId") Long residentId);
     
+    // namePattern is lower-cased with wildcards by the caller ("%jane%"); a function is never applied to a
+    // parameter, because a null parameter has no type on PostgreSQL.
     @Query(value = """
         SELECT
             p.trans_no, p.status, p.type as service_type, p.cost, p.payment_reference,
             p.payment_date AS issued_at, p.paid_at,
-            COALESCE(r_am.name, r_tm.name, p.billed_to, 'UrbanNexus System') AS resident_name,
+            COALESCE(r.name, p.billed_to, 'UrbanNexus System') AS resident_name,
             -- NULL block/unit with a name means a former (deleted) resident; 'SYS' means a system charge.
-            COALESCE(r_am.house_block, r_tm.house_block, CASE WHEN p.billed_to IS NULL THEN 'SYS' END) AS house_block,
-            COALESCE(r_am.house_unit, r_tm.house_unit, CASE WHEN p.billed_to IS NULL THEN 'ADMIN' END) AS house_unit
+            COALESCE(r.house_block, CASE WHEN p.billed_to IS NULL THEN 'SYS' END) AS house_block,
+            COALESCE(r.house_unit, CASE WHEN p.billed_to IS NULL THEN 'ADMIN' END) AS house_unit
         FROM payment p
-        LEFT JOIN amenity_mgmt am ON p.trans_no = am.trans_no
-        LEFT JOIN resident r_am ON am.resident_id = r_am.resident_id
-        LEFT JOIN technician_management tm ON p.trans_no = tm.trans_no
-        LEFT JOIN resident r_tm ON tm.resident_id = r_tm.resident_id
+        LEFT JOIN resident r ON r.resident_id = p.resident_id
         WHERE (:status IS NULL OR p.status = :status)
-        AND (:block IS NULL OR r_am.house_block = :block OR r_tm.house_block = :block)
-        AND (:residentName IS NULL OR :residentName = ''
-             OR LOWER(COALESCE(r_am.name, r_tm.name, p.billed_to)) LIKE LOWER(CONCAT('%', :residentName, '%'))
-             OR (:residentName = 'UrbanNexus System' AND r_am.name IS NULL AND r_tm.name IS NULL AND p.billed_to IS NULL))
+        AND (:block IS NULL OR r.house_block = :block)
+        AND (:namePattern IS NULL OR LOWER(COALESCE(r.name, p.billed_to, 'UrbanNexus System')) LIKE :namePattern)
+        ORDER BY p.payment_date DESC
         """, nativeQuery = true)
     List<Map<String, Object>> searchTransactions(@Param("status") String status,
                                                  @Param("block") String block,
-                                                 @Param("residentName") String residentName);
+                                                 @Param("namePattern") String namePattern);
     
     // Resident side: claim an unpaid invoice of their own as paid offline. It stays unpaid
     // until the admin confirms it.
     @Modifying
     @Query(value = """
-        UPDATE payment p SET status = 'Under Review', payment_reference = :reference
-        WHERE p.trans_no = :transNo
-        AND p.status IN ('Pending', 'Overdue')
-        AND (
-            EXISTS (SELECT 1 FROM amenity_mgmt am WHERE am.trans_no = p.trans_no AND am.resident_id = :residentId)
-            OR
-            EXISTS (SELECT 1 FROM technician_management tm WHERE tm.trans_no = p.trans_no AND tm.resident_id = :residentId)
-        )
+        UPDATE payment SET status = 'Under Review', payment_reference = :reference
+        WHERE trans_no = :transNo
+        AND status IN ('Pending', 'Overdue')
+        AND resident_id = :residentId
         """, nativeQuery = true)
     int submitForReview(@Param("transNo") String transNo, @Param("residentId") Long residentId,
                         @Param("reference") String reference);
@@ -118,24 +120,23 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     int rejectPayment(@Param("transNo") String transNo);
     
     @Query(value = "SELECT COUNT(*) FROM payment WHERE status IN ('Pending', 'Overdue', 'Under Review') "
-                       + "AND trans_no IN (" + RESIDENT_TRANS_NOS + ")", nativeQuery = true)
+                       + "AND resident_id = :residentId", nativeQuery = true)
     long countUnpaidForResident(@Param("residentId") Long residentId);
     
     @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM payment WHERE status IN ('Pending', 'Overdue', 'Under Review') "
-                       + "AND trans_no IN (" + RESIDENT_TRANS_NOS + ")", nativeQuery = true)
+                       + "AND resident_id = :residentId", nativeQuery = true)
     java.math.BigDecimal sumUnpaidForResident(@Param("residentId") Long residentId);
     
     // Written-off invoices stay in the ledger for the record but no longer count as money owed.
     @Modifying
     @Query(value = "UPDATE payment SET status = 'Written Off' WHERE status IN ('Pending', 'Overdue', 'Under Review') "
-                       + "AND trans_no IN (" + RESIDENT_TRANS_NOS + ")", nativeQuery = true)
+                       + "AND resident_id = :residentId", nativeQuery = true)
     int writeOffUnpaidForResident(@Param("residentId") Long residentId);
     
     // Copies the resident's name onto their invoices so the ledger still shows who was billed after the
-    // resident (and with them the booking rows that link invoice to resident) are deleted.
+    // resident is deleted.
     @Modifying
-    @Query(value = "UPDATE payment SET billed_to = :name WHERE trans_no IN (" + RESIDENT_TRANS_NOS + ")",
-        nativeQuery = true)
+    @Query(value = "UPDATE payment SET billed_to = :name WHERE resident_id = :residentId", nativeQuery = true)
     int recordBilledTo(@Param("residentId") Long residentId, @Param("name") String name);
     
     // Money not yet received: includes claims still awaiting the admin's confirmation.

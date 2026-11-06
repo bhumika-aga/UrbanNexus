@@ -129,14 +129,19 @@ public class TechnicianController {
     
     @PutMapping("/me/availability")
     public ResponseEntity<?> updateMyAvailability(@AuthenticationPrincipal UserPrincipal currentUser,
-                                                  @RequestBody Map<String, Boolean> payload) {
+                                                  @RequestBody(required = false) Map<String, Boolean> payload) {
         if (!"Technician".equals(currentUser.getRole())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Access denied."));
         }
+        Boolean available = payload == null ? null : payload.get("available");
+        if (available == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                       .body(Map.of("error", "available must be true or false."));
+        }
         try {
-            Boolean available = payload.get("available");
             return ResponseEntity.ok(technicianService.updateAvailability(currentUser.getTechId(), available));
         } catch (Exception e) {
+            log.error("Failed to update availability for technician {}", currentUser.getTechId(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to update availability."));
         }
@@ -158,6 +163,24 @@ public class TechnicianController {
             log.error("Password reset failed for technician {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                        .body(Map.of("error", "Failed to reset password."));
+        }
+    }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateTechnician(@AuthenticationPrincipal UserPrincipal currentUser,
+                                              @PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        if (!"SuperAdmin".equals(currentUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                       .body(Map.of("error", "Only Admin can edit technicians."));
+        }
+        try {
+            return ResponseEntity.ok(technicianService.updateTechnician(id, updates));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", e.getReason()));
+        } catch (RuntimeException e) {
+            log.error("Failed to update technician {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                       .body(Map.of("error", "Failed to update technician."));
         }
     }
     

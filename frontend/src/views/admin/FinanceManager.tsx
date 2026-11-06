@@ -55,10 +55,16 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
   "Written Off": { bg: "#f4f4f5", fg: "#52525b" },
 };
 
-const FinanceManager: React.FC = () => {
+interface Props {
+  // Called after payments change status, so the dashboard cards stay current.
+  onDataChanged?: () => void;
+}
+
+const FinanceManager: React.FC<Props> = ({ onDataChanged }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
+  // Starts true so the table shows a spinner, not "No transactions", before the first load.
+  const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
 
   const fetchTransactions = useCallback(async () => {
@@ -92,6 +98,7 @@ const FinanceManager: React.FC = () => {
     try {
       await api.post(`/payments/${encodeURIComponent(tx.trans_no)}/${action}`);
       fetchTransactions();
+      onDataChanged?.();
     } catch (err) {
       const errorMsg = axios.isAxiosError(err)
         ? err.response?.data?.error
@@ -103,9 +110,10 @@ const FinanceManager: React.FC = () => {
   const runOverdueScan = async () => {
     setScanning(true);
     try {
-      await api.post("/admin/process-overdue");
-      alert("Overdue cursor executed mapping penalties to the ledger.");
+      const res = await api.post("/admin/process-overdue");
+      alert(res.data.message);
       fetchTransactions();
+      onDataChanged?.();
     } catch {
       alert("Scan failed");
     } finally {
